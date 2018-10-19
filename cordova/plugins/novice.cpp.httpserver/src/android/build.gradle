@@ -1,0 +1,33 @@
+
+android {
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 27
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_shared"
+            }
+        }
+        ndk {
+            abiFilters "armeabi-v7a"
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+
+project.afterEvaluate {
+    // Not sure how much of a hack this is - but it allows CMake/SWIG to run before Android Studio
+    // complains about missing generated files
+    // TODO: Probably need a release hook too?
+    javaPreCompileDebug.dependsOn externalNativeBuildDebug
+}

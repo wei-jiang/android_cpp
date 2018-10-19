@@ -1,0 +1,17 @@
+#pragma once
+#include "common.h"
+namespace Util
+{
+    std::vector<std::string> split(const std::string &s, char delim);
+    std::string byte2str(uint8_t *bytes, int size);
+    std::string hexStr(const std::string& buff);
+    std::string string_to_hex(const std::string& input);
+    std::string random_string( size_t length );
+    std::string decodeHex(const std::string & source);
+    std::string get_files_json(const std::string &path);
+    std::string urlEncode(const std::string &url);
+    std::string urlDecode(const std::string &encoded);
+    std::string charToHex(unsigned char c);
+    unsigned char hexToChar(const std::string &str);
+};
+extern std::string g_ms;

@@ -1,0 +1,26 @@
+{
+    "name": "android-cpp",
+    "displayName": "android cpp webserver",
+    "version": "1.0.0",
+    "description": "integrate cordova and cpp",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Apache Cordova Team",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "FreeGo": "file:FreeGo",
+        "cordova-android": "^7.1.1",
+        "cordova-plugin-whitelist": "^1.3.3"
+    },
+    "cordova": {
+        "plugins": {
+            "cordova-plugin-whitelist": {},
+            "novice.cpp.httpserver": {}
+        },
+        "platforms": [
+            "android"
+        ]
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "cordova-plugin-whitelist": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-whitelist@1"
+    },
+    "is_top_level": true,
+    "variables": {}
+  },
+  "novice.cpp.httpserver": {
+    "source": {
+      "type": "local",
+      "path": "/data/github/net/cordova/node_modules/FreeGo"
+    },
+    "is_top_level": true,
+    "variables": {}
+  }
+}
