@@ -25,6 +25,7 @@
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
     </platform>
+    <plugin name="cordova-plugin-networkinterface" spec="^2.0.0" />
     <plugin name="novice.cpp.httpserver" spec="./FreeGo" />
     <engine name="android" spec="^7.1.1" />
 </widget>

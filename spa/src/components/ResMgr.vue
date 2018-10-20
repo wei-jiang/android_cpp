@@ -1,13 +1,21 @@
 <template>
   <div class="hello">
     <!-- <h1>{{ msg }}</h1> -->
-    <div class="progressbar" v-for="(v, k) in uploading">
-      <div v-bind:style="{width: v.progress}">{{`${k}(${v.progress})`}}</div>
+    <div class="local_ip" v-if="in_cordova">
+      <div>请在内网访问以下ip或扫码打开：</div>
+      <div>wifi IP：&nbsp;<i>{{ip? my_uri:'未连接'}}</i></div>
+      <canvas id="uri_qr"></canvas>
     </div>
-    <input type="file" multiple @change="processFile($event)">
-    <button @click.prevent="open_file()" v-if="up_count==0">上传文件</button>
-
+    <div v-else>
+      <div class="progressbar" v-for="(v, k) in uploading">
+        <div v-bind:style="{width: v.progress}"></div>
+        <div class="cap">{{`${k}(${v.progress})`}}</div>
+      </div>
+      <input type="file" multiple @change="processFile($event)">
+      <button class="upload" @click.prevent="open_file()" v-if="up_count==0">上传文件</button>
+    </div>
     <div class="fi" v-for="f in files">
+      <div>{{`文件名称：${f.filename}`}}</div>
       <div v-if="f.file_type.includes('image/')">
         <img :src="file_url(f.path)"/>
       </div>
@@ -21,16 +29,20 @@
         <a :href="file_url(f.path)">打开文件</a>
         <div>{{`文件类型：${f.file_type}`}}</div>
         <div>{{`文件大小：${formatFileSize(f.file_size)}`}}</div>
-        <div>{{`文件名称：${f.filename}`}}</div>
+        
         <div>{{`文件路径：${f.path}`}}</div>
       </div>
-      <button @click.prevent="del_file(f)">删除文件</button>
+      <div v-if="in_cordova">
+        <button @click.prevent="del_file(f)">删除文件</button>
+        <button @click.prevent="rename_file(f)">重命名</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import ws from "../ws";
+import QRious from "qrious";
 export default {
   name: "ResMgr",
   props: {
@@ -40,6 +52,7 @@ export default {
     this.$root.$on("get_file_list", files => {
       this.files = files;
     });
+    this.in_cordova = isCordovaApp;
     if (isCordovaApp) {
       document.addEventListener(
         "deviceready",
@@ -56,6 +69,19 @@ export default {
               this.msg = err;
             }
           );
+          networkinterface.getWiFiIPAddress(
+            info => {
+              this.ip = info.ip;
+              const qr = new QRious({
+                size: 200,
+                background: "#fff",
+                foreground: "#284a9f",
+                element: $("#uri_qr").get(0),
+                value: this.my_uri
+              });
+            },
+            err => {}
+          );
         },
         false
       );
@@ -66,6 +92,7 @@ export default {
   mounted() {},
   data() {
     return {
+      ip: "",
       msg: "",
       cpp_svr_started: false,
       files: [],
@@ -74,6 +101,9 @@ export default {
     };
   },
   computed: {
+    my_uri() {
+      return `http://${this.ip}:12345`;
+    },
     store_url() {
       let loc = window.location,
         store_url,
@@ -90,15 +120,28 @@ export default {
     }
   },
   methods: {
-    del_file(f){
-      const cmd = {
-        cmd: 'del_file',
-        path: f.path
+    rename_file(f) {
+      let new_name = prompt("新文件名:", f.filename);
+      if (new_name && new_name != f.filename) {
+        new_name = f.path.replace(f.filename, new_name);
+        // alert(`new_name = ${new_name}`)
+        const cmd = {
+          cmd: "rename_file",
+          path: f.path,
+          new_name
+        };
+        ws.send(JSON.stringify(cmd));
       }
-      ws.send( JSON.stringify(cmd) )
     },
-    file_url(file_path){
-      return file_path.replace('/sdcard/mystore', this.store_url)
+    del_file(f) {
+      const cmd = {
+        cmd: "del_file",
+        path: f.path
+      };
+      ws.send(JSON.stringify(cmd));
+    },
+    file_url(file_path) {
+      return file_path.replace("/sdcard/mystore", this.store_url);
     },
     formatFileSize(bytes, decimalPoint) {
       if (bytes == 0) return "0 Bytes";
@@ -153,9 +196,10 @@ export default {
                 this.uploading = {};
               }
             }
-            this.uploading[file.name].progress = `${parseFloat(
-              (loaded / total) * 100
-            ).toFixed(2)}%`;
+            if (this.up_count > 0)
+              this.uploading[file.name].progress = `${parseFloat(
+                (loaded / total) * 100
+              ).toFixed(2)}%`;
           })
           .fail(err => {
             console.log("failed: ", err);
@@ -195,10 +239,24 @@ li {
   margin: 0 10px;
 }
 .progressbar {
+  position: relative;
   margin: 0.3em 0.5em;
   background-color: black;
   border-radius: 1em; /* (height of inner div) / 2 + padding */
   padding: 0.2em;
+  overflow: hidden;
+}
+.progressbar > .cap {
+  // display: none;
+  // z-index:8;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  background-color: initial;
+  width: 100%;
+  color: green;
+  font-weight: bold;
 }
 .progressbar + .progressbar {
   margin-top: 0.7em;
@@ -209,8 +267,6 @@ li {
   height: 2em;
   line-height: 2em;
   border-radius: 0.7em;
-  color: green;
-  font-weight: bold;
 }
 .fi {
   background-color: aqua;
@@ -219,7 +275,38 @@ li {
 }
 .fi + .fi {
 }
-audio, video, img{
+.fi > button {
+  margin: 0 0.7em;
+  display: inline-block;
+}
+audio,
+video,
+img {
   width: 100%;
+}
+.upload {
+  border-radius: 0.7em;
+  display: block;
+  background-color: chartreuse;
+  color: blueviolet;
+  font-size: 2rem;
+  width: 80%;
+  margin: 0.7em auto;
+  text-align: center;
+}
+.local_ip {
+  font-weight: 700;
+  border: 1px dotted purple;
+  display: flex;
+  flex-flow: column;
+  background-color: lightgray;
+  // color: blueviolet;
+}
+.local_ip > canvas {
+  margin: 0.3em auto;
+  width: 200px;
+}
+i {
+  color: green;
 }
 </style>

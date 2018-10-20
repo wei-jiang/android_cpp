@@ -22,6 +22,7 @@
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/format.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/property_tree/ptree.hpp> 
 #include <boost/property_tree/json_parser.hpp>

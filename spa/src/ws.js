@@ -1,13 +1,15 @@
 import _ from 'lodash'
 import moment from "moment";
 import adb from "./db";
+import Noty from "noty";
+import Peer from 'simple-peer';
 
 class WS {
-  constructor() {    
-    
+  constructor() {
+
   }
-  init(){
-    this.ws=new WebSocket( this.ws_uri() );
+  init() {
+    this.ws = new WebSocket(this.ws_uri());
     _.bindAll(this, ['on_message', 'on_close', 'on_error', 'on_open'])
     this.ws.onmessage = this.on_message;
     this.ws.onclose = this.on_close;
@@ -19,15 +21,26 @@ class WS {
       this.emit('notify_seller_status', data)
     });
   }
-  on_message(evt){
+  on_message(evt) {
     const data = JSON.parse(evt.data)
     // console.log(data)
-    vm.$emit(data.cmd, data.files);
+    if ('get_file_list' == data.cmd) {
+      vm.$emit(data.cmd, data.files);
+    } else {
+      new Noty({
+        layout: 'center',
+        text: evt.data
+        , type: 'information'
+        , closeWith: ['click', 'timeout']
+        , maxVisible: 5
+        , timeout: 3000,
+      }).show();
+    }
   }
-  on_error(err){
+  on_error(err) {
     console.log('onerror', err)
   }
-  on_close(){
+  on_close() {
     console.log('onclose')
   }
   on_open() {
@@ -46,11 +59,11 @@ class WS {
   send(data) {
     this.ws.send(data);
   }
-  ws_uri(){
+  ws_uri() {
     let loc = window.location, ws_uri, h = loc.host;
     if (loc.protocol === "https:") {
       ws_uri = "wss:";
-    } else if (loc.protocol === "http:"){
+    } else if (loc.protocol === "http:") {
       ws_uri = "ws:";
     } else {
       ws_uri = "ws:";

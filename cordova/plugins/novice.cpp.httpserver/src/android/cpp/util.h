@@ -8,7 +8,7 @@ namespace Util
     std::string string_to_hex(const std::string& input);
     std::string random_string( size_t length );
     std::string decodeHex(const std::string & source);
-    std::string get_files_json(const std::string &path);
+    std::string get_files_json(const std::string &path = "/sdcard/mystore/");
     std::string urlEncode(const std::string &url);
     std::string urlDecode(const std::string &encoded);
     std::string charToHex(unsigned char c);
