@@ -102,3 +102,5 @@ secret*
 
 www/
 .gradle/
+.project
+.settings/

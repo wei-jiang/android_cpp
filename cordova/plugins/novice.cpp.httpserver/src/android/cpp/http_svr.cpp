@@ -217,7 +217,7 @@ void HttpSvr::serve_res()
 
             SimpleWeb::CaseInsensitiveMultimap header;
             // enable Cache-Control
-            header.emplace("Cache-Control", "max-age=86400");
+            // header.emplace("Cache-Control", "max-age=86400");
             auto ifs = make_shared<ifstream>();
             ifs->open(path.string(), ifstream::in | ios::binary | ios::ate);
 
