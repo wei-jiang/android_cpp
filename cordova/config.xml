@@ -2,10 +2,10 @@
 <widget id="freenet.cppsvr" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>资源库</name>
     <description>
-        android's C++ http server 
+        安卓文件资源服务器
     </description>
-    <author email="wei-jiang@163.com" href="http://cordova.io">
-        freelancer
+    <author email="novice@piaoyun.shop" href="http://cordova.io">
+        飘云工作室
     </author>
     <content src="index.html" />
     <plugin name="cordova-plugin-whitelist" spec="1" />
@@ -21,11 +21,12 @@
         <allow-intent href="market:*" />
         <resource-file src="res/magic.mgc" target="app/src/main/assets/magic.mgc" />
         <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+        <!-- android 4.4 and can not use above to build -->
+        <preference name="android-minSdkVersion" value="19" />
     </platform>
     <platform name="ios">
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
     </platform>
     <plugin name="cordova-plugin-networkinterface" spec="^2.0.0" />
-    <engine name="android" spec="^7.1.1" />
 </widget>

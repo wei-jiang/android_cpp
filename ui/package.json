@@ -1,0 +1,33 @@
+{
+  "name": "ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "i18n:report": "vue-cli-service i18n:report --src './src/**/*.?(js|vue)' --locales './src/locales/**/*.json'"
+  },
+  "dependencies": {
+    "core-js": "^2.6.5",
+    "jquery": "^3.4.1",
+    "lodash": "^4.17.11",
+    "lokijs": "^1.5.6",
+    "moment": "^2.24.0",
+    "noty": "^3.2.0-beta",
+    "qrious": "^4.0.2",
+    "register-service-worker": "^1.6.2",
+    "simple-peer": "^9.3.0",
+    "uuid": "^3.3.2",
+    "vue": "^2.6.10",
+    "vue-i18n": "^8.0.0",
+    "vue-router": "^3.0.3"
+  },
+  "devDependencies": {
+    "@kazupon/vue-i18n-loader": "^0.3.0",
+    "@vue/cli-plugin-babel": "^3.8.0",
+    "@vue/cli-plugin-pwa": "^3.8.0",
+    "@vue/cli-service": "^3.8.0",
+    "vue-cli-plugin-i18n": "^0.6.0",
+    "vue-template-compiler": "^2.6.10"
+  }
+}

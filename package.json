@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd cordova && adb uninstall freenet.cppsvr;  cordova run android",
-    "spa": "cd spa && npm run build",
+    "dev": "npm run ui && cd cordova && ./dev.sh",
+    "ui": "cd ui && npm run build",
     "cor": "cd cordova && ./build.sh",
     "build": "cd cordova && cordova clean android && cordova build android --release"
   },

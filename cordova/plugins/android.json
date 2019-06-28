@@ -7,10 +7,16 @@
     "files": {}
   },
   "installed_plugins": {
-    "cordova-plugin-whitelist": {
+    "cordova-plugin-device": {
+      "PACKAGE_NAME": "freenet.cppsvr"
+    },
+    "cordova-plugin-file": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
     "cordova-plugin-networkinterface": {
+      "PACKAGE_NAME": "freenet.cppsvr"
+    },
+    "cordova-plugin-whitelist": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
     "novice.cpp.httpserver": {
