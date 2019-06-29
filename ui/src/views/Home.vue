@@ -1,34 +1,43 @@
 <template>
   <div class="home">
+    
+    <!-- {{ $t('message') }} -->
     <div class="fi" v-for="f in files">
-      <div>{{`文件名称：${f.filename}`}}</div>
-      <div v-if="f.file_type.includes('image/')">
-        <img :src="file_url(f.path)"/>
+
+      <div v-if="f.is_dir">
+        <i class="small material-icons">folder</i>
       </div>
-      <div v-else-if="f.file_type.includes('audio/')">
-        <audio :src="file_url(f.path)" controls/>
+      <div v-else-if="f.type.includes('image/')">
+        <i class="small material-icons">image</i>
       </div>
-      <div v-else-if="f.file_type.includes('video/')">
-        <video :src="file_url(f.path)" controls="controls"/>
+      <div v-else-if="f.type.includes('audio/')">
+        <i class="small material-icons">audiotrack</i>
+      </div>
+      <div v-else-if="f.type.includes('video/')">
+        <i class="small material-icons">ondemand_video</i>
       </div>
       <div v-else>
-        <a :href="file_url(f.path)">打开文件</a>
-        <div>{{`文件类型：${f.file_type}`}}</div>
-        <div>{{`文件大小：${formatFileSize(f.file_size)}`}}</div>
-        
-        <div>{{`文件路径：${f.path}`}}</div>
+        <i class="small material-icons">insert_drive_file</i>
       </div>
+      <div v-if="!f.is_dir">
+        <div>{{f.type}}</div>
+        <div>{{formatFileSize(f.size)}}</div>
+      </div>
+      <div>{{f.name}}</div>
+      <div>{{f.time}}</div>
+      <div>{{f.path}}</div>
+      <!-- </div> -->
       <div v-if="in_cordova">
         <button @click.prevent="del_file(f)">删除文件</button>
         <button @click.prevent="rename_file(f)">重命名</button>
       </div>
     </div>
-    <!-- {{ $t('hello') }} -->
+    
   </div>
 </template>
 
 <script>
-
+import cfg from "../common/config";
 export default {
   name: 'home',
   created: function() {
@@ -52,7 +61,7 @@ export default {
         store_url = loc.protocol;
       } else {
         store_url = "http:";
-        h = "localhost:57000";
+        h = `localhost:${cfg.svr_port}`;
       }
       store_url += "//" + h + "/store";
       console.log(store_url);

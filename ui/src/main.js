@@ -9,7 +9,7 @@ import Pub from './Pub.vue'
 import router_pub from './router_pub'
 
 Vue.config.productionTip = false
-
+window.i18n = i18n;
 window.isCordovaApp = !!window.cordova;
 if (window.isCordovaApp) { 
   new Vue({

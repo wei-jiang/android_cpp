@@ -16,7 +16,7 @@
 <script>
 
 import QRious from "qrious";
-
+import cfg from "../common/config";
 import util from "../common/util";
 export default {
   name: "Intranet",
@@ -40,7 +40,7 @@ export default {
   },
   computed: {
     address(){
-      return `http://${this.wifi_ip}:57000`
+      return `http://${this.wifi_ip}:${cfg.svr_port}`
     }
   },
   methods: {

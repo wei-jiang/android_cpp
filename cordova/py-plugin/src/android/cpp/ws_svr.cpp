@@ -33,37 +33,45 @@ void WsSvr::to_all(const std::string &json)
 }
 void WsSvr::ep_for_cpp()
 {
-    auto &id_card_endpoint = ws_server_.endpoint["^/cpp_channel/?$"];
-    id_card_endpoint.on_open = [&](shared_ptr<WsServer::Connection> connection) {
+    auto &fs_endpoint = ws_server_.endpoint["^/cpp_channel/?$"];
+    fs_endpoint.on_open = [&](shared_ptr<WsServer::Connection> connection) {
         auto out_message = make_shared<string>(Util::get_files_json());
         connection->send(*out_message);
         cout << "Server: Opened connection " << connection.get() << endl;
     };
 
-    id_card_endpoint.on_close = [&](shared_ptr<WsServer::Connection> connection, int status, const string &reason) {
+    fs_endpoint.on_close = [&](shared_ptr<WsServer::Connection> connection, int status, const string &reason) {
         cout << "Server: Closed connection " << connection.get() << " with status code " << status << endl;
     };
 
-    id_card_endpoint.on_error = [&](shared_ptr<WsServer::Connection> connection, const boost::system::error_code &ec) {
+    fs_endpoint.on_error = [&](shared_ptr<WsServer::Connection> connection, const boost::system::error_code &ec) {
         cerr << "Server: Error in connection " << connection.get() << ". "
              << "Error: " << ec << ", error message: " << ec.message() << endl;
     };
-    id_card_endpoint.on_message = [this](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
+    fs_endpoint.on_message = [this](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
         auto cmd_json = in_message->string();
-        std::stringstream ss;
-        ss << cmd_json;
-        pt::ptree json;
-        pt::read_json(ss, json);
-        const string &cmd = json.get<std::string>("cmd");
-        auto it = handlers_.find(cmd);
-        if (it != handlers_.end())
-            return it->second(json, connection);
-        // cout << "Server: Message received: \"" << out_message << "\" from " << connection.get() << endl;
-        // cout << "Server: Sending message \"" << out_message << "\" to " << connection.get() << endl;
-        // connection->send is an asynchronous function
-        json.put("ret", -1);
-		json.put("msg", boost::format( R"foo(can not find command dealer of %1%")foo") % cmd);
-        return_json(connection, json);
+        if(cmd_json == "") return;
+        try
+        {
+            std::stringstream ss;
+            ss << cmd_json;
+            pt::ptree json;
+            pt::read_json(ss, json);
+            const string &cmd = json.get<std::string>("cmd");
+            auto it = handlers_.find(cmd);
+            if (it != handlers_.end())
+                return it->second(json, connection);
+            // cout << "Server: Message received: \"" << out_message << "\" from " << connection.get() << endl;
+            // cout << "Server: Sending message \"" << out_message << "\" to " << connection.get() << endl;
+            // connection->send is an asynchronous function
+            json.put("ret", -1);
+            json.put("msg", boost::format( R"foo(can not find command dealer of %1%")foo") % cmd);
+            return_json(connection, json);
+        }
+        catch(const std::exception& e)
+        {
+            LOGE("ws onmessage exception: %s", e.what());
+        }              
     };
 }
 void WsSvr::return_json(std::shared_ptr<WsServer::Connection> cnn, pt::ptree& json)

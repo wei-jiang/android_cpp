@@ -76,14 +76,27 @@ std::string get_files_json(const std::string &path)
 	pt::ptree files;
 	for (auto &&x : v)
 	{
-		auto type = ::magic_file(handle, x.native().c_str());
-		string fn = x.filename().native();
 		pt::ptree fi;
-		fi.put("file_type", (type ? type : "UNKOWN"));
-		fi.put("file_size", fs::file_size(x));
-		fi.put("filename", fn);
+		string fn = x.filename().native();
+		
+		std::time_t t = fs::last_write_time(x.native());
+		std::tm tm = *std::localtime(&t);
+		std::ostringstream ss;
+		ss << std::put_time(&tm, "%F %T");
+		std::string time_str = ss.str();
+		fi.put("name", fn);
+		fi.put("time", time_str);
 		fi.put("path", x.native());
-		fi.put("extension", x.extension());
+		if( fs::is_directory(x) )
+		{
+			fi.put("is_dir", 'Y');
+			files.push_back(std::make_pair("", fi));
+			continue;
+		}
+		auto type = ::magic_file(handle, x.native().c_str());
+		fi.put("type", (type ? type : "UNKOWN"));
+		fi.put("size", fs::file_size(x));
+		fi.put("ext", x.extension());
 		files.push_back(std::make_pair("", fi));
 	}
 	root.add_child("files", files);

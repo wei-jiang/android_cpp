@@ -1,6 +1,6 @@
 <template>
   <div class="browse">
-    <div class="fi" v-for="f in files">
+    <!-- <div class="fi" v-for="f in files">
       <div>{{`文件名称：${f.filename}`}}</div>
       <div v-if="f.file_type.includes('image/')">
         <img :src="file_url(f.path)"/>
@@ -18,7 +18,7 @@
         
         <div>{{`文件路径：${f.path}`}}</div>
       </div>
-    </div>
+    </div> -->
     <!-- {{ $t('hello') }} -->
   </div>
 </template>
@@ -42,14 +42,8 @@ export default {
   computed: {
     store_url() {
       let loc = window.location,
-        store_url,
+        store_url = loc.protocol,
         h = loc.host;
-      if (loc.protocol === "https:" || loc.protocol === "http:") {
-        store_url = loc.protocol;
-      } else {
-        store_url = "http:";
-        h = "localhost:57000";
-      }
       store_url += "//" + h + "/store";
       console.log(store_url);
       return store_url;

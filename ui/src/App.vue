@@ -17,6 +17,7 @@
 <script>
 
 import util from "./common/util";
+import cfg from "./common/config";
 import adb from "./db";
 import ws from "./ws";
 export default {
@@ -31,7 +32,12 @@ export default {
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
-
+    console.log(`navigator.language = ${navigator.language}`);
+    if(navigator.language === 'zh-CN'){
+      i18n.locale = 'zh'
+    }
+    // "navigator.language = zh-CN"
+    // "navigator.language = en-US"
   },
   data() {
     return {
@@ -59,13 +65,14 @@ export default {
       window.db = await adb;
       window.cli_id = util.md5(`${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`);
 
-      cpp.start( 57000, () => {ws.init()}, err => {} );
+      cpp.start( cfg.svr_port, () => {ws.init()}, err => {} );
       
     }
   }
 };
 </script>
 <style>
+@import './assets/font.css';
 :root {
   box-sizing: border-box;
   font-size: calc(1vw + 0.9em);
