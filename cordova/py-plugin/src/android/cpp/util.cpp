@@ -7,16 +7,16 @@ using namespace std;
 namespace Util
 {
 
-vector<string> split(const string &s, char delim)
+vector<string> split(const string &s, std::string delim)
 {
-	stringstream ss(s);
-	string item;
-	vector<string> tokens;
-	while (getline(ss, item, delim))
-	{
-		tokens.push_back(item);
-	}
-	return tokens;
+	vector<string> strs;
+	boost::split(strs, s, boost::is_any_of(delim));
+	return strs;
+}
+std::string join(const std::vector<std::string> &ss, std::string delim)
+{
+	std::string joined = boost::algorithm::join(ss, delim);
+	return joined;
 }
 std::string byte2str(uint8_t *bytes, int size)
 {

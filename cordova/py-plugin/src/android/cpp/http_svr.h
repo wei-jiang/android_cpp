@@ -23,4 +23,5 @@ private:
     void post_test();
     void handle_upload();
     void emplace_ws();
+    void read_and_send(const std::shared_ptr<HttpServer::Response> &response, const std::shared_ptr<std::ifstream> &ifs, size_t len);
 };

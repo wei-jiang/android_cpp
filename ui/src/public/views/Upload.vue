@@ -5,7 +5,7 @@
       <div class="cap">{{`${k}(${v.progress})`}}</div>
     </div>
     <input type="file" multiple @change="processFile($event)">
-    <button class="upload" @click.prevent="open_file()" v-if="up_count==0">上传文件</button>
+    <button class="upload_btn" @click.prevent="open_file()" v-if="up_count==0">上传文件</button>
   </div>
 </template>
 
@@ -31,7 +31,7 @@ export default {
   },
   computed: {
     address() {
-      return `http://${this.wifi_ip}:12345`;
+      return ``;
     }
   },
   methods: {
@@ -138,7 +138,7 @@ input[type="file"] {
   line-height: 2em;
   border-radius: 0.7em;
 }
-.upload {
+.upload_btn {
   border-radius: 0.7em;
   display: block;
   background-color: chartreuse;

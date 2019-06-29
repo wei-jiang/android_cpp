@@ -40,7 +40,7 @@ export default {
   },
   computed: {
     address(){
-      return `http://${this.wifi_ip}:12345`
+      return `http://${this.wifi_ip}:57000`
     }
   },
   methods: {

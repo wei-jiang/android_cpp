@@ -65,7 +65,7 @@ void HttpSvr::static_dir(const std::string &dir)
 
             SimpleWeb::CaseInsensitiveMultimap header;
             // Uncomment the following line to enable Cache-Control
-            // header.emplace("Cache-Control", "max-age=86400");
+            header.emplace("Cache-Control", "max-age=86400");
 
             auto ifs = make_shared<ifstream>();
             ifs->open(path.string(), ifstream::in | ios::binary | ios::ate);
@@ -203,6 +203,26 @@ void HttpSvr::handle_upload()
         }
     };
 }
+void HttpSvr::read_and_send(const shared_ptr<HttpServer::Response> &response, const shared_ptr<ifstream> &ifs, size_t len)
+{
+    if(len <= 0) return;
+    // Read and send 128 KB at a time
+    static const size_t buff_len = 131072;
+    static vector<char> buffer(buff_len); // Safe when server is running on one thread
+    size_t read_len = std::min(len, buff_len);
+    streamsize read_length;
+    if ((read_length = ifs->read( &buffer[0], static_cast<streamsize>(read_len) ).gcount()) > 0)
+    {
+        response->write(&buffer[0], read_length);
+        // cout << "write buff len = " << read_length << endl;
+        response->send([=](const SimpleWeb::error_code &ec) {
+            if (!ec)
+                read_and_send(response, ifs, len - read_length);
+            else
+                cerr << "Connection interrupted: " << ec.message() << endl;
+        });  
+    }
+}
 void HttpSvr::serve_res()
 {
     server_.resource["^/store/(.+)$"]["GET"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
@@ -217,43 +237,38 @@ void HttpSvr::serve_res()
 
             SimpleWeb::CaseInsensitiveMultimap header;
             // enable Cache-Control
-            // header.emplace("Cache-Control", "max-age=86400");
+            header.emplace("Cache-Control", "max-age=86400");
             auto ifs = make_shared<ifstream>();
             ifs->open(path.string(), ifstream::in | ios::binary | ios::ate);
 
             if (*ifs)
             {
-                auto length = ifs->tellg();
+                size_t file_len = ifs->tellg();
                 ifs->seekg(0, ios::beg);
-
-                header.emplace("Content-Length", to_string(length));
-                response->write(header);
-
-                // Trick to define a recursive function within this scope (for example purposes)
-                class FileServer
+                size_t length = file_len;
+                auto it = request->header.find("Range");
+                if(it != request->header.end()) {
+                    auto range = it->second;
+                    boost::replace_all(range, "bytes=", "");
+                    auto vs = Util::split(range, "-");
+                    size_t begin = stoi( vs[0] );
+                    size_t end = vs[1] == "" ? file_len : stoi( vs[1] );
+                    // [begin, end] not [begin, end)
+                    end = std::min( file_len - 1, end );
+                    length = (end - begin) + 1;
+                    range = "bytes " + vs[0] + "-" + to_string(end) + "/" + to_string(file_len);
+                    header.emplace("Content-Range", range); 
+                    header.emplace("Accept-Ranges", "bytes");
+                    header.emplace("Content-Length", to_string(length));
+                    response->write(SimpleWeb::StatusCode::success_partial_content, header);
+                    ifs->seekg(begin, ios::beg);
+                } 
+                else 
                 {
-                  public:
-                    static void read_and_send(const shared_ptr<HttpServer::Response> &response, const shared_ptr<ifstream> &ifs)
-                    {
-                        // Read and send 128 KB at a time
-                        static vector<char> buffer(131072); // Safe when server is running on one thread
-                        streamsize read_length;
-                        if ((read_length = ifs->read(&buffer[0], static_cast<streamsize>(buffer.size())).gcount()) > 0)
-                        {
-                            response->write(&buffer[0], read_length);
-                            if (read_length == static_cast<streamsize>(buffer.size()))
-                            {
-                                response->send([response, ifs](const SimpleWeb::error_code &ec) {
-                                    if (!ec)
-                                        read_and_send(response, ifs);
-                                    else
-                                        cerr << "Connection interrupted" << endl;
-                                });
-                            }
-                        }
-                    }
-                };
-                FileServer::read_and_send(response, ifs);
+                    header.emplace("Content-Length", to_string(length));
+                    response->write(header);
+                }
+                read_and_send(response, ifs, length);
             }
             else
                 throw invalid_argument("could not read file");

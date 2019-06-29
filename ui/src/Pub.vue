@@ -3,7 +3,9 @@
 
     <header>{{title}}</header>
     <div class="content">
+      <keep-alive>
         <router-view/>
+      </keep-alive>
     </div>
     <footer>
       <div class="mb selected" @click="to_page('/', `浏览文件`, $event)">浏览文件</div>

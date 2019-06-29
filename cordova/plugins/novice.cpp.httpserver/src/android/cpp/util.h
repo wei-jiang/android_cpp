@@ -2,7 +2,8 @@
 #include "common.h"
 namespace Util
 {
-    std::vector<std::string> split(const std::string &s, char delim);
+    std::vector<std::string> split(const std::string &s, std::string delim = ",");
+    std::string join(const std::vector<std::string> &ss, std::string delim = ",");
     std::string byte2str(uint8_t *bytes, int size);
     std::string hexStr(const std::string& buff);
     std::string string_to_hex(const std::string& input);

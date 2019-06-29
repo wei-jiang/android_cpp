@@ -3,7 +3,9 @@
     
     <header>{{title}}</header>
     <div class="content">
-      <router-view/>
+      <keep-alive>
+        <router-view/>
+      </keep-alive>
     </div>
     <footer>
       <div class="mb selected" @click="to_page('/', `文件管理`, $event)">文件管理</div>
@@ -57,7 +59,7 @@ export default {
       window.db = await adb;
       window.cli_id = util.md5(`${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`);
 
-      cpp.start( 12345, () => {ws.init()}, err => {} );
+      cpp.start( 57000, () => {ws.init()}, err => {} );
       
     }
   }

@@ -52,7 +52,7 @@ export default {
         store_url = loc.protocol;
       } else {
         store_url = "http:";
-        h = "localhost:12345";
+        h = "localhost:57000";
       }
       store_url += "//" + h + "/store";
       console.log(store_url);
