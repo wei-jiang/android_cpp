@@ -5,6 +5,7 @@ import Noty from "noty";
 import Peer from 'simple-peer';
 
 import cfg from "./common/config";
+import util from "./common/util";
 class WS {
   constructor() {
 
@@ -20,23 +21,16 @@ class WS {
   }
 
   on_message(evt) {
-    const data = JSON.parse(evt.data)
-    // console.log(data)
-    if ('get_file_list' == data.cmd) {
-      vm.$emit(data.cmd, data.files);
-    } else {
-      new Noty({
-        layout: 'center',
-        text: evt.data
-        , type: 'information'
-        , closeWith: ['click', 'timeout']
-        , maxVisible: 5
-        , timeout: 3000,
-      }).show();
+    try{
+      const data = JSON.parse(evt.data)
+      // console.log(evt.data);
+      vm.$emit(data.cmd, data);
+    }catch(err){
+      console.log(JSON.stringify(err))
     }
   }
   on_error(err) {
-    console.log('onerror', err)
+    console.log('onerror: ' + err)
   }
   on_close() {
     clearInterval(this.connected)

@@ -31,7 +31,7 @@ void HttpSvr::init()
     handle_upload();
     serve_res();
     static_dir(pub_dir_);
-    post_test();
+    get_files();
     emplace_ws();
     server_.start();
 }
@@ -113,39 +113,18 @@ void HttpSvr::static_dir(const std::string &dir)
         }
     };
 }
-void HttpSvr::post_test()
+void HttpSvr::get_files()
 {
-    server_.resource["^/json$"]["POST"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
-        try
-        {
+    server_.resource["^/get_files$"]["POST"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+        try {
             ptree pt;
             read_json(request->content, pt);
-
-            auto name = pt.get<string>("firstName") + " " + pt.get<string>("lastName");
-            // cout<< name <<endl;
-            name = "some chinese"; 
-            *response << "HTTP/1.1 200 OK\r\n"
-                      << "Content-Type: charset=gbk\r\n"
-                      << "Content-Length: " << name.length() << "\r\n\r\n"
-                      << name;
+            auto path = pt.get<string>("path");
+            response->write( Util::get_files_json(path) );
         }
-        catch (const exception &e)
-        {
-            *response << "HTTP/1.1 400 Bad Request\r\nContent-Length: " << strlen(e.what()) << "\r\n\r\n"
-                      << e.what();
+        catch(const exception &e) {
+            response->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
         }
-
-        // Alternatively, using a convenience function:
-        // try {
-        //     ptree pt;
-        //     read_json(request->content, pt);
-
-        //     auto name=pt.get<string>("firstName")+" "+pt.get<string>("lastName");
-        //     response->write(name);
-        // }
-        // catch(const exception &e) {
-        //     response->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
-        // }
     };
 }
 void HttpSvr::handle_upload()

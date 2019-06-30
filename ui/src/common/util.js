@@ -1,6 +1,7 @@
 import Noty from 'noty';
 import moment from "moment";
 
+import cfg from "./config";
 // import Md5 from './md5';
 class Util {
     show_confirm(text, ok_cb) {
@@ -30,7 +31,9 @@ class Util {
         new Noty({ type: 'success', layout: 'top', text }).show();
     }
 
-
+    get_name_from_path(file_path){
+        return file_path.substring( file_path.lastIndexOf("/") + 1 );
+    }
     get_order_id() {
         return `${cli_id}-${moment().format("YYYYMMDDHHmmssSSS")}`
     }
@@ -46,6 +49,9 @@ class Util {
     }
     show_alert_top_tm(text, timeout = 3000) {
         new Noty({ timeout, layout: 'top', text }).show();
+    }
+    show_info_center_tm(text, timeout = 3000) {
+        new Noty({ timeout, layout: 'center', text, type: 'information' }).show();
     }
     show_warn_top(text) {
         new Noty({ type: 'warning', layout: 'top', text }).show();
@@ -80,7 +86,7 @@ class Util {
     async post_local(url, data) {
         const res = await $.ajax({
             type: "POST",
-            url: `http://127.0.0.1:12345/${url}`,
+            url: `http://127.0.0.1:${cfg.svr_port}/${url}`,
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(data),
             dataType: "json"

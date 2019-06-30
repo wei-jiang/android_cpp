@@ -9,8 +9,8 @@ void WsSvr::init()
 {
     handlers_["del_file"] = [this](pt::ptree &json, std::shared_ptr<WsServer::Connection> cnn) {
         const string &path = json.get<std::string>("path");
-        fs::remove(path);
-        to_all( Util::get_files_json() );
+        fs::remove_all(path);
+        to_all( Util::refresh_files_noty() );
         json.put("ret", 0);
         return_json(cnn, json);
     };
@@ -19,9 +19,21 @@ void WsSvr::init()
         const string &new_name = json.get<std::string>("new_name");
         LOGI("c++ rename %s to %s", path.c_str(), new_name.c_str());
         fs::rename(path, new_name);
-        to_all( Util::get_files_json() );
+        to_all( Util::refresh_files_noty() );
         json.put("ret", 0);
         return_json(cnn, json);
+    };
+    handlers_["create_dir"] = [this](pt::ptree &json, std::shared_ptr<WsServer::Connection> cnn) {
+        const string &path = json.get<std::string>("path");
+        LOGI("c++ create dir %s", path.c_str());
+        fs::create_directories(path);
+        to_all( Util::refresh_files_noty() );
+        json.put("ret", 0);
+        return_json(cnn, json);
+    };
+    handlers_["get_files"] = [](pt::ptree &json, std::shared_ptr<WsServer::Connection> cnn) {
+        const string &path = json.get<std::string>("path");
+        cnn->send( Util::get_files_json(path) );
     };
     ep_for_cpp();
 }
@@ -70,7 +82,11 @@ void WsSvr::ep_for_cpp()
         }
         catch(const std::exception& e)
         {
-            LOGE("ws onmessage exception: %s", e.what());
+            LOGE("ws onmessage throw exception: %s", e.what());
+            pt::ptree json;
+            json.put("ret", -1);
+            json.put("msg", e.what());
+            return_json(connection, json);
         }              
     };
 }

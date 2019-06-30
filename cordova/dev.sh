@@ -12,6 +12,6 @@ set -x
 # cordova plugin remove novice.cpp.httpserver
 # cordova plugin add ./py-plugin
 
-adb uninstall freenet.cppsvr
+# adb uninstall freenet.cppsvr
 cordova run android --device
 # cordova build android

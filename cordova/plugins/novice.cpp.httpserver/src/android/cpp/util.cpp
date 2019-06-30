@@ -71,8 +71,8 @@ std::string get_files_json(const std::string &path)
 
 	for (auto &&x : fs::directory_iterator(p))
 		v.push_back(x.path());
-
-	std::sort(v.begin(), v.end());
+	// leave client to sort
+	// std::sort(v.begin(), v.end());
 	pt::ptree files;
 	for (auto &&x : v)
 	{
@@ -101,6 +101,14 @@ std::string get_files_json(const std::string &path)
 	}
 	root.add_child("files", files);
 
+	pt::write_json(ss, root);
+	return ss.str();
+}
+std::string refresh_files_noty()
+{
+	pt::ptree root;
+	stringstream ss;
+	root.put("cmd", "refresh_file_list");
 	pt::write_json(ss, root);
 	return ss.str();
 }

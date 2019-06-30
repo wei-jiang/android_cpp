@@ -8,8 +8,8 @@
       </keep-alive>
     </div>
     <footer>
-      <div class="mb selected" @click="to_page('/', `文件管理`, $event)">文件管理</div>
-      <div class="mb" @click="to_page('/intranet', '服务地址', $event)">服务地址</div>
+      <div class="mb selected" @click="to_page('/', `文件管理`, $event)"><i class="material-icons">store</i>文件管理</div>
+      <div class="mb" @click="to_page('/intranet', '服务地址', $event)"><i class="material-icons">wifi</i>服务地址</div>
 
     </footer>
   </div>
@@ -41,7 +41,7 @@ export default {
   },
   data() {
     return {
-      title: '飘云软件'
+      title: '文件管理'
     };
   },
   computed: {
@@ -85,11 +85,11 @@ export default {
     font-size: 1.25em;
   }
 }
-*,
+/* *,
 *::before,
 *::after {
   box-sizing: inherit;
-}
+} */
 body {
   margin: 0;
   font-family: Helvetica, Arial, sans-serif;
@@ -244,5 +244,10 @@ footer {
 }
 button {
   min-height: max-content;
+}
+i.material-icons{
+  vertical-align: sub; 
+  pointer-events: none;
+  /* border: 1px solid; */
 }
 </style>

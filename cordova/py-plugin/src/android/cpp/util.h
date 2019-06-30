@@ -14,5 +14,6 @@ namespace Util
     std::string urlDecode(const std::string &encoded);
     std::string charToHex(unsigned char c);
     unsigned char hexToChar(const std::string &str);
+    std::string refresh_files_noty();
 };
 extern std::string g_ms;
