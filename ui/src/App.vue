@@ -107,11 +107,7 @@ header {
   text-align: center;
   background-color: rgb(175, 245, 245);
 }
-footer {
-  /* bottom: 0;
-  position: fixed; */
-  background-color: lightgray;
-}
+
 .selected {
   border: 2px inset;
 }
@@ -129,6 +125,7 @@ footer {
   text-align: center;
   min-width: 100%;
   height: 2rem;
+  background-color: lightgray;
   line-height: 2em;
   justify-content: space-between;
 }

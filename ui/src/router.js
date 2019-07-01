@@ -2,6 +2,8 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import Home from './views/Home.vue';
 
+import All from './views/fs/All.vue';
+import Folder from './views/fs/Folder.vue';
 Vue.use(Router);
 
 export default new Router({
@@ -10,7 +12,12 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
+      children: [
+        { path: '', name: 'all', component: All },
+        { path: 'folder', name: 'folder', component: Folder },
+        // ...other sub routes
+      ]
     },
     {
       path: '/intranet',

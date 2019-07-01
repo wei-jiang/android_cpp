@@ -6,6 +6,8 @@ import i18n from './i18n'
 import 'noty/lib/noty.css'
 import "./assets/animate.css"
 window.$ = require('jquery')
+import Draggabilly from 'draggabilly'
+window.Draggabilly = Draggabilly;
 import Pub from './Pub.vue'
 import router_pub from './router_pub'
 
