@@ -4,6 +4,9 @@ import Home from './views/Home.vue';
 
 import All from './views/fs/All.vue';
 import Folder from './views/fs/Folder.vue';
+import Image from './views/fs/Image.vue';
+import Audio from './views/fs/Audio.vue';
+import Video from './views/fs/Video.vue';
 Vue.use(Router);
 
 export default new Router({
@@ -16,6 +19,9 @@ export default new Router({
       children: [
         { path: '', name: 'all', component: All },
         { path: 'folder', name: 'folder', component: Folder },
+        { path: 'image', name: 'image', component: Image },
+        { path: 'audio', name: 'audio', component: Audio },
+        { path: 'video', name: 'video', component: Video },
         // ...other sub routes
       ]
     },

@@ -17,13 +17,19 @@
     
     <!-- {{ $t('message') }} -->
     <div class="fs-menu" @click.stop="hide_menu"> 
-       <i class="handle small material-icons">menu</i>
-       <div class="fs-dropdown">
-          <div @click="$router.replace({name: 'all'})"><i class="material-icons">image</i>图片</div>
-          <div @click="$router.replace({name: 'folder'})"><i class="material-icons">audiotrack</i>音频</div>
-          <div @click="test('视频')"><i class="material-icons">ondemand_video</i>视频</div>
-          
-        </div>
+      <i class="handle small material-icons">menu</i>
+      <div class="fs-dropdown">
+        <div @click="$root.$emit('sub_title_chg', '全部');$router.replace({name: 'all'})"><i class="material-icons">store</i>全部</div>
+        <div @click="$root.$emit('sub_title_chg', '图片');$router.replace({name: 'image'})"><i class="material-icons">image</i>图片</div>
+        <div @click="$root.$emit('sub_title_chg', '音频');$router.replace({name: 'audio'})"><i class="material-icons">audiotrack</i>音频</div>
+        <div @click="$root.$emit('sub_title_chg', '视频');$router.replace({name: 'video'})"><i class="material-icons">ondemand_video</i>视频</div>
+        
+      </div>
+      <div class="sort-dropdown">
+        <div @click="sort_by(1)">按时间排序</div>
+        <div @click="sort_by(2)">按名称排序</div>
+        <div @click="sort_by(3)">按类型排序</div>
+      </div>
     </div>
   </div>
 </template>
@@ -64,7 +70,7 @@ export default {
     // });
     this.draggie.on( 'staticClick', ()=>{
       $(".fs-menu").toggleClass("is-open");
-      console.log('staticClick');
+      // console.log('staticClick');
     });
   },
   data() {
@@ -82,6 +88,9 @@ export default {
     }
   },
   methods: {
+    sort_by(type){
+      alert(type)
+    },
     cancel_move(){
       this.restore_before_move()
     },
@@ -110,8 +119,9 @@ export default {
       $(".fs-menu").removeClass("is-open");
     },
     test(msg){
-      console.log('in test')
-      alert(msg);
+      // console.log('in test')
+      alert(cli_id);
+
     },
     on_create_dir(data) {
       if (data.ret == 0) {
@@ -165,6 +175,9 @@ export default {
 };
 </script>
 <style scoped >
+.home{
+  overflow: hidden;
+}
 .handle{
   padding: 0.35em;
 }
@@ -176,7 +189,7 @@ export default {
   position: absolute;
   /* must use left/top, or it will stretch */
   left: 70%;
-  top: 75%;
+  top: 50%;
   border-radius: 2em;
   background-color: rgb(230, 227, 227);
 }
@@ -188,6 +201,14 @@ export default {
   right: 50%;
   top: 70%;
   margin: 0;
+}
+.sort-dropdown{
+  margin: 0;
+  top: 70%;
+  white-space: nowrap;
+  position: absolute;
+  background-color: lightgray;
+  left: 50%;
 }
 .fs-dropdown > div + div {
   border-top: 1px outset;
@@ -217,27 +238,10 @@ export default {
   z-index: 7;
 }
 .main {
-  height: calc(100vh - 6rem);
+  height: calc(100vh - 6.5rem);
   overflow-y: auto;
 }
 
-.op-menu {
-  position: relative;
-}
-.op-btn {
-  font-size: 1.5em;
-  margin: 0.1em 0.5em;
-}
-.op-dropdown {
-  background-color: lightgray;
-  display: none;
-  white-space: nowrap;
-  position: absolute;
-  right: 0.9em;
-  top: 1.3em;
-  margin: 0;
-  z-index: 79;
-}
 .return,
 .new-folder {
   border: none;
@@ -248,18 +252,7 @@ export default {
   padding: 0.7em;
   margin-left: auto;
 }
-.op-dropdown > div + div {
-  border-top: 1px outset;
-}
-.op-dropdown > div {
-  /* width: 100%; */
-  text-align: center;
-  padding: 0.8em 1em;
-  font-weight: normal;
-}
-.op-menu.is-open .op-dropdown {
-  display: block;
-}
+
 
 button:disabled {
   /* background-color: #ccc; */

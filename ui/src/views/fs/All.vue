@@ -76,18 +76,7 @@ export default {
   },
   computed: {
     store_url() {
-      let loc = window.location,
-        store_url,
-        h = loc.host;
-      if (loc.protocol === "https:" || loc.protocol === "http:") {
-        store_url = loc.protocol;
-      } else {
-        store_url = "http:";
-        h = `localhost:${cfg.svr_port}`;
-      }
-      store_url += "//" + h + "/store";
-      console.log(store_url);
-      return store_url;
+
     }
   },
   methods: {
@@ -126,16 +115,16 @@ export default {
     on_rename_file(data) {
       if (data.ret == 0) {
         const n = util.get_name_from_path(data.path);
-        util.show_info_center_tm(`重命名【${n}】成功`);
+        util.show_info_center_tm(`移动/重命名【${n}】成功`);
       } else {
-        util.show_error_top(`重命名文件失败：${data.msg}`);
+        util.show_error_top(`移动/重命名文件失败：${data.msg}`);
       }
     },
     rename_file(f) {
       let new_name = prompt("新文件名:", f.name);
-      new_name = new_name.replace(/[\n\r]/gm, "");
+      if(new_name) new_name = new_name.replace(/[\n\r]/gm, "");
       if (new_name && new_name != f.name) {
-        new_name = f.path.replace(f.name, new_name);
+        new_name = util.get_dir_from_path(f.path) + new_name;
         // alert(`new_name = ${new_name}`)
         const cmd = {
           cmd: "rename_file",
@@ -153,15 +142,10 @@ export default {
       ws.send(JSON.stringify(cmd));
     },
     file_url(file_path) {
-      return file_path.replace("/sdcard/mystore", this.store_url);
+      return file_path.replace("/sdcard/mystore", util.store_url());
     },
     formatFileSize(bytes, decimalPoint) {
-      if (bytes == 0) return "0 Bytes";
-      let k = 1000,
-        dm = decimalPoint || 2,
-        sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
-        i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+      return util.formatFileSize(bytes, decimalPoint)
     }
   }
 };

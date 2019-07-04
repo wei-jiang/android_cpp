@@ -1,8 +1,8 @@
 import Noty from 'noty';
 import moment from "moment";
-
+import md5 from "./md5";
 import cfg from "./config";
-// import Md5 from './md5';
+
 class Util {
     show_confirm(text, ok_cb) {
         const n = new Noty({
@@ -25,12 +25,14 @@ class Util {
         n.show();
     }
     md5(s){
-        return (s);
+        return md5(s);
     }
     show_success_top(text) {
         new Noty({ type: 'success', layout: 'top', text }).show();
     }
-
+    get_dir_from_path(file_path){
+        return file_path.substring( 0, file_path.lastIndexOf("/") + 1 );
+    }
     get_name_from_path(file_path){
         return file_path.substring( file_path.lastIndexOf("/") + 1 );
     }
@@ -92,6 +94,42 @@ class Util {
             dataType: "json"
         });
         return res;
+    }
+    toHHMMSS(s) {
+        let sec_num = parseInt(s, 10); // don't forget the second param
+        let hours   = Math.floor(sec_num / 3600);
+        let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        let seconds = sec_num - (hours * 3600) - (minutes * 60);
+    
+        if (hours   < 10) {hours   = "0"+hours;}
+        if (minutes < 10) {minutes = "0"+minutes;}
+        if (seconds < 10) {seconds = "0"+seconds;}
+        return hours+':'+minutes+':'+seconds;
+    }
+    path2url(path){
+        return path.replace("/sdcard/mystore", this.store_url());
+    }
+    store_url() {
+        let loc = window.location,
+          store_url,
+          h = loc.host;
+        if (loc.protocol === "https:" || loc.protocol === "http:") {
+          store_url = loc.protocol;
+        } else {
+          store_url = "http:";
+          h = `localhost:${cfg.svr_port}`;
+        }
+        store_url += "//" + h + "/store";
+        // console.log(store_url);
+        return store_url;
+    }
+    formatFileSize(bytes, decimalPoint) {
+        if (bytes == 0) return "0 Bytes";
+        let k = 1000,
+            dm = decimalPoint || 2,
+            sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
+            i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
     }
     reset_cd(name) {
         db.cooldown.findAndUpdate({}, c => {

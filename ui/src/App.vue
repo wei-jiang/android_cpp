@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     
-    <header>{{title}}</header>
+    <header>{{title}}{{sub_title}}</header>
     <div class="content">
       <keep-alive>
         <router-view/>
@@ -23,12 +23,13 @@ import ws from "./ws";
 export default {
   name: "App",
   created: function() {
-
+    this.$root.$on("sub_title_chg", this.sub_title_chg);
     document.addEventListener("deviceready", this.deviceready, false);
     window.vm = this.$root;
   },
   beforeDestroy() {},
   destroyed() {
+    this.$root.$off("sub_title_chg", this.sub_title_chg);
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
@@ -41,32 +42,38 @@ export default {
   },
   data() {
     return {
-      title: '文件管理'
+      title: '文件管理',
+      sub: ''
     };
   },
   computed: {
-    caption() {
-
-      return "";
+    sub_title() {
+      return this.sub ? `(${this.sub})`:"";
     }
   },
   methods: {
-
+    sub_title_chg(sub){
+      this.sub = sub;
+    },
     to_page(name, title, e) {      
       // router.replace(location, onComplete?, onAbort?)
       this.$router.replace(name, ()=>{
         this.title = title;
         $(".mb").removeClass("selected");
         $(e.target).addClass("selected");
+        this.sub = ''
       });
       
     },
     async deviceready() {
       window.db = await adb;
-      window.cli_id = util.md5(`${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`);
-
-      cpp.start( cfg.svr_port, () => {ws.init()}, err => {} );
-      
+      window.cli_id = `${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`;
+      try {
+        window.cli_id = util.md5(window.cli_id);
+      } catch (err) {
+        console.log(err)
+      }
+      cpp.start( cfg.svr_port, () => {ws.init()}, err => {} );     
     }
   }
 };
@@ -137,7 +144,7 @@ footer {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  height: calc(100vh - 4rem);
+  height: calc(100vh - 4.0rem);
   overflow-y: auto;
 }
 /* menu */
@@ -247,4 +254,6 @@ i.material-icons{
   pointer-events: none;
   /* border: 1px solid; */
 }
+
+
 </style>

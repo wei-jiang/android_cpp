@@ -1,19 +1,14 @@
 <template>
-  <div class="folder">
-    <div class="op-btn">
-      <button @click="cancel_move">取消</button>
-      <button @click="confirm_move">确定</button>
-    </div>
-    <div class="op-btn-dummy"></div>
-    <div class="fi" v-for="f in files" @click="open_folder(f)">
-      <div v-if="f.is_dir">
-        <i class="small material-icons">folder</i>
-      </div>
+  <div class="image">
+
+    <div class="fi" v-for="f in files" >
       <div class="file-desc">
         <div>{{f.name}}</div>
         <div class="file-time">
           <div>{{f.time}}</div>
+          <div>{{formatFileSize(f.size)}}</div>
         </div>
+        <img @click="toggle_size" :src="file_url(f.path)" />
       </div>
     </div>
   </div>
@@ -23,9 +18,9 @@
 import _ from 'lodash'
 import cfg from "@/common/config";
 import util from "@/common/util";
-import ws from "@/ws";
+
 export default {
-  name: "folder",
+  name: "image",
   created: function() {
     this.$root.$on("update_file_list", this.update_file_list);
   },
@@ -33,7 +28,7 @@ export default {
     this.$root.$off("update_file_list", this.update_file_list);
   },
   mounted() {
-    this.files = this.filter_folder(g.files);
+    this.files = this.filter_img(g.files);
   },
   data() {
     return {
@@ -46,26 +41,26 @@ export default {
     }
   },
   methods: {
-    cancel_move(){
-      this.$root.$emit('cancel_move', '');
+    file_url(file_path) {
+      return file_path.replace("/sdcard/mystore", util.store_url());
     },
-    confirm_move(){
-      this.$root.$emit('confirm_move', '');
+    formatFileSize(bytes, decimalPoint) {
+      return util.formatFileSize(bytes, decimalPoint)
     },
-    filter_folder(files){
-      return _.filter(files, f=>f.is_dir);
+    filter_img(files){
+      return _.filter(files, f=>f.type && f.type.includes('image/'));
     },
-    open_folder(f) {
-        this.$root.$emit("enter_dir", f.name);
+    toggle_size(e) {
+        $(e.target).toggleClass('ori-size')
     },
     update_file_list(files) {
-      this.files = this.filter_folder(files);
+      this.files = this.filter_img(files);
     },
   }
 };
 </script>
 <style scoped >
-.folder{
+.image{
   min-height: 97%;
   position: relative;
 }
@@ -75,19 +70,7 @@ button{
   border-radius: 1em;
   padding: 0.3em;
 }
-.op-btn-dummy{
-  min-height: 3.1em;
-}
-.op-btn{
-  position: absolute;
-  /* top: -0.4em; */
-  width: 100%;
 
-  display: flex;
-  justify-content: space-around;
-  background-color: rgb(174, 209, 206);
-  opacity: 0.9;
-}
 .file-desc {
   flex: 1;
   margin: 0 0.4em;
@@ -95,6 +78,7 @@ button{
 
 .file-time {
   display: flex;
+  justify-content: space-between;
   font-size: 0.7rem;
 }
 
@@ -110,5 +94,10 @@ button:disabled {
   /* background-color: #ccc; */
   color: grey;
 }
-
+img {
+  width: 100%;
+}
+.ori-size{
+  width: auto;
+}
 </style>
