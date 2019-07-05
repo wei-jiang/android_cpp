@@ -26,9 +26,24 @@
         
       </div>
       <div class="sort-dropdown">
-        <div @click="sort_by(1)">按时间排序</div>
-        <div @click="sort_by(2)">按名称排序</div>
-        <div @click="sort_by(3)">按类型排序</div>
+        <div @click="sort_by(1)">
+          按时间排序
+          <i v-if="order_by_time=='asc'" class="material-icons">arrow_upward</i>
+          <i v-else-if="order_by_time=='desc'" class="material-icons">arrow_downward</i>
+          <i v-else class="material-icons">swap_vert</i>
+        </div>
+        <div @click="sort_by(2)">
+          按名称排序
+          <i v-if="order_by_name=='asc'" class="material-icons">arrow_upward</i>
+          <i v-else-if="order_by_name=='desc'" class="material-icons">arrow_downward</i>
+          <i v-else class="material-icons">swap_vert</i>
+        </div>
+        <div @click="sort_by(3)">
+          按类型排序
+          <i v-if="order_by_type=='asc'" class="material-icons">arrow_upward</i>
+          <i v-else-if="order_by_type=='desc'" class="material-icons">arrow_downward</i>
+          <i v-else class="material-icons">swap_vert</i>
+        </div>
       </div>
     </div>
   </div>
@@ -75,6 +90,9 @@ export default {
   },
   data() {
     return {
+      order_by_time: '',
+      order_by_name: '',
+      order_by_type: '',
       pending_f: null,
       dir: [],
       original_dir: [],
@@ -89,13 +107,40 @@ export default {
   },
   methods: {
     sort_by(type){
-      alert(type)
+      switch(type){
+        case 1:{
+          if(this.order_by_time == 'asc') this.order_by_time = 'desc';
+          else if(this.order_by_time == 'desc') this.order_by_time = 'asc';
+          else this.order_by_time = 'asc';
+          // cause desc does not work as expected, so reverse it
+          // console.log(`order_by_time: ${this.order_by_time}`)
+          g.files = _.orderBy(g.files, ['time']);
+          this.update_file_list( this.order_by_time == 'asc' ? g.files : _.reverse(g.files) );
+          break;
+        }
+        case 2:{
+          if(this.order_by_name == 'asc') this.order_by_name = 'desc';
+          else this.order_by_name = 'asc';
+          g.files = _.orderBy(g.files, ['name']); //always asc
+          this.update_file_list( this.order_by_name == 'asc' ? g.files : _.reverse(g.files) )
+          break;
+        }
+        case 3:{
+          if(this.order_by_type == 'asc') this.order_by_type = 'desc';
+          else this.order_by_type = 'asc';
+          g.files = _.orderBy(g.files, ['type']); //always asc
+          this.update_file_list( this.order_by_type == 'asc' ? g.files : _.reverse(g.files) )
+          break;
+        }
+      }
     },
     cancel_move(){
       this.restore_before_move()
     },
     confirm_move(){
-      // actually move and
+      let i = _.findIndex( g.files, f=> f.type == this.pending_f.type && f.name == this.pending_f.name );
+      if(i >= 0) return util.show_alert_top_tm('文件(夹)已存在当前目录')
+      // actually move and restore previous dir
       const cmd = {
         cmd: "rename_file",
         path: this.pending_f.path,
@@ -116,7 +161,7 @@ export default {
       });
     },
     hide_menu(){
-      $(".fs-menu").removeClass("is-open");
+      // $(".fs-menu").removeClass("is-open");
     },
     test(msg){
       // console.log('in test')
@@ -133,7 +178,11 @@ export default {
     },
     create_folder() {
       let name = prompt("新文件夹名称:", "新建文件夹");
+      if(!name) return util.show_alert_top_tm('文件夹名称不能为空')
       name = name.replace(/[\n\r]/gm, "");
+      if(!name) return util.show_alert_top_tm('文件夹名称不能为空')
+      let i = _.findIndex( g.files, f=> f.type == 'dir' && f.name == name );
+      if(i >= 0) return util.show_alert_top_tm('文件夹已存在')
       if (name) {
         const cmd = {
           cmd: "create_dir",
@@ -156,6 +205,7 @@ export default {
     },
     // ws onopen emit
     on_files_chg(data) {
+      // console.log('on_files_chg: '+JSON.stringify(data) )
       this.update_file_list(data.files);
     },
     async on_refresh() {
@@ -188,38 +238,40 @@ export default {
 .fs-menu{
   position: absolute;
   /* must use left/top, or it will stretch */
-  left: 70%;
-  top: 50%;
+  left: 60%;
+  top: 40%;
   border-radius: 2em;
   background-color: rgb(230, 227, 227);
 }
-.fs-dropdown {
+.fs-dropdown{
   background-color: lightgray;
   display: none;
   white-space: nowrap;
   position: absolute;
   right: 50%;
-  top: 70%;
+  top: 75%;
   margin: 0;
 }
 .sort-dropdown{
-  margin: 0;
-  top: 70%;
+  /* font-size: 1.06em; */
+  background-color: lightgray;
+  display: none;
   white-space: nowrap;
   position: absolute;
-  background-color: lightgray;
+  top: 75%;
+  margin: 0;
   left: 50%;
 }
-.fs-dropdown > div + div {
+.fs-dropdown > div + div, .sort-dropdown > div + div{
   border-top: 1px outset;
 }
-.fs-dropdown > div {
+.fs-dropdown > div, .sort-dropdown > div {
   /* width: 100%; */
   text-align: center;
   padding: 0.8em 1em;
   font-weight: normal;
 }
-.fs-menu.is-open .fs-dropdown {
+.fs-menu.is-open > div {
   display: block;
 }
 .cur > div:first-child {

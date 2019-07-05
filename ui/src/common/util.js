@@ -50,7 +50,15 @@ class Util {
         }).show();
     }
     show_alert_top_tm(text, timeout = 3000) {
-        new Noty({ timeout, layout: 'top', text }).show();
+        new Noty({ 
+            timeout, 
+            layout: 'top', 
+            text,
+            animation: {
+                open: 'animated pulse', // Animate.css class names
+                close: 'animated slideOutUp' // Animate.css class names
+            }
+        }).show();
     }
     show_info_center_tm(text, timeout = 3000) {
         new Noty({ timeout, layout: 'center', text, type: 'information' }).show();
@@ -85,10 +93,12 @@ class Util {
         });
         return res;
     }
-    async post_local(url, data) {
+    async post_local(url, data) {       
+        const host = location.host || `127.0.0.1:${cfg.svr_port}`;
+        console.log(`post_local host=${host}`)
         const res = await $.ajax({
             type: "POST",
-            url: `http://127.0.0.1:${cfg.svr_port}/${url}`,
+            url: `http://${host}/${url}`,
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(data),
             dataType: "json"

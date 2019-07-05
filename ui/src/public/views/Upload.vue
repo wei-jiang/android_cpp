@@ -2,7 +2,7 @@
   <div class="upload">
     <div class="progressbar" v-for="(v, k) in uploading">
       <div v-bind:style="{width: v.progress}"></div>
-      <div class="cap">{{`${k}(${v.progress})`}}</div>
+      <div class="cap">{{`${progress_cap(v)}(${v.progress})`}}</div>
     </div>
     <input type="file" multiple @change="processFile($event)">
     <button class="upload_btn" @click.prevent="open_file()" v-if="up_count==0">上传文件</button>
@@ -11,7 +11,7 @@
 
 <script>
 import QRious from "qrious";
-
+import _ from 'lodash'
 import util from "@/common/util";
 export default {
   name: "Upload",
@@ -35,6 +35,9 @@ export default {
     }
   },
   methods: {
+    progress_cap(f){
+      return `${_.truncate(f.name, {'length': 7})}${util.formatFileSize(f.size)}`
+    },
     open_file() {
       $('input[type="file"]').click();
     },
@@ -95,7 +98,7 @@ export default {
       this.up_count = event.target.files.length;
       const ups = {};
       _.each(event.target.files, f => {
-        ups[f.name] = { progress: "0%", size: f.size };
+        ups[f.name] = { progress: "0%", size: f.size, name: f.name };
         this.upload_file(f);
       });
       this.uploading = ups;
@@ -134,18 +137,19 @@ input[type="file"] {
 .progressbar > div {
   text-align: center;
   background-color: orange;
-  height: 2em;
-  line-height: 2em;
+  height: 1.5em;
+  line-height: 1.5em;
   border-radius: 0.7em;
 }
 .upload_btn {
   border-radius: 0.7em;
   display: block;
-  background-color: chartreuse;
-  color: blueviolet;
-  font-size: 2rem;
-  width: 80%;
-  margin: 0.7em auto;
+  background-color: rgb(166, 218, 218);
+  color: rgb(71, 70, 70);
+  font-weight: 900;
+  font-size: 1.7rem;
+  width: 90%;
+  margin: 0.9em auto;
   text-align: center;
 }
 </style>

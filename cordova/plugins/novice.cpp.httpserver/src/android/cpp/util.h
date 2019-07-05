@@ -15,5 +15,6 @@ namespace Util
     std::string charToHex(unsigned char c);
     unsigned char hexToChar(const std::string &str);
     std::string refresh_files_noty();
+    std::string file_type(const std::string &path);
 };
 extern std::string g_ms;

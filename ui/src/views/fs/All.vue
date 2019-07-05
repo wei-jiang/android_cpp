@@ -3,7 +3,7 @@
     
     <!-- {{ $t('message') }} -->
     <div class="fi" v-for="f in files" @click="open_file_or_folder(f)">
-      <div v-if="f.is_dir">
+      <div v-if="f.type=='dir'">
         <i class="small material-icons">folder</i>
       </div>
       <div v-else-if="f.type.includes('image/')">
@@ -22,11 +22,10 @@
         <div>{{f.name}}</div>
         <div class="file-time">
           <div>{{f.time}}</div>
-          <!-- <div v-if="!f.is_dir">{{f.type}}</div> -->
-          <div class="file-size" v-if="!f.is_dir">{{formatFileSize(f.size)}}</div>
+          <div class="file-size" v-if="f.type != 'dir'">{{formatFileSize(f.size)}}</div>
           <!-- <div>{{f.path}}</div> -->
         </div>
-        <div v-if="!f.is_dir && f.shown">
+        <div v-if="f.type!='dir' && f.shown">
           <img v-if="f.type.includes('image/')" :src="file_url(f.path)" />
           <audio v-else-if="f.type.includes('audio/')" :src="file_url(f.path)" controls  @click.stop="1"/>
           <video
@@ -46,6 +45,7 @@
         </div>
       </div>
     </div>
+    <div class="pad-bottom"></div>
   </div>
 </template>
 
@@ -81,7 +81,7 @@ export default {
   },
   methods: {
     open_file_or_folder(f) {
-      if (f.is_dir) {
+      if (f.type == 'dir') {
         this.$root.$emit("enter_dir", f.name);
       } else {
         f.shown = !f.shown;
@@ -123,6 +123,8 @@ export default {
     rename_file(f) {
       let new_name = prompt("新文件名:", f.name);
       if(new_name) new_name = new_name.replace(/[\n\r]/gm, "");
+      let i = _.findIndex( g.files, ff=> ff.type == f.type && ff.name == new_name );
+      if(i >= 0) return util.show_alert_top_tm('同名文件已存在')
       if (new_name && new_name != f.name) {
         new_name = util.get_dir_from_path(f.path) + new_name;
         // alert(`new_name = ${new_name}`)
@@ -135,11 +137,14 @@ export default {
       }
     },
     del_file(f) {
-      const cmd = {
-        cmd: "del_file",
-        path: f.path
-      };
-      ws.send(JSON.stringify(cmd));
+      util.show_confirm(`确认删除【${f.name}】吗？`, ()=>{
+        const cmd = {
+          cmd: "del_file",
+          path: f.path
+        };
+        ws.send(JSON.stringify(cmd));
+      })
+    
     },
     file_url(file_path) {
       return file_path.replace("/sdcard/mystore", util.store_url());
@@ -168,8 +173,8 @@ export default {
   display: none;
   white-space: nowrap;
   position: absolute;
-  right: 0.9em;
-  top: 1.3em;
+  right: 2.3em;
+  top: 1.2em;
   margin: 0;
   z-index: 79;
 }

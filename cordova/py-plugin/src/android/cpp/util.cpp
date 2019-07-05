@@ -42,8 +42,7 @@ std::string hexStr(const std::string &buff)
 	}
 	return s;
 }
-
-std::string get_files_json(const std::string &path)
+std::string file_type(const std::string &path)
 {
 	static magic_t handle = NULL;
 	if (!handle)
@@ -63,6 +62,10 @@ std::string get_files_json(const std::string &path)
 			LOGD("load magic database succeed!");
 		}
 	}
+	return ::magic_file(handle, path.c_str());
+}
+std::string get_files_json(const std::string &path)
+{	
 	pt::ptree root;
 	stringstream ss;
 	root.put("cmd", "get_file_list");
@@ -89,12 +92,12 @@ std::string get_files_json(const std::string &path)
 		fi.put("path", x.native());
 		if( fs::is_directory(x) )
 		{
-			fi.put("is_dir", 'Y');
+			fi.put("type", "dir");
 			files.push_back(std::make_pair("", fi));
 			continue;
 		}
-		auto type = ::magic_file(handle, x.native().c_str());
-		fi.put("type", (type ? type : "UNKOWN"));
+		auto type = file_type( x.native() );
+		fi.put("type", (!type.empty() ? type : "UNKOWN"));
 		fi.put("size", fs::file_size(x));
 		fi.put("ext", x.extension());
 		files.push_back(std::make_pair("", fi));

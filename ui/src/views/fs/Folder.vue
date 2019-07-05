@@ -6,7 +6,7 @@
     </div>
     <div class="op-btn-dummy"></div>
     <div class="fi" v-for="f in files" @click="open_folder(f)">
-      <div v-if="f.is_dir">
+      <div>
         <i class="small material-icons">folder</i>
       </div>
       <div class="file-desc">
@@ -16,6 +16,7 @@
         </div>
       </div>
     </div>
+    <div class="pad-bottom"></div>
   </div>
 </template>
 
@@ -53,7 +54,7 @@ export default {
       this.$root.$emit('confirm_move', '');
     },
     filter_folder(files){
-      return _.filter(files, f=>f.is_dir);
+      return _.filter(files, f=>f.type == 'dir');
     },
     open_folder(f) {
         this.$root.$emit("enter_dir", f.name);

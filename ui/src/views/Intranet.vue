@@ -55,10 +55,8 @@ export default {
         
       }, err=>{
 
-      });
-      
-    },
-    
+      });      
+    },  
   }
 };
 </script>

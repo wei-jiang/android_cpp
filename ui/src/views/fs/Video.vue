@@ -10,6 +10,7 @@
         </div>
       </div>
     </div>
+    <div class="pad-bottom"></div>
     <div class="video-player"> 
       <div class="drag-header">
         <div class="prompt">

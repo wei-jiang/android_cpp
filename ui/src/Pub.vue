@@ -1,5 +1,5 @@
 <template>
-  <div id="pub">
+  <div id="pub" @click="enter_full">
 
     <header>{{title}}</header>
     <div class="content">
@@ -15,9 +15,12 @@
   </div>
 </template>
 <script>
-import util from "./common/util";
+import util from "@/common/util";
 import uuidv1 from 'uuid/v1'
-import ws from "./ws";
+// import screenfull from 'screenfull'
+import ws from "@/ws";
+import vhCheck from 'vh-check'
+const test = vhCheck()
 window.cli_id = localStorage.getItem('cli_id')
 if(!window.cli_id){
   window.cli_id = uuidv1()
@@ -33,26 +36,40 @@ export default {
 
   },
   mounted() {
-
+    console.log(`navigator.language = ${navigator.language}`);
+    if(navigator.language === 'zh-CN'){
+      i18n.locale = 'zh'
+    }
   },
   data() {
     return {
-      title: ""
+      title: "文件管理",
+      sub: ''
     };
   },
   computed: {
     caption() {
-
       return "【飘云软件】";
     }
   },
   methods: {
-    
+    enter_full(){
+      // if (screenfull.enabled && !screenfull.isFullscreen) {
+      //   screenfull.request();
+      //   console.log('enter fullscreen')
+      // } else {
+      //   console.log('not support fullscreen')
+      // }     
+    },
+    sub_title_chg(sub){
+      this.sub = sub;
+    },
     to_page(name, title, e) {
       this.title = title;
       this.$router.replace(name);
       $(".mb").removeClass("selected");
       $(e.target).addClass("selected");
+      this.sub = ''
     },
 
   }
@@ -119,6 +136,7 @@ footer {
   background-repeat: no-repeat;
   background-size: cover;
   height: calc(100vh - 4rem);
+  height: calc(100vh - var(--vh-offset, 0px) - 4rem);
   overflow-y: auto;
 }
 
@@ -174,6 +192,8 @@ button{
 /* .tooltip:hover .tooltiptext {
   visibility: visible;
 } */
-
+.pad-bottom{
+  min-height: var(--vh-offset, 0px);
+}
   
 </style>

@@ -11,6 +11,7 @@
         <img @click="toggle_size" :src="file_url(f.path)" />
       </div>
     </div>
+    <div class="pad-bottom"></div>
   </div>
 </template>
 

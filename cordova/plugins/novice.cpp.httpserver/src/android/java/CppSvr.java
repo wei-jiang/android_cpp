@@ -161,10 +161,36 @@ public class CppSvr extends CordovaPlugin {
             }
         }
     }
-
+    private static String inputStreamToString(InputStream in) throws Exception{
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = in.read(buffer)) != -1) {
+            result.write(buffer, 0, length);
+        }
+        // StandardCharsets.UTF_8.name() > JDK 7
+        return result.toString("UTF-8");
+    }
+    private static InputStream filterFileContent(String srcFolder, InputStream in){
+        // Log.d(LOG_TAG, srcFolder);
+        if( srcFolder.equals("www/index.html") ){
+            try {
+                String content = inputStreamToString(in);
+                // Log.d(LOG_TAG, content);
+                content = content.replace("src=cordova.js", "");
+                // Log.d(LOG_TAG, content);
+                return new ByteArrayInputStream(content.getBytes());
+            } catch (Exception e) {
+                
+            }
+        }
+        return in;
+    }
     private static void copyAssetFile(String srcFolder, String destPath) throws IOException {
         
         InputStream in = assetManager.open(srcFolder);
+        // insert filter here
+        in = filterFileContent(srcFolder, in);
         new File(destPath).createNewFile();
         OutputStream out = new FileOutputStream(destPath);
         copyFile(in, out);

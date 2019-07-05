@@ -1,12 +1,12 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Home from './views/Home.vue';
+import Home from '@/views/Home.vue';
 
-import All from './views/fs/All.vue';
-import Folder from './views/fs/Folder.vue';
-import Image from './views/fs/Image.vue';
-import Audio from './views/fs/Audio.vue';
-import Video from './views/fs/Video.vue';
+import All from '@/views/fs/All.vue';
+import Folder from '@/views/fs/Folder.vue';
+import Image from '@/views/fs/Image.vue';
+import Audio from '@/views/fs/Audio.vue';
+import Video from '@/views/fs/Video.vue';
 Vue.use(Router);
 
 export default new Router({

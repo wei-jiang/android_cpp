@@ -1,19 +1,21 @@
 import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import './registerServiceWorker'
-import i18n from './i18n'
+
+import App from '@/App.vue'
+import router from '@/router'
+import '@/registerServiceWorker'
+import i18n from '@/i18n'
 import 'noty/lib/noty.css'
-import "./assets/animate.css"
+import "@/assets/animate.css"
 window.$ = require('jquery')
 import Draggabilly from 'draggabilly'
 window.Draggabilly = Draggabilly;
-import Pub from './Pub.vue'
-import router_pub from './router_pub'
+import Pub from '@/Pub.vue'
+import router_pub from '@/router_pub'
 
 Vue.config.productionTip = false
 window.i18n = i18n;
 window.isCordovaApp = !!window.cordova;
+
 if (window.isCordovaApp) { 
   new Vue({
     router,

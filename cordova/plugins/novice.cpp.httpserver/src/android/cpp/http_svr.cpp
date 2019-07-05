@@ -76,6 +76,8 @@ void HttpSvr::static_dir(const std::string &dir)
                 ifs->seekg(0, ios::beg);
 
                 header.emplace("Content-Length", to_string(length));
+                // text/plain wrong type
+                // header.emplace("Content-Type", Util::file_type(path.string()) );
                 response->write(header);
 
                 // Trick to define a recursive function within this scope (for example purposes)
@@ -120,7 +122,10 @@ void HttpSvr::get_files()
             ptree pt;
             read_json(request->content, pt);
             auto path = pt.get<string>("path");
-            response->write( Util::get_files_json(path) );
+            SimpleWeb::CaseInsensitiveMultimap header;
+            header.emplace("Content-Type", "application/json;charset=utf-8");
+            header.emplace("Connection", "keep-alive");
+            response->write( Util::get_files_json(path), header );
         }
         catch(const exception &e) {
             response->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
@@ -168,12 +173,12 @@ void HttpSvr::handle_upload()
             }
             writer->write( buff.c_str(), buff.length() );
             // cout << Util::string_to_hex( data ) << endl; 
-            // cout<< name <<endl;
-            string name = "蒋维"; //Util::gbk_to_utf8("��ά");
+
+            string rs = "ok";
             *response << "HTTP/1.1 200 OK\r\n"
-                    //   << "Content-Type: charset=gbk\r\n"
-                      << "Content-Length: " << name.length() << "\r\n\r\n"
-                      << name;
+                      << "Content-Type: text/html; charset=utf-8\r\n"
+                      << "Content-Length: " << rs.length() << "\r\n\r\n"
+                      << rs;
         }
         catch (const exception &e)
         {
