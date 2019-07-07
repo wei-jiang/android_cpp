@@ -7,6 +7,7 @@ import Folder from '@/views/fs/Folder.vue';
 import Image from '@/views/fs/Image.vue';
 import Audio from '@/views/fs/Audio.vue';
 import Video from '@/views/fs/Video.vue';
+import MultiSel from '@/views/fs/MultiSel.vue';
 Vue.use(Router);
 
 export default new Router({
@@ -22,6 +23,7 @@ export default new Router({
         { path: 'image', name: 'image', component: Image },
         { path: 'audio', name: 'audio', component: Audio },
         { path: 'video', name: 'video', component: Video },
+        { path: 'multi-sel', name: 'multi-sel', component: MultiSel },
         // ...other sub routes
       ]
     },
@@ -32,6 +34,11 @@ export default new Router({
       // this generates a separate chunk (intranet.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import(/* webpackChunkName: "intranet" */ './views/Intranet.vue')
-    }
+    },
+    {
+      path: '/help',
+      name: 'help',
+      component: () => import(/* webpackChunkName: "intranet" */ './views/Help.vue')
+    },
   ]
 });

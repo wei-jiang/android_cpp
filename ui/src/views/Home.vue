@@ -5,7 +5,7 @@
       <button class="return" @click="go_back" :disabled="dir.length <= 0">
         <i class="material-icons">keyboard_backspace</i>
       </button>
-      <button class="new-folder" @click="create_folder">
+      <button v-if="in_app" class="new-folder" @click="create_folder">
         <i class="material-icons">create_new_folder</i>
       </button>
     </div>
@@ -19,10 +19,10 @@
     <div class="fs-menu" @click.stop="hide_menu"> 
       <i class="handle small material-icons">menu</i>
       <div class="fs-dropdown">
-        <div @click="$root.$emit('sub_title_chg', '全部');$router.replace({name: 'all'})"><i class="material-icons">store</i>全部</div>
-        <div @click="$root.$emit('sub_title_chg', '图片');$router.replace({name: 'image'})"><i class="material-icons">image</i>图片</div>
-        <div @click="$root.$emit('sub_title_chg', '音频');$router.replace({name: 'audio'})"><i class="material-icons">audiotrack</i>音频</div>
-        <div @click="$root.$emit('sub_title_chg', '视频');$router.replace({name: 'video'})"><i class="material-icons">ondemand_video</i>视频</div>
+        <div class="all disabled" @click="switch_page('全部', 'all')"><i class="material-icons">store</i>全部</div>
+        <div class="image" @click="switch_page('图片', 'image')"><i class="material-icons">image</i>图片</div>
+        <div class="audio" @click="switch_page('音频', 'audio')"><i class="material-icons">audiotrack</i>音频</div>
+        <div class="video" @click="switch_page('视频', 'video')"><i class="material-icons">ondemand_video</i>视频</div>
         
       </div>
       <div class="sort-dropdown">
@@ -44,6 +44,10 @@
           <i v-else-if="order_by_type=='desc'" class="material-icons">arrow_downward</i>
           <i v-else class="material-icons">swap_vert</i>
         </div>
+        <div v-if="in_app" class="multi-sel" @click="switch_page('多选', 'multi-sel')">
+          多选
+          <i class="material-icons">select_all</i>
+        </div>
       </div>
     </div>
   </div>
@@ -63,8 +67,10 @@ export default {
     this.$root.$on("create_dir", this.on_create_dir);
     this.$root.$on("refresh_file_list", this.on_refresh);
     this.$root.$on('move_to', this.move_to);
-    this.$root.$on('cancel_move', this.cancel_move);
+    this.$root.$on('cancel', this.cancel);
     this.$root.$on('confirm_move', this.confirm_move);
+
+    this.in_app = util.in_app();
   },
   destroyed() {
     this.$root.$off("get_file_list", this.on_files_chg);
@@ -72,8 +78,16 @@ export default {
     this.$root.$off("create_dir", this.on_create_dir);
     this.$root.$off("refresh_file_list", this.on_refresh);
     this.$root.$off('move_to', this.move_to);
-    this.$root.$off('cancel_move', this.cancel_move);
+    this.$root.$off('cancel', this.cancel);
     this.$root.$off('confirm_move', this.confirm_move);
+  },
+  watch: {
+    '$route' (to, from) {
+      // console.log(`from=${JSON.stringify(from.name)}`)
+      // console.log(`to=${JSON.stringify(to.name)}`)
+      $(`.fs-menu > div > div`).removeClass('disabled')
+      $(`.${to.name}`).addClass('disabled')
+    }
   },
   mounted() {
     this.draggie = new Draggabilly('.fs-menu', {
@@ -90,10 +104,12 @@ export default {
   },
   data() {
     return {
+      refreshing: false,
       order_by_time: '',
       order_by_name: '',
       order_by_type: '',
-      pending_f: null,
+      pending_f: [],
+      original_page: 'all',
       dir: [],
       original_dir: [],
     };
@@ -106,6 +122,11 @@ export default {
     }
   },
   methods: {
+    switch_page(sub, name){
+      this.$root.$emit('sub_title_chg', sub);
+      this.$router.replace({name: name})
+    },
+
     sort_by(type){
       switch(type){
         case 1:{
@@ -134,31 +155,51 @@ export default {
         }
       }
     },
-    cancel_move(){
+    cancel(){
+      this.original_page = 'all'
       this.restore_before_move()
     },
     confirm_move(){
-      let i = _.findIndex( g.files, f=> f.type == this.pending_f.type && f.name == this.pending_f.name );
+      let i = _.findIndex( g.files, f=> f.type == this.pending_f[0].type && f.name == this.pending_f[0].name );
       if(i >= 0) return util.show_alert_top_tm('文件(夹)已存在当前目录')
       // actually move and restore previous dir
-      const cmd = {
-        cmd: "rename_file",
-        path: this.pending_f.path,
-        new_name: this.cur_dir + this.pending_f.name
-      };
-      ws.send(JSON.stringify(cmd));
+      for(let f of this.pending_f){
+        const cmd = {
+          cmd: "rename_file",
+          path: f.path,
+          new_name: this.cur_dir + f.name
+        };
+        ws.send(JSON.stringify(cmd));
+      }
       this.restore_before_move()
     },
     restore_before_move(){
       this.dir = this.original_dir;
-      this.$router.replace({name: 'all'});
+      this.$router.replace({name: this.original_page});
       this.on_refresh();
     },
     move_to(f){
+      this.pending_f = [];
       this.original_dir = _.cloneDeep(this.dir);
-      this.$router.replace('folder', ()=>{
-        this.pending_f = f;
-      });
+      const cr = this.$router.currentRoute;
+      // console.log(`cr.name=${cr.name}`)
+      this.original_page = cr.name;
+      if(f){
+        this.$router.replace('folder', ()=>{
+          this.pending_f.push(f);
+        });
+      } else {
+        // 多选
+        const sel_fs = _.filter(g.files, ff=>ff.sel);
+        // console.log('多选移动： ' + JSON.stringify(sel_fs))
+        if(sel_fs.length == 0){
+          util.show_alert_top_tm('没有选择文件')
+        } else {
+          this.$router.replace('folder', ()=>{
+            this.pending_f = sel_fs;
+          });
+        }
+      }     
     },
     hide_menu(){
       // $(".fs-menu").removeClass("is-open");
@@ -196,6 +237,7 @@ export default {
       this.on_refresh();
     },
     on_enter_dir(name) {
+      if(this.refreshing) return;
       this.dir.push(name);
       this.on_refresh();
     },
@@ -210,6 +252,7 @@ export default {
     },
     async on_refresh() {
       // console.log(`refresh ${this.cur_dir}`);
+      this.refreshing = true;
       try {
         const res = await util.post_local("get_files", {
           path: this.cur_dir
@@ -219,6 +262,7 @@ export default {
       } catch (err) {
         console.log(`refresh ${this.cur_dir} failed: ${JSON.stringify(err)}`);
       }
+      this.refreshing = false;
     },
     
   }
@@ -238,7 +282,7 @@ export default {
 .fs-menu{
   position: absolute;
   /* must use left/top, or it will stretch */
-  left: 60%;
+  left: 55%;
   top: 40%;
   border-radius: 2em;
   background-color: rgb(230, 227, 227);
@@ -249,7 +293,7 @@ export default {
   white-space: nowrap;
   position: absolute;
   right: 50%;
-  top: 75%;
+  top: 80%;
   margin: 0;
 }
 .sort-dropdown{
@@ -258,7 +302,7 @@ export default {
   display: none;
   white-space: nowrap;
   position: absolute;
-  top: 75%;
+  top: 80%;
   margin: 0;
   left: 50%;
 }
@@ -304,11 +348,16 @@ export default {
   padding: 0.7em;
   margin-left: auto;
 }
-
-
 button:disabled {
   /* background-color: #ccc; */
   color: grey;
+}
+div.disabled
+{
+  pointer-events: none;
+  /* for "disabled" effect */
+  opacity: 0.5;
+  background: #CCC;
 }
 
 </style>

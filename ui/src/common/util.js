@@ -80,6 +80,9 @@ class Util {
         }
         return hash;
     }
+    in_app(){
+        return window.location.href.startsWith("file://");
+    }
     slice_n_from_end(str, n = 4){
         return str.slice( str.length - n );
     }
@@ -95,10 +98,11 @@ class Util {
     }
     async post_local(url, data) {       
         const host = location.host || `127.0.0.1:${cfg.svr_port}`;
-        console.log(`post_local host=${host}`)
+        url = `http://${host}/${url}`;
+        console.log(`post_local uro=${url}`)
         const res = await $.ajax({
             type: "POST",
-            url: `http://${host}/${url}`,
+            url,
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(data),
             dataType: "json"

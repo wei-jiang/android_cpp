@@ -14,6 +14,11 @@ FreeNet::~FreeNet() {}
 
 int FreeNet::start_svr(int port, const string& path)
 {
+    if( !g_ms.empty() )
+    {
+        LOGI("cpp server already started, do nothing");
+        return 0;
+    }
     LOGI("in FreeNet::start_svr(int port): %d, static path : %s", port, path.c_str());
     std::thread t([=]() {
         UdpSvr us(port);

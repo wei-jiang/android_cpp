@@ -1,5 +1,5 @@
 <template>
-  <div class="all" @click.prevent="close_menu">
+  <div class="All" @click.prevent="close_menu">
     
     <!-- {{ $t('message') }} -->
     <div class="fi" v-for="f in files" @click="open_file_or_folder(f)">
@@ -36,7 +36,7 @@
           <a v-else :href="file_url(f.path)" target="_blank" @click.stop="1">打开文件</a>
         </div>
       </div>
-      <div class="op-menu" @click.stop="toggle_menu">
+      <div v-if="in_app" class="op-menu" @click.stop="toggle_menu">
         <div class="op-btn">&#8942;</div>
         <div class="op-dropdown">
           <div @click="del_file(f)">删&nbsp;除</div>
@@ -54,11 +54,13 @@ import cfg from "@/common/config";
 import util from "@/common/util";
 import ws from "@/ws";
 export default {
-  name: "all",
+  name: "All",
   created: function() {
     this.$root.$on("del_file", this.on_del_file);
     this.$root.$on("rename_file", this.on_rename_file);
     this.$root.$on("update_file_list", this.update_file_list);
+
+    this.in_app = util.in_app();
   },
   destroyed() {
     this.$root.$off("del_file", this.on_del_file);

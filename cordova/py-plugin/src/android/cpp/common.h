@@ -105,3 +105,4 @@ public:
 };
 
 extern std::shared_ptr<boost::asio::io_context> g_io;
+extern std::string g_ms;

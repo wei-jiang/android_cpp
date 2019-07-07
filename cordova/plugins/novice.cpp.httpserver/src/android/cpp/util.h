@@ -17,4 +17,3 @@ namespace Util
     std::string refresh_files_noty();
     std::string file_type(const std::string &path);
 };
-extern std::string g_ms;

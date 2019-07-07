@@ -1,7 +1,7 @@
 <template>
   <div class="folder">
     <div class="op-btn">
-      <button @click="cancel_move">取消</button>
+      <button @click="cancel">取消</button>
       <button @click="confirm_move">确定</button>
     </div>
     <div class="op-btn-dummy"></div>
@@ -47,8 +47,8 @@ export default {
     }
   },
   methods: {
-    cancel_move(){
-      this.$root.$emit('cancel_move', '');
+    cancel(){
+      this.$root.$emit('cancel', '');
     },
     confirm_move(){
       this.$root.$emit('confirm_move', '');

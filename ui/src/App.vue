@@ -2,6 +2,17 @@
   <div id="app">
     
     <header>{{title}}{{sub_title}}</header>
+    <nav class="menu" id="main-menu">
+      <div class="menu-toggle" @click="toggle_menu">主菜单</div>
+      <div class="menu-dropdown">
+        <ul class="nav-menu">
+          <li>
+            <a class="mb" @click="to_page('/help', '帮助', $event)"><i class="material-icons">help_outline</i>帮助</a>
+          </li>
+
+        </ul>
+      </div>
+    </nav>
     <div class="content">
       <keep-alive>
         <router-view/>
@@ -52,6 +63,10 @@ export default {
     }
   },
   methods: {
+    toggle_menu() {
+      const menu = document.getElementById("main-menu");
+      menu.classList.toggle("is-open");
+    },
     sub_title_chg(sub){
       this.sub = sub;
     },
@@ -61,7 +76,8 @@ export default {
         this.title = title;
         $(".mb").removeClass("selected");
         $(e.target).addClass("selected");
-        this.sub = ''
+        this.sub = '';
+        $("#main-menu").removeClass("is-open");
       });
       
     },
@@ -154,7 +170,7 @@ footer {
 .menu-toggle {
   position: absolute;
   top: -0.75em;
-  right: 0.2em;
+  left: 0;
   border: 0;
   background-color: transparent;
   font-size: 2.5em;
@@ -176,8 +192,8 @@ footer {
 .menu-dropdown {
   display: none;
   position: absolute;
-  right: 0;
-  left: 50%;
+  left: 0.7em;
+  width: 40%;
   margin: 0;
   z-index: 79;
 }
