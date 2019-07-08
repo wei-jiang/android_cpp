@@ -37,10 +37,6 @@ import static java.util.Arrays.copyOfRange;
 import java.io.*;
 import java.util.*;
 
-import my.free.net.IntVector;
-import my.free.net.StringVector;
-import my.free.net.FreeNet;
-
 
 public class CppSvr extends CordovaPlugin {
     protected static final String TAG = "freenet";
@@ -48,13 +44,17 @@ public class CppSvr extends CordovaPlugin {
         // Use the name of the Java wrapper library (which is already linked to the original library)
         System.loadLibrary("cpp_lib");
     }
-    String [] permissions = { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_NETWORK_STATE };
-    int listenPort;
+    String [] permissions = { 
+        Manifest.permission.WRITE_EXTERNAL_STORAGE, 
+        Manifest.permission.ACCESS_NETWORK_STATE,
+        Manifest.permission.FOREGROUND_SERVICE,
+        Manifest.permission.WAKE_LOCK
+    };
+    static int listenPort;
     CallbackContext cb;
-    private String mPubDir;
+    static String mPubDir;
+    static String mMagicPath;
     
-    private String mMagicPath;
-    private FreeNet mCpp;
     private static final String LOG_TAG = "cpp_svr";
     private CordovaWebView mWebView;
     private static AssetManager assetManager = null;
@@ -72,7 +72,6 @@ public class CppSvr extends CordovaPlugin {
         mWebView = webView;
         assetManager = getActivity().getBaseContext().getAssets();
         self = this;
-        mCpp = new FreeNet();
         try{
             ContextWrapper c = new ContextWrapper(getActivity().getBaseContext());
             mPubDir = c.getFilesDir().getPath() + "/www";
@@ -105,31 +104,39 @@ public class CppSvr extends CordovaPlugin {
                 System.exit(0);
             }
         }
-        int ret = mCpp.start_svr(listenPort, mPubDir);
-        Log.i(LOG_TAG, "start c++ server return : " +  ret);
-        this.cb.success("start c++ server return : " +  ret);
+        startService();
+    }
+    void startService(){
+        Activity activity = cordova.getActivity();
+        Intent intent = new Intent(activity, ForegroundService.class);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+            activity.getApplicationContext().startForegroundService(intent);
+            Log.i(LOG_TAG, "activity.getApplicationContext().startForegroundService");
+        }else{
+            activity.getApplicationContext().startService(intent);
+            Log.i(LOG_TAG, "activity.getApplicationContext().startService");
+        }
+        this.cb.success("http service started");
+        
     }
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if (action.equals("start")) {
             listenPort = args.getInt(0);
+            this.cb = callbackContext;
             if(cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))
             {
-                int ret = mCpp.start_svr(listenPort, mPubDir);
-                // show("start c++ server return : " +  ret);
-                callbackContext.success("start c++ server return : " +  ret);
-                // callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ret ));
+                startService();
             }
             else
             {
                 // show("需要访问sd卡以存取文件！");
                 cordova.requestPermissions(this, 0, permissions);
-                this.cb = callbackContext;
             }
         } else if(action.equals("echoAsync")) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
-                    String str = mCpp.get_str();
+                    String str = "mCpp.get_str()";
                     callbackContext.sendPluginResult( 
                         new PluginResult(
                             PluginResult.Status.OK, args.optString(0)+" from java; cpp ret="+str

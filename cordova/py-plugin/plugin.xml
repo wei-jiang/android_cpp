@@ -22,11 +22,16 @@
 			<uses-permission android:name="android.permission.INTERNET" />
 			<!-- <uses-feature android:name="android.hardware.camera" />
 			<uses-feature android:name="android.hardware.camera.autofocus" /> -->
-
+			<uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 		</config-file>
 
 		<source-file src="src/android/java/CppSvr.java" target-dir="app/src/main/java/freego/novice" />
-
+		<source-file src="src/android/java/ForegroundService.java" target-dir="app/src/main/java/freego/novice" />
+		<config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <service android:name="freego.novice.ForegroundService" android:stopWithTask="true"/>
+        </config-file>
 		<source-file src="src/android/cpp/cpp_net.cpp" target-dir="app/src/main/cpp/" />
         <source-file src="src/android/cpp/cpp_net.h" target-dir="app/src/main/cpp/" />
         <source-file src="src/android/cpp/cpp_net.i" target-dir="app/src/main/cpp/" />
@@ -42,7 +47,8 @@
 		<source-file src="src/android/cpp/util.cpp" target-dir="app/src/main/cpp/" />
         <source-file src="src/android/cpp/util.h" target-dir="app/src/main/cpp/" />
 		<source-file src="src/android/CMakeLists.txt" target-dir="app/" />
-
+		<!-- notification icon -->
+		<resource-file src="src/android/res/icon.png" target="app/src/main/res/drawable/icon.png" />
         <framework src="src/android/build.gradle" custom="true" type="gradleReference" />
 	</platform>
 </plugin>
