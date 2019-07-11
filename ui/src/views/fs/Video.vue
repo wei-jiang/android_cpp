@@ -59,7 +59,6 @@ export default {
     }
   },
   methods: {
-    
     formatFileSize(bytes, decimalPoint) {
       return util.formatFileSize(bytes, decimalPoint)
     },

@@ -271,6 +271,7 @@ export default {
 <style scoped >
 .home{
   overflow: hidden;
+  position: relative;
 }
 .handle{
   padding: 0.35em;

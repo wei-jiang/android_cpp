@@ -38,6 +38,14 @@ import java.io.*;
 import java.util.*;
 
 
+import android.os.Environment;
+import android.net.Uri;
+import android.net.ConnectivityManager;
+import android.os.PowerManager;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
+
+
 public class CppSvr extends CordovaPlugin {
     protected static final String TAG = "freenet";
     static {
@@ -46,9 +54,9 @@ public class CppSvr extends CordovaPlugin {
     }
     String [] permissions = { 
         Manifest.permission.WRITE_EXTERNAL_STORAGE, 
-        Manifest.permission.ACCESS_NETWORK_STATE,
-        Manifest.permission.FOREGROUND_SERVICE,
-        Manifest.permission.WAKE_LOCK
+        Manifest.permission.ACCESS_NETWORK_STATE
+        // ,Manifest.permission.FOREGROUND_SERVICE
+        // ,Manifest.permission.WAKE_LOCK
     };
     static int listenPort;
     CallbackContext cb;
@@ -99,7 +107,8 @@ public class CppSvr extends CordovaPlugin {
         {
             if(r == PackageManager.PERMISSION_DENIED)
             {
-                // this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+                Log.i(LOG_TAG, "permissions denied, exit-----------------------");
+                // this.cb.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
                 getActivity().finish();
                 System.exit(0);
             }
@@ -121,7 +130,93 @@ public class CppSvr extends CordovaPlugin {
     }
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (action.equals("start")) {
+        Context context = cordova.getActivity().getApplicationContext();
+        String packageName = context.getPackageName();
+        if (action.equals("isAndroidVerGt")) {
+            int v = args.getInt(0);
+            boolean result = Build.VERSION.SDK_INT > v;
+            // callbackContext.success(Build.VERSION.SDK_INT>v);
+            // Log level: v, d, i, w, e, huawei not show debug info, so change to warning
+            // Log.w(LOG_TAG, String.valueOf(Build.VERSION.SDK_INT) + ">" + String.valueOf(v) + " = " + Boolean.toString(result) );
+            callbackContext.sendPluginResult(new PluginResult(Status.OK, result));
+            return true;
+        }else if (action.equals("isAndroidVerLt")) {
+            int v = args.getInt(0);
+            boolean result = Build.VERSION.SDK_INT < v;
+            // callbackContext.success(Build.VERSION.SDK_INT>v);
+            callbackContext.sendPluginResult(new PluginResult(Status.OK, result));
+            return true;
+        }else if (action.equals("isIgnoringBatteryOptimizations")) {
+            try {
+                if (Build.VERSION.SDK_INT>Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    String message ="";
+                    PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                    if (pm.isIgnoringBatteryOptimizations(packageName)) {
+                        message ="true";
+                    }
+                    else
+                    {
+                        message ="false";
+                    }
+                    callbackContext.success(message);
+                    return true;
+                }
+                else
+                {
+                    callbackContext.error("BATTERY_OPTIMIZATIONS Not available.");
+                    return false;
+                }
+            } catch (Exception e) {
+                callbackContext.error("IsIgnoringBatteryOptimizations: failed N/A");
+                return false;
+            }
+        }else if (action.equals("requestOptimizations")) {
+            try {
+                if (Build.VERSION.SDK_INT>Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    String message ="Optimizations Requested Successfully";
+                    Intent intent = new Intent();
+                    intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.setData(Uri.parse("package:" + packageName));
+                        context.startActivity(intent);
+
+                    callbackContext.success(message);
+                    return true;
+                }
+                else
+                {
+                    callbackContext.error("BATTERY_OPTIMIZATIONS Not available.");
+                    return false;
+                }
+            } catch (Exception e) {
+                callbackContext.error("N/A");
+                return false;
+            }
+        } else if (action.equals("requestOptimizationsMenu")) {
+            try {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+
+                    Intent intent = new Intent();
+                    PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                    if (pm.isIgnoringBatteryOptimizations(packageName)){
+                        intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(intent);
+                    }
+
+                    callbackContext.success("requested");
+                    return true;
+                }
+                else
+                {
+                    callbackContext.error("BATTERY_OPTIMIZATIONS Not available.");
+                    return false;
+                }
+            } catch (Exception e) {
+                callbackContext.error("RequestOptimizationsMenu: failed N/A");
+                return false;
+            }
+        } else if (action.equals("start")) {
             listenPort = args.getInt(0);
             this.cb = callbackContext;
             if(cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))

@@ -2,7 +2,7 @@
   <div class="folder">
     <div class="op-btn">
       <button @click="cancel">取消</button>
-      <button @click="confirm_move">确定</button>
+      <button @click="confirm_move">移动</button>
     </div>
     <div class="op-btn-dummy"></div>
     <div class="fi" v-for="f in files" @click="open_folder(f)">
@@ -68,7 +68,6 @@ export default {
 <style scoped >
 .folder{
   min-height: 97%;
-  position: relative;
 }
 
 button{

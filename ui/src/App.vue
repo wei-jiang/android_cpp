@@ -7,7 +7,7 @@
       <div class="menu-dropdown">
         <ul class="nav-menu">
           <li>
-            <a class="mb" @click="to_page('/help', '帮助', $event)"><i class="material-icons">help_outline</i>帮助</a>
+            <a class="mb" @click="to_page('/help', '帮助', $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;帮助</a>
           </li>
 
         </ul>
@@ -193,7 +193,8 @@ footer {
   display: none;
   position: absolute;
   left: 0.7em;
-  width: 40%;
+  /* width: 40%; */
+  padding: 0 1.7em;
   margin: 0;
   z-index: 79;
 }

@@ -2,8 +2,8 @@
   <div class="multi-sel">
     <div class="op-btn">
       <button @click="cancel">取消</button>
-      <button @click="del_file">删除</button>
-      <button @click="move_to">移动</button>
+      <button @click="del_file" :disabled="!is_selected">删除</button>
+      <button @click="move_to" :disabled="!is_selected">移动</button>
     </div>
     <div class="op-btn-dummy"></div>
     <!-- {{ $t('message') }} -->
@@ -59,8 +59,9 @@ export default {
     };
   },
   computed: {
-    store_url() {
-
+    is_selected() {
+      const sels = _.filter(this.files, f=>f.sel)
+      return sels.length > 0;
     }
   },
   methods: {
@@ -106,7 +107,6 @@ export default {
 <style scoped >
 .multi-sel{
   min-height: 97%;
-  position: relative;
 }
 .file-desc {
   flex: 1;
