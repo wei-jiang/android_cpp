@@ -2,10 +2,10 @@
   <div class="home">
     <div class="cur">
       <div>{{cur_dir}}</div>
-      <button class="return" @click="go_back" :disabled="dir.length <= 0">
+      <button class="green return" @click="go_back" :disabled="dir.length <= 0">
         <i class="material-icons">keyboard_backspace</i>
       </button>
-      <button v-if="in_app" class="new-folder" @click="create_folder">
+      <button v-if="in_app" class="yellow new-folder" @click="create_folder">
         <i class="material-icons">create_new_folder</i>
       </button>
     </div>
@@ -19,33 +19,33 @@
     <div class="fs-menu" @click.stop="hide_menu"> 
       <i class="handle small material-icons">menu</i>
       <div class="fs-dropdown">
-        <div class="all disabled" @click="switch_page('全部', 'all')"><i class="material-icons">store</i>全部</div>
-        <div class="image" @click="switch_page('图片', 'image')"><i class="material-icons">image</i>图片</div>
-        <div class="audio" @click="switch_page('音频', 'audio')"><i class="material-icons">audiotrack</i>音频</div>
-        <div class="video" @click="switch_page('视频', 'video')"><i class="material-icons">ondemand_video</i>视频</div>
+        <div class="all disabled" @click="switch_page($t('all'), 'all')"><i class="material-icons">store</i>{{$t('all')}}</div>
+        <div class="image" @click="switch_page($t('image'), 'image')"><i class="material-icons">image</i>{{$t('image')}}</div>
+        <div class="audio" @click="switch_page($t('audio'), 'audio')"><i class="material-icons">audiotrack</i>{{$t('audio')}}</div>
+        <div class="video" @click="switch_page($t('video'), 'video')"><i class="material-icons">ondemand_video</i>{{$t('video')}}</div>
         
       </div>
       <div class="sort-dropdown">
         <div @click="sort_by(1)">
-          按时间排序
+          {{$t('sort-by-time')}}
           <i v-if="order_by_time=='asc'" class="material-icons">arrow_upward</i>
           <i v-else-if="order_by_time=='desc'" class="material-icons">arrow_downward</i>
           <i v-else class="material-icons">swap_vert</i>
         </div>
         <div @click="sort_by(2)">
-          按名称排序
+          {{$t('sort-by-name')}}
           <i v-if="order_by_name=='asc'" class="material-icons">arrow_upward</i>
           <i v-else-if="order_by_name=='desc'" class="material-icons">arrow_downward</i>
           <i v-else class="material-icons">swap_vert</i>
         </div>
         <div @click="sort_by(3)">
-          按类型排序
+          {{$t('sort-by-type')}}
           <i v-if="order_by_type=='asc'" class="material-icons">arrow_upward</i>
           <i v-else-if="order_by_type=='desc'" class="material-icons">arrow_downward</i>
           <i v-else class="material-icons">swap_vert</i>
         </div>
-        <div v-if="in_app" class="multi-sel" @click="switch_page('多选', 'multi-sel')">
-          多选
+        <div v-if="in_app" class="multi-sel" @click="switch_page($t('multi-sel'), 'multi-sel')">
+          {{$t('multi-sel')}}
           <i class="material-icons">select_all</i>
         </div>
       </div>
@@ -161,7 +161,7 @@ export default {
     },
     confirm_move(){
       let i = _.findIndex( g.files, f=> f.type == this.pending_f[0].type && f.name == this.pending_f[0].name );
-      if(i >= 0) return util.show_alert_top_tm('文件(夹)已存在当前目录')
+      if(i >= 0) return util.show_alert_top_tm( this.$t('already-exist') )
       // actually move and restore previous dir
       for(let f of this.pending_f){
         const cmd = {
@@ -193,7 +193,7 @@ export default {
         const sel_fs = _.filter(g.files, ff=>ff.sel);
         // console.log('多选移动： ' + JSON.stringify(sel_fs))
         if(sel_fs.length == 0){
-          util.show_alert_top_tm('没有选择文件')
+          util.show_alert_top_tm( this.$t('no-selection') )
         } else {
           this.$router.replace('folder', ()=>{
             this.pending_f = sel_fs;
@@ -212,18 +212,18 @@ export default {
     on_create_dir(data) {
       if (data.ret == 0) {
         const n = util.get_name_from_path(data.path);
-        util.show_info_center_tm(`创建文件夹【${n}】成功`);
+        util.show_info_center_tm(`${this.$t('create-folder')}【${n}】${this.$t('success')}`);
       } else {
-        util.show_error_top(`创建文件夹失败：${data.msg}`);
+        util.show_error_top(`${this.$t('create-folder')}${this.$t('fail')}: ${data.msg}`);
       }
     },
     create_folder() {
-      let name = prompt("新文件夹名称:", "新建文件夹");
-      if(!name) return util.show_alert_top_tm('文件夹名称不能为空')
+      let name = prompt(this.$t('new-folder-name'), this.$t('new-folder'));
+      if(!name) return util.show_alert_top_tm(`${this.$t('new-folder-name')}${this.$t('can-not-be-empty')}`)
       name = name.replace(/[\n\r]/gm, "");
-      if(!name) return util.show_alert_top_tm('文件夹名称不能为空')
+      if(!name) return util.show_alert_top_tm(`${this.$t('new-folder-name')}${this.$t('can-not-be-empty')}`)
       let i = _.findIndex( g.files, f=> f.type == 'dir' && f.name == name );
-      if(i >= 0) return util.show_alert_top_tm('文件夹已存在')
+      if(i >= 0) return util.show_alert_top_tm(this.$t('already-exist'))
       if (name) {
         const cmd = {
           cmd: "create_dir",
@@ -261,6 +261,7 @@ export default {
         this.update_file_list(res.files);
       } catch (err) {
         console.log(`refresh ${this.cur_dir} failed: ${JSON.stringify(err)}`);
+        this.dir.pop();
       }
       this.refreshing = false;
     },

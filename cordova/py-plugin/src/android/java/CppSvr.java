@@ -36,18 +36,27 @@ import org.json.JSONObject;
 import static java.util.Arrays.copyOfRange;
 import java.io.*;
 import java.util.*;
-
+import java.lang.Runnable;
 
 import android.os.Environment;
 import android.net.Uri;
 import android.net.ConnectivityManager;
 import android.os.PowerManager;
+import android.os.Handler;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.view.View;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 
 
 public class CppSvr extends CordovaPlugin {
     protected static final String TAG = "freenet";
+    private PowerManager.WakeLock wakeLock = null;
+	private PowerManager powerManager = null;
+    private Handler handler;
+	private PendingIntent wakeupIntent;
+	private CordovaWebView webView;
     static {
         // Use the name of the Java wrapper library (which is already linked to the original library)
         System.loadLibrary("cpp_lib");
@@ -74,11 +83,61 @@ public class CppSvr extends CordovaPlugin {
         String str = new String(byteArray);
         return str;
     }
-
+    private PluginResult acquire_partial_lock() {
+		PluginResult result = null;
+		if (this.wakeLock == null) {
+			this.wakeLock = this.powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AudioMix");
+			try {
+                this.wakeLock.acquire();
+                Log.i(LOG_TAG, "acquire PARTIAL_WAKE_LOCK success");
+				result = new PluginResult(PluginResult.Status.OK);
+			}
+			catch( Exception e ) {
+                Log.i(LOG_TAG, "acquire PARTIAL_WAKE_LOCK failed", e);
+				this.wakeLock = null;
+				result = new PluginResult(PluginResult.Status.ERROR,"Can't acquire wake-lock - check your permissions!");
+			}
+		}
+		else {
+			result = new PluginResult(PluginResult.Status.ILLEGAL_ACCESS_EXCEPTION,"WakeLock already active - release first");
+		}
+		return result;
+	}
+    private final Runnable heartbeat = new Runnable() {
+	    public void run() {
+	        try {
+	        	// Log.d(LOG_TAG, "About to declare ourselves VISIBLE");
+	        	mWebView.getEngine().getView().dispatchWindowVisibilityChanged(View.VISIBLE);
+	        	// if sdk is 23 (android 6) or greater
+				if(android.os.Build.VERSION.SDK_INT > 22){
+		            if (wakeLock != null && powerManager != null && powerManager.isDeviceIdleMode()) {
+		                Log.i(LOG_TAG, "Poking location service");
+		                try {
+		                    wakeupIntent.send();
+		                } catch (SecurityException e) {
+		                    Log.d(LOG_TAG, "SecurityException : Heartbeat location manager keep-alive failed");
+		                } catch (PendingIntent.CanceledException e) {
+		                    Log.d(LOG_TAG, "PendingIntent.CanceledException : Heartbeat location manager keep-alive failed");
+		                }
+		            }
+		        } else {
+                    Log.d(LOG_TAG, "below android 6(api 23)");
+                }
+	        } finally {
+	            if (handler != null) {
+	                handler.postDelayed(this, 10000);
+	            }
+	        }
+	    }
+	};
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
+        Context context = cordova.getActivity().getApplicationContext();
         mWebView = webView;
         assetManager = getActivity().getBaseContext().getAssets();
+        this.powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
+		handler = new Handler();
+	    wakeupIntent = PendingIntent.getBroadcast( context , 0, new Intent("com.android.internal.location.ALARM_WAKEUP"), 0);
         self = this;
         try{
             ContextWrapper c = new ContextWrapper(getActivity().getBaseContext());
@@ -126,7 +185,9 @@ public class CppSvr extends CordovaPlugin {
             Log.i(LOG_TAG, "activity.getApplicationContext().startService");
         }
         this.cb.success("http service started");
-        
+        PluginResult result = this.acquire_partial_lock();
+        handler.postDelayed(heartbeat, 10000);
+        // this.cb.sendPluginResult(result);
     }
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {

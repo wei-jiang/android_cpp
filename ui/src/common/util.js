@@ -99,7 +99,7 @@ class Util {
     async post_local(url, data) {       
         const host = location.host || `127.0.0.1:${cfg.svr_port}`;
         url = `http://${host}/${url}`;
-        console.log(`post_local uro=${url}`)
+        // console.log(`post_local url=${url}`)
         const res = await $.ajax({
             type: "POST",
             url,

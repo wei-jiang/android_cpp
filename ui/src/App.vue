@@ -3,13 +3,12 @@
     
     <header>{{title}}{{sub_title}}</header>
     <nav class="menu" id="main-menu">
-      <div class="menu-toggle" @click="toggle_menu">主菜单</div>
+      <div class="menu-toggle" @click="toggle_menu">{{ $t('main-menu') }}</div>
       <div class="menu-dropdown">
         <ul class="nav-menu">
           <li>
-            <a class="mb" @click="to_page('/help', '帮助', $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;帮助</a>
+            <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
-
         </ul>
       </div>
     </nav>
@@ -19,8 +18,8 @@
       </keep-alive>
     </div>
     <footer>
-      <div class="mb selected" @click="to_page('/', `文件管理`, $event)"><i class="material-icons">store</i>文件管理</div>
-      <div class="mb" @click="to_page('/intranet', '服务地址', $event)"><i class="material-icons">wifi</i>服务地址</div>
+      <div class="mb selected" @click="to_page('/', $t('file-mgr'), $event)"><i class="material-icons">store</i>{{$t('file-mgr')}}</div>
+      <div class="mb" @click="to_page('/intranet', $t('svr-addr'), $event)"><i class="material-icons">wifi</i>{{$t('svr-addr')}}</div>
 
     </footer>
   </div>
@@ -44,16 +43,11 @@ export default {
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
-    console.log(`navigator.language = ${navigator.language}`);
-    if(navigator.language === 'zh-CN'){
-      i18n.locale = 'zh'
-    }
-    // "navigator.language = zh-CN"
-    // "navigator.language = en-US"
+    
   },
   data() {
     return {
-      title: '文件管理',
+      title: this.$t("file-mgr"),
       sub: ''
     };
   },
@@ -73,13 +67,13 @@ export default {
     to_page(name, title, e) {      
       // router.replace(location, onComplete?, onAbort?)
       this.$router.replace(name, ()=>{
-        this.title = title;
-        $(".mb").removeClass("selected");
-        $(e.target).addClass("selected");
-        this.sub = '';
-        $("#main-menu").removeClass("is-open");
+        
       });
-      
+      this.title = title;
+      $(".mb").removeClass("selected");
+      $(e.target).addClass("selected");
+      this.sub = '';
+      $("#main-menu").removeClass("is-open");
     },
     async deviceready() {
       window.db = await adb;
@@ -272,5 +266,13 @@ i.material-icons{
   /* border: 1px solid; */
 }
 
-
+.yellow-new{
+  color: rgb(87, 67, 1);
+}
+.yellow{
+  color: rgb(199, 173, 87);
+}
+.green{
+  color: green;
+}
 </style>

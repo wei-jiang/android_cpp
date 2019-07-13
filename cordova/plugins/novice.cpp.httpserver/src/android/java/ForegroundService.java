@@ -50,7 +50,7 @@ public class ForegroundService extends Service {
     }
     private void keepAwake() {
         PowerManager powerMgr = (PowerManager)getSystemService(POWER_SERVICE);
-        wakeLock = powerMgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "BackgroundMode");
+        wakeLock = powerMgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AudioMix");
         wakeLock.acquire();
     } 
     private void sleepWell()
@@ -69,7 +69,7 @@ public class ForegroundService extends Service {
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(LOG_TAG, "in ForegroundService::onStartCommand");
+        // Log.i(LOG_TAG, "in ForegroundService::onStartCommand");
         return START_STICKY;
     }
 
@@ -114,7 +114,7 @@ public class ForegroundService extends Service {
         startForeground(NOTIFICATION_ID, notification.build());
             
         int ret = mCpp.start_svr(CppSvr.listenPort, CppSvr.mPubDir);
-        Log.i(LOG_TAG, "in startFGService(), start c++ server return : " +  ret);
+        // Log.i(LOG_TAG, "in startFGService(), start c++ server return : " +  ret);
         
     }
 

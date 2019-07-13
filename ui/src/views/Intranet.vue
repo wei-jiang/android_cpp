@@ -5,25 +5,24 @@
       <!-- can not use v-if, cause not be able to get element -->
       <canvas id="addr_qr"></canvas>
       <p>
-        请连入
-        <b>同一内网</b>，用浏览器上传/查看文件
+        {{$t('please-cnn')}}<b>{{$t('same-innet')}}</b>{{$t('browse')}}
       </p>
-      <p class="prompt">提示：手机接上充电器后可当服务器用；否则过一段时间会自动休眠，导致文件服务器不可访问。</p>
+      <p>{{$t('upload-prompt')}}</p>
       <div v-if="isAboveAndroid6">
-        <div>或把应用<i>加入</i>电源管理白名单</div>
-        <button @click="req_whitelist">加入白名单</button>
+        <div>{{$t('upload-try')}}</div>
+        <button @click="req_whitelist">{{$t('whitelist')}}</button>
       </div>
     </div>
     <div v-show="!wifi_ip">
-      <h3>wifi未连接，请连入内网后重试！</h3>
+      <h3>{{$t('wifi-disconnected')}}</h3>
     </div>
   </div>
 </template>
 
 <script>
 import QRious from "qrious";
-import cfg from "../common/config";
-import util from "../common/util";
+import cfg from "@/common/config";
+import util from "@/common/util";
 export default {
   name: "Intranet",
   props: {
@@ -102,8 +101,8 @@ canvas {
   width: 200px;
   height: 200px;
 }
-.prompt {
-  margin: 2em;
+P {
+  margin: 0.7em 1.7em;
   text-align: left;
 }
 .intranet {

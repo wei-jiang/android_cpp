@@ -40,5 +40,10 @@ export default new Router({
       name: 'help',
       component: () => import(/* webpackChunkName: "intranet" */ './views/Help.vue')
     },
+    {
+      path: '/help-en',
+      name: 'help-en',
+      component: () => import(/* webpackChunkName: "intranet" */ './views/Help_en.vue')
+    },
   ]
 });

@@ -1,8 +1,8 @@
 <template>
   <div class="folder">
     <div class="op-btn">
-      <button @click="cancel">取消</button>
-      <button @click="confirm_move">移动</button>
+      <button @click="cancel">{{$t('cancel')}}</button>
+      <button @click="confirm_move">{{$t('move')}}</button>
     </div>
     <div class="op-btn-dummy"></div>
     <div class="fi" v-for="f in files" @click="open_folder(f)">

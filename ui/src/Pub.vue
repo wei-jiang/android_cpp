@@ -8,8 +8,8 @@
       </keep-alive>
     </div>
     <footer>
-      <div class="mb selected" @click="to_page('/', `浏览文件`, $event)">浏览文件</div>
-      <div class="mb" @click="to_page('/upload', '上传文件', $event)">上传文件</div>
+      <div class="mb selected" @click="to_page('/', $t('browse-file'), $event)">{{$t('browse-file')}}</div>
+      <div class="mb" @click="to_page('/upload', $t('upload-file'), $event)">{{$t('upload-file')}}</div>
     </footer>
     
   </div>
@@ -36,20 +36,19 @@ export default {
 
   },
   mounted() {
-    console.log(`navigator.language = ${navigator.language}`);
-    if(navigator.language === 'zh-CN'){
-      i18n.locale = 'zh'
+    if(navigator.language !== 'zh-CN'){
+      document.title = 'android resource server';
     }
   },
   data() {
     return {
-      title: "文件管理",
+      title: this.$t("file-mgr"),
       sub: ''
     };
   },
   computed: {
     caption() {
-      return "【飘云软件】";
+      return "";
     }
   },
   methods: {
@@ -195,5 +194,10 @@ button{
 .pad-bottom{
   min-height: var(--vh-offset, 0px);
 }
-  
+.yellow{
+  color: rgb(199, 173, 87);
+}
+.green{
+  color: green;
+}
 </style>

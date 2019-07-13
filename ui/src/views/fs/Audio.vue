@@ -14,30 +14,30 @@
     <div class="audio-player"> 
       <div class="drag-header">
         <div class="prompt">
-          <div>当前播放： {{cur_audio?cur_audio.name:'无'}} </div>
-          <div><b>点此可拖动</b></div>
+          <div>{{$t('current-playback')}}: {{cur_audio?cur_audio.name:$t('none')}} </div>
+          <div><b>{{$t('drag-it-move')}}</b></div>
         </div>
-        顺序播放： 按顺序播放完当前目录下所有音乐后停止<br>
-        目录循环： 播放完当前目录下所有音乐后重新目录循环<br>
+        {{$t('sequence')}}: {{$t('sequence-tip')}}<br>
+        {{$t('repeat-dir')}}: {{$t('repeat-dir-tip')}}<br>
       </div>
       <div>
         <audio id="audio-player" v-if="cur_audio" :src="cur_url" controls autoplay @ended="on_end()"/>
         <div v-if="cur_audio" class="play-type">
           <div @click.stop="play_type=1">
             <input type="radio" value="1" v-model="play_type">
-            <label for="1">单曲播放</label>
+            <label for="1">{{$t('single')}}</label>
           </div>
           <div @click.stop="play_type=2">
             <input type="radio" value="2" v-model="play_type">
-            <label for="2">单曲循环</label>
+            <label for="2">{{$t('repeat-one')}}</label>
           </div>
           <div @click.stop="play_type=3">
             <input type="radio" value="3" v-model="play_type">
-            <label for="3">顺序播放</label>
+            <label for="3">{{$t('sequence')}}</label>
           </div>
           <div @click.stop="play_type=4">
             <input type="radio" value="4" v-model="play_type">
-            <label for="4">目录循环</label>
+            <label for="4">{{$t('repeat-dir')}}</label>
           </div>
           
         </div>

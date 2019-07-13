@@ -16,6 +16,12 @@ Vue.config.productionTip = false
 window.i18n = i18n;
 window.isCordovaApp = !!window.cordova;
 
+console.log(`navigator.language = ${navigator.language}`);
+if(navigator.language === 'zh-CN'){
+  i18n.locale = 'zh'
+}
+// "navigator.language = zh-CN"
+// "navigator.language = en-US"
 if (window.isCordovaApp) { 
   new Vue({
     router,

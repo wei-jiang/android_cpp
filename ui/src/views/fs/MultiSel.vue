@@ -1,9 +1,9 @@
 <template>
   <div class="multi-sel">
     <div class="op-btn">
-      <button @click="cancel">取消</button>
-      <button @click="del_file" :disabled="!is_selected">删除</button>
-      <button @click="move_to" :disabled="!is_selected">移动</button>
+      <button @click="cancel">{{$t('cancel')}}</button>
+      <button @click="del_file" :disabled="!is_selected">{{$t('delete')}}</button>
+      <button @click="move_to" :disabled="!is_selected">{{$t('move')}}</button>
     </div>
     <div class="op-btn-dummy"></div>
     <!-- {{ $t('message') }} -->
@@ -83,7 +83,7 @@ export default {
     },
     
     del_file() {
-      util.show_confirm(`确认删除所选文件吗？`, ()=>{
+      util.show_confirm(`${this.$t('confirm-del')}?`, ()=>{
         for(let f of this.files){
           if(f.sel){
             const cmd = {

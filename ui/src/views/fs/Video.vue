@@ -14,10 +14,10 @@
     <div class="video-player"> 
       <div class="drag-header">
         <div class="prompt">
-          <div>当前播放： {{cur_video?cur_video.name:'无'}} </div>
-          <div><b>点此可拖动</b></div>
+          <div>{{$t('current-playback')}}: {{cur_video?cur_video.name:$t('none')}} </div>
+          <div><b>{{$t('drag-it-move')}}</b></div>
         </div>
-        <p>提示：这里使用浏览器内置播放器播放，有些视频格式不支持,请自行安装vlc等专业播放器播放</p>
+        <p>{{`${$t('tip')}${$t('play-tip')}`}}</p>
       </div>
       <div>
         <video id="video-player" v-if="cur_video" :src="cur_url" controls autoplay />

@@ -4,7 +4,7 @@
     <!-- {{ $t('message') }} -->
     <div class="fi" v-for="f in files" @click="open_file_or_folder(f)">
       <div v-if="f.type=='dir'">
-        <i class="small material-icons">folder</i>
+        <i class="small yellow material-icons">folder</i>
       </div>
       <div v-else-if="f.type.includes('image/')">
         <i class="small material-icons">image</i>
@@ -33,15 +33,15 @@
             :src="file_url(f.path)"
             controls="controls" @click.stop="1"
           />
-          <a v-else :href="file_url(f.path)" target="_blank" @click.stop="1">打开文件</a>
+          <a v-else :href="file_url(f.path)" target="_blank" @click.stop="1">{{$t('open-file')}}</a>
         </div>
       </div>
       <div v-if="in_app" class="op-menu" @click.stop="toggle_menu">
         <div class="op-btn">&#8942;</div>
         <div class="op-dropdown">
-          <div @click="del_file(f)">删&nbsp;除</div>
-          <div @click="rename_file(f)">重命名</div>
-          <div @click="move_to(f)">移动到</div>
+          <div @click="del_file(f)">{{$t('delete')}}</div>
+          <div @click="rename_file(f)">{{$t('rename-file')}}</div>
+          <div @click="move_to(f)">{{$t('move')}}</div>
         </div>
       </div>
     </div>
@@ -109,24 +109,24 @@ export default {
     on_del_file(data) {
       if (data.ret == 0) {
         const n = util.get_name_from_path(data.path);
-        util.show_info_center_tm(`删除【${n}】成功`);
+        util.show_info_center_tm(`${this.$t('delete')}【${n}】${this.$t('success')}`);
       } else {
-        util.show_error_top(`删除文件失败：${data.msg}`);
+        util.show_error_top(`${this.$t('delete')}${this.$t('fail')}: ${data.msg}`);
       }
     },
     on_rename_file(data) {
       if (data.ret == 0) {
         const n = util.get_name_from_path(data.path);
-        util.show_info_center_tm(`移动/重命名【${n}】成功`);
+        util.show_info_center_tm(`${this.$t('move')}/${this.$t('rename-file')}【${n}】${this.$t('success')}`);
       } else {
-        util.show_error_top(`移动/重命名文件失败：${data.msg}`);
+        util.show_error_top(`${this.$t('move')}/${this.$t('rename-file')}【${n}】${this.$t('fail')}：${data.msg}`);
       }
     },
     rename_file(f) {
-      let new_name = prompt("新文件名:", f.name);
+      let new_name = prompt(this.$t('new-file-name'), f.name);
       if(new_name) new_name = new_name.replace(/[\n\r]/gm, "");
       let i = _.findIndex( g.files, ff=> ff.type == f.type && ff.name == new_name );
-      if(i >= 0) return util.show_alert_top_tm('同名文件已存在')
+      if(i >= 0) return util.show_alert_top_tm(`${this.$t('same-file')}${this.$t('already-exist')}`)
       if (new_name && new_name != f.name) {
         new_name = util.get_dir_from_path(f.path) + new_name;
         // alert(`new_name = ${new_name}`)
@@ -139,7 +139,7 @@ export default {
       }
     },
     del_file(f) {
-      util.show_confirm(`确认删除【${f.name}】吗？`, ()=>{
+      util.show_confirm(`${this.$t('confirm-del')}[${f.name}]？`, ()=>{
         const cmd = {
           cmd: "del_file",
           path: f.path

@@ -9,8 +9,8 @@
     <h3>2、选择图片、音频、视频分类时会显示所有子目录下该类型的文件吗？</h3>
     <p>
     不会显示子目录中的内容，只显示【当前目录】中的文件。
-    【当前目录】显示在“文件管理”上面的标题栏，点<i class="material-icons">folder</i>进入子目录，点<i class="material-icons">keyboard_backspace</i>返回上级目录。
-    点右上角的<i class="material-icons">create_new_folder</i>在当前目录中新建文件夹。<br>
+    【当前目录】显示在“文件管理”上面的标题栏，点<i class="yellow material-icons">folder</i>进入子目录，点<i class="green material-icons">keyboard_backspace</i>返回上级目录。
+    点右上角的<i class="yellow-new material-icons">create_new_folder</i>在当前目录中新建文件夹。<br>
     <span>提示：</span>如果选择文件分类后，只会显示”当前目录“下该类型的文件，不会显示子文件夹。如果要进入其它文件夹，请先选择”全部“，再点击进入子文件夹。
     </p>    
     <h3>3、其它客户端能删除我的文件吗？</h3>
@@ -29,9 +29,43 @@
     <p>
     不是根据后缀名判断文件类型，比如把[a.jpg]改名为[a]还是图片文件
     </p>
+    <h3>7、加入省电白名单后，不接电源过段时间服务也不可访问？</h3>
+    <p>
+    有些深度定制/深度优化的安卓系统，只要应用一进入后台或锁屏，系统就断开网络了。这些系统就必须要插上电源才能当服务器使用了。
+    </p>
   </div>
 </template>
+<script>
+export default {
+  name: "Help",
+  created: function() {
 
+  },
+  destroyed() {
+
+  },
+  mounted() {
+
+  },
+  beforeRouteEnter(to, from, next) {
+    if(navigator.language !== 'zh-CN') {
+      next('/help-en');
+    } else {
+      next()
+    }
+  },
+  data() {
+    return {
+    };
+  },
+  computed: {
+
+  },
+  methods: {
+  
+  }
+};
+</script>
 <style scoped>
 .faq{
   margin-top: 1em;

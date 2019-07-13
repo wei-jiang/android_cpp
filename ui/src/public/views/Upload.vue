@@ -5,7 +5,7 @@
       <div class="cap">{{`${progress_cap(v)}(${v.progress})`}}</div>
     </div>
     <input type="file" multiple @change="processFile($event)">
-    <button class="upload_btn" @click.prevent="open_file()" v-if="up_count==0">上传文件</button>
+    <button class="upload_btn" @click.prevent="open_file()" v-if="up_count==0">{{$t('upload-file')}}</button>
   </div>
 </template>
 

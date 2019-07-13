@@ -11,7 +11,7 @@ HttpSvr::HttpSvr(int port, const std::string& dir)
     g_ms = dir;
     boost::replace_all(g_ms, "www", "magic.mgc");
     // g_ms = regex_replace(pub_dir_, regex("www"), "magic.mgc");
-    LOGI("magic_source = %s", g_ms.c_str());
+    // LOGI("magic_source = %s", g_ms.c_str());
     server_.config.port = port;
     server_.io_service = g_io;
     init();
