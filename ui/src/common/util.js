@@ -13,11 +13,11 @@ class Util {
                 close: 'animated fadeOutUp' // Animate.css class names
             },
             buttons: [
-                Noty.button('确认', 'btn btn-ok', function () {
+                Noty.button(i18n.t('ok'), 'btn btn-ok', function () {
                     ok_cb();
                     n.close();
                 }),
-                Noty.button('取消', 'btn btn-cancel', function () {
+                Noty.button(i18n.t('cancel'), 'btn btn-cancel', function () {
                     n.close();
                 })
             ]

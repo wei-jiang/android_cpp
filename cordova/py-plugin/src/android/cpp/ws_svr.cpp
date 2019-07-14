@@ -17,7 +17,7 @@ void WsSvr::init()
     handlers_["rename_file"] = [this](pt::ptree &json, std::shared_ptr<WsServer::Connection> cnn) {
         const string &path = json.get<std::string>("path");
         const string &new_name = json.get<std::string>("new_name");
-        LOGI("c++ rename %s to %s", path.c_str(), new_name.c_str());
+        // LOGI("c++ rename %s to %s", path.c_str(), new_name.c_str());
         fs::rename(path, new_name);
         to_all( Util::refresh_files_noty() );
         json.put("ret", 0);

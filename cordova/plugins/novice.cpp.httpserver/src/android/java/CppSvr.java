@@ -49,8 +49,14 @@ import android.view.View;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 
-
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
 public class CppSvr extends CordovaPlugin {
+    private static final String AD_UNIT_ID = "ca-app-pub-3940256099942544~3347511713";
+    private InterstitialAd interstitialAd;
+
     protected static final String TAG = "freenet";
     private PowerManager.WakeLock wakeLock = null;
 	private PowerManager powerManager = null;
@@ -68,7 +74,7 @@ public class CppSvr extends CordovaPlugin {
         // ,Manifest.permission.WAKE_LOCK
     };
     static int listenPort;
-    CallbackContext cb;
+    CallbackContext cppStartCb, adsCloseCb;
     static String mPubDir;
     static String mMagicPath;
     
@@ -132,7 +138,40 @@ public class CppSvr extends CordovaPlugin {
 	};
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        Context context = cordova.getActivity().getApplicationContext();
+        final Context context = cordova.getActivity().getApplicationContext();
+        cordova.getActivity().runOnUiThread(
+            new Runnable() {
+            public void run() {
+                // cordova.getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                // callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+                // Initialize the Mobile Ads SDK.
+                MobileAds.initialize(context, AD_UNIT_ID);
+                // Create the InterstitialAd and set the adUnitId.
+                interstitialAd = new InterstitialAd(context);
+                // for test
+                interstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+                interstitialAd.setAdListener(new AdListener() {
+                    @Override
+                    public void onAdLoaded() {
+                        // show("onAdLoaded()");
+                    }
+                    @Override
+                    public void onAdFailedToLoad(int errorCode) {
+                        // show("onAdFailedToLoad() with error code: " + errorCode);
+                        Log.e(LOG_TAG, "onAdFailedToLoad() with error code: " + errorCode);
+                    }
+                    @Override
+                    public void onAdClosed() {
+                        // Load the next interstitial.
+                        interstitialAd.loadAd(new AdRequest.Builder().build());
+                        if(adsCloseCb != null) adsCloseCb.success("closed");
+                    }
+                });
+                interstitialAd.loadAd(new AdRequest.Builder().build());
+                // ads end 
+            }
+        });
+        
         mWebView = webView;
         assetManager = getActivity().getBaseContext().getAssets();
         this.powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
@@ -167,7 +206,7 @@ public class CppSvr extends CordovaPlugin {
             if(r == PackageManager.PERMISSION_DENIED)
             {
                 Log.i(LOG_TAG, "permissions denied, exit-----------------------");
-                // this.cb.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+                // this.cppStartCb.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
                 getActivity().finish();
                 System.exit(0);
             }
@@ -184,16 +223,30 @@ public class CppSvr extends CordovaPlugin {
             activity.getApplicationContext().startService(intent);
             Log.i(LOG_TAG, "activity.getApplicationContext().startService");
         }
-        this.cb.success("http service started");
+        this.cppStartCb.success("http service started");
         PluginResult result = this.acquire_partial_lock();
         handler.postDelayed(heartbeat, 10000);
-        // this.cb.sendPluginResult(result);
+        // this.cppStartCb.sendPluginResult(result);
     }
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         Context context = cordova.getActivity().getApplicationContext();
         String packageName = context.getPackageName();
-        if (action.equals("isAndroidVerGt")) {
+        if (action.equals("showInterstitialAd")) {
+            adsCloseCb = callbackContext;
+            cordova.getActivity().runOnUiThread(
+                new Runnable() {
+                public void run() {
+                    if (interstitialAd.isLoaded()) {
+                        interstitialAd.show();
+                        // Log.i(LOG_TAG, "The interstitial shown ....................");
+                    } else {
+                        Log.d(LOG_TAG, "The interstitial wasn't loaded yet.");
+                    }
+                }
+            });
+            return true;
+        }else if (action.equals("isAndroidVerGt")) {
             int v = args.getInt(0);
             boolean result = Build.VERSION.SDK_INT > v;
             // callbackContext.success(Build.VERSION.SDK_INT>v);
@@ -279,7 +332,7 @@ public class CppSvr extends CordovaPlugin {
             }
         } else if (action.equals("start")) {
             listenPort = args.getInt(0);
-            this.cb = callbackContext;
+            this.cppStartCb = callbackContext;
             if(cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))
             {
                 startService();

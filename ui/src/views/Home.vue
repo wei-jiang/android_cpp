@@ -94,12 +94,14 @@ export default {
       containment: '.content', 
       handle: '.handle'
     });
-    // this.draggie.on( 'dragStart', ()=>{
-    //   $(".fs-menu").removeClass("is-open");
-    // });
+    this.draggie.on( 'dragStart', ()=>{
+      // $(".fs-menu").removeClass("is-open");
+      this.$root.$emit('reset_timer', '');
+    });
     this.draggie.on( 'staticClick', ()=>{
       $(".fs-menu").toggleClass("is-open");
       // console.log('staticClick');
+      this.$root.$emit('reset_timer', '');
     });
   },
   data() {

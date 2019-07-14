@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="freenet.cppsvr" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>资源库</name>
+    <name>Resource</name>
     <description>
         安卓文件资源服务器
     </description>
@@ -20,6 +20,7 @@
     <platform name="android">
         <allow-intent href="market:*" />
         <resource-file src="res/magic.mgc" target="app/src/main/assets/magic.mgc" />
+        <resource-file src="res/values-zh-rCN/strings.xml" target="app/src/main/res/values-zh-rCN/strings.xml" />
         <preference name="AndroidPersistentFileLocation" value="Compatibility" />
         <!-- android 4.4 and can not use above to build -->
         <preference name="android-minSdkVersion" value="19" />

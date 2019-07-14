@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" @click="reset_timer">
     
     <header>{{title}}{{sub_title}}</header>
     <nav class="menu" id="main-menu">
@@ -9,6 +9,9 @@
           <li>
             <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
+          <!-- <li>
+            <a class="mb" @click="test">&nbsp;&nbsp;test</a>
+          </li> -->
         </ul>
       </div>
     </nav>
@@ -30,20 +33,24 @@ import util from "./common/util";
 import cfg from "./common/config";
 import adb from "./db";
 import ws from "./ws";
+
+const idle_seconds = 99;
 export default {
   name: "App",
   created: function() {
     this.$root.$on("sub_title_chg", this.sub_title_chg);
+    this.$root.$on("reset_timer", this.reset_timer);
     document.addEventListener("deviceready", this.deviceready, false);
     window.vm = this.$root;
   },
   beforeDestroy() {},
   destroyed() {
     this.$root.$off("sub_title_chg", this.sub_title_chg);
+    this.$root.$off("reset_timer", this.reset_timer);
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
-    
+    this.reset_timer();
   },
   data() {
     return {
@@ -57,6 +64,19 @@ export default {
     }
   },
   methods: {
+    test(){
+      cpp.showInterstitialAd();
+      this.toggle_menu()
+    },
+    reset_timer(){
+      // console.log('reset idle timer ...............')
+      clearTimeout(this.idle_timer);
+      this.idle_timer = setTimeout(()=>{
+        cpp.showInterstitialAd(()=>{
+          this.reset_timer();
+        });
+      }, idle_seconds*1000);
+    },
     toggle_menu() {
       const menu = document.getElementById("main-menu");
       menu.classList.toggle("is-open");
