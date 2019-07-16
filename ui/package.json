@@ -11,12 +11,11 @@
     "core-js": "^2.6.5",
     "draggabilly": "^2.2.0",
     "jquery": "^3.4.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.14",
     "lokijs": "^1.5.6",
     "moment": "^2.24.0",
     "noty": "^3.1.4",
     "qrious": "^4.0.2",
-    "register-service-worker": "^1.6.2",
     "screenfull": "^4.2.0",
     "simple-peer": "^9.1.2",
     "uuid": "^3.3.2",
@@ -28,7 +27,6 @@
   "devDependencies": {
     "@kazupon/vue-i18n-loader": "^0.3.0",
     "@vue/cli-plugin-babel": "^3.8.0",
-    "@vue/cli-plugin-pwa": "^3.8.0",
     "@vue/cli-service": "^3.8.0",
     "vue-cli-plugin-i18n": "^0.6.0",
     "vue-template-compiler": "^2.6.10"

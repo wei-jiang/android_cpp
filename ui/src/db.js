@@ -3,6 +3,15 @@ import LokiIndexedAdapter from 'lokijs/src/loki-indexed-adapter';
 const idbAdapter = new LokiIndexedAdapter();
 let db;
 
+function populate_default(){
+    if ( !db.ui.findOne({}) ) {
+        db.ui.insert({
+            sort_type: 1,
+            sort_asc: 'asc',
+            audio_loop_type: '1'
+        });
+    }
+}
 //export promise?
 export default new Promise((resolve, reject) => {
     if (db) {
@@ -13,8 +22,10 @@ export default new Promise((resolve, reject) => {
             autoload: true,
             autoloadCallback: () => {
                 db = {
-                    user: mgrDB.getCollection("user") ? mgrDB.getCollection("user") : mgrDB.addCollection("user")
+                    user: mgrDB.getCollection("user") ? mgrDB.getCollection("user") : mgrDB.addCollection("user"),
+                    ui: mgrDB.getCollection("ui") ? mgrDB.getCollection("ui") : mgrDB.addCollection("ui")
                 }
+                populate_default();
                 resolve(db);
             },
             autosave: true,

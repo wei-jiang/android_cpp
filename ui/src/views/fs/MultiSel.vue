@@ -59,6 +59,11 @@ export default {
     };
   },
   computed: {
+    selected_file_names() {
+      let sels = _.filter(this.files, f=>f.sel)
+      sels = _.map(sels, 'name');
+      return sels.join(" + ");
+    },
     is_selected() {
       const sels = _.filter(this.files, f=>f.sel)
       return sels.length > 0;
@@ -83,17 +88,25 @@ export default {
     },
     
     del_file() {
-      util.show_confirm(`${this.$t('confirm-del')}?`, ()=>{
-        for(let f of this.files){
-          if(f.sel){
-            const cmd = {
-              cmd: "del_file",
-              path: f.path
-            };
-            ws.send(JSON.stringify(cmd));
-          }
-        }
-      })
+      navigator.notification.confirm(
+          this.selected_file_names, // message
+          i=>{
+            // the index uses one-based indexing, so the value is 1, 2, 3, etc.
+            if(i == 1){
+              for(let f of this.files){
+                if(f.sel){
+                  const cmd = {
+                    cmd: "del_file",
+                    path: f.path
+                  };
+                  ws.send(JSON.stringify(cmd));
+                }
+              }
+            }
+          },            
+          this.$t('confirm-del'),           // title
+          [this.$t('ok'), this.$t('cancel')]     // buttonLabels
+      );
     },
     file_url(file_path) {
       return file_path.replace("/sdcard/mystore", util.store_url());

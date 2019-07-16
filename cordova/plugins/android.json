@@ -21,6 +21,9 @@
     },
     "novice.cpp.httpserver": {
       "PACKAGE_NAME": "freenet.cppsvr"
+    },
+    "cordova-plugin-dialogs": {
+      "PACKAGE_NAME": "freenet.cppsvr"
     }
   },
   "dependent_plugins": {}

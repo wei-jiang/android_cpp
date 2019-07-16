@@ -26,19 +26,19 @@
         
       </div>
       <div class="sort-dropdown">
-        <div @click="sort_by(1)">
+        <div @click="set_sort_criteria(1)">
           {{$t('sort-by-time')}}
           <i v-if="order_by_time=='asc'" class="material-icons">arrow_upward</i>
           <i v-else-if="order_by_time=='desc'" class="material-icons">arrow_downward</i>
           <i v-else class="material-icons">swap_vert</i>
         </div>
-        <div @click="sort_by(2)">
+        <div @click="set_sort_criteria(2)">
           {{$t('sort-by-name')}}
           <i v-if="order_by_name=='asc'" class="material-icons">arrow_upward</i>
           <i v-else-if="order_by_name=='desc'" class="material-icons">arrow_downward</i>
           <i v-else class="material-icons">swap_vert</i>
         </div>
-        <div @click="sort_by(3)">
+        <div @click="set_sort_criteria(3)">
           {{$t('sort-by-type')}}
           <i v-if="order_by_type=='asc'" class="material-icons">arrow_upward</i>
           <i v-else-if="order_by_type=='desc'" class="material-icons">arrow_downward</i>
@@ -58,7 +58,9 @@ import _ from 'lodash'
 import cfg from "@/common/config";
 import util from "@/common/util";
 import ws from "@/ws";
-window.g = {};
+window.g = {
+  files: []
+};
 export default {
   name: "home",
   created: function() {
@@ -103,10 +105,13 @@ export default {
       // console.log('staticClick');
       this.$root.$emit('reset_timer', '');
     });
+    const ui_set = db.ui.findOne({})
+    this.set_sort_criteria(ui_set.sort_type, ui_set.sort_asc, false);
   },
   data() {
     return {
       refreshing: false,
+      sort_type: 1,
       order_by_time: '',
       order_by_name: '',
       order_by_type: '',
@@ -128,31 +133,64 @@ export default {
       this.$root.$emit('sub_title_chg', sub);
       this.$router.replace({name: name})
     },
-
-    sort_by(type){
+    set_sort_criteria(type, is_asc = 'asc', is_toggle = true) {
       switch(type){
         case 1:{
-          if(this.order_by_time == 'asc') this.order_by_time = 'desc';
-          else if(this.order_by_time == 'desc') this.order_by_time = 'asc';
-          else this.order_by_time = 'asc';
-          // cause desc does not work as expected, so reverse it
-          // console.log(`order_by_time: ${this.order_by_time}`)
-          g.files = _.orderBy(g.files, ['time']);
-          this.update_file_list( this.order_by_time == 'asc' ? g.files : _.reverse(g.files) );
+          if(is_toggle){
+            if(this.order_by_time == 'asc') this.order_by_time = 'desc';
+            else if(this.order_by_time == 'desc') this.order_by_time = 'asc';
+            else this.order_by_time = 'asc';
+            is_asc = this.order_by_time;
+          } else {
+            this.order_by_time = is_asc;
+          }
           break;
         }
         case 2:{
-          if(this.order_by_name == 'asc') this.order_by_name = 'desc';
-          else this.order_by_name = 'asc';
-          g.files = _.orderBy(g.files, ['name']); //always asc
-          this.update_file_list( this.order_by_name == 'asc' ? g.files : _.reverse(g.files) )
+          if(is_toggle){
+            if(this.order_by_name == 'asc') this.order_by_name = 'desc';
+            else this.order_by_name = 'asc';
+            is_asc = this.order_by_name;
+          } else {
+            this.order_by_name = is_asc;
+          }         
           break;
         }
         case 3:{
-          if(this.order_by_type == 'asc') this.order_by_type = 'desc';
-          else this.order_by_type = 'asc';
+          if(is_toggle){
+            if(this.order_by_type == 'asc') this.order_by_type = 'desc';
+            else this.order_by_type = 'asc';
+            is_asc = this.order_by_type;
+          } else {
+            this.order_by_type = is_asc;
+          }           
+          break;
+        }
+      }
+      this.sort_type = type;
+      db.ui.findAndUpdate({}, s => {
+        s.sort_type = type;
+        s.sort_asc = is_asc;
+      });
+      this.update_file_list();
+    },
+    sort(){
+      switch(this.sort_type){
+        case 1:{
+          // cause desc does not work as expected, so reverse it
+          // console.log(`order_by_time: ${this.order_by_time}`)
+          g.files = _.orderBy(g.files, ['time']);
+          if(this.order_by_time != 'asc') _.reverse(g.files);
+          break;
+        }
+        case 2:{
+          g.files = _.orderBy(g.files, ['name']); //always asc
+          if(this.order_by_name != 'asc') _.reverse(g.files);
+          break;
+        }
+        case 3:{
           g.files = _.orderBy(g.files, ['type']); //always asc
-          this.update_file_list( this.order_by_type == 'asc' ? g.files : _.reverse(g.files) )
+          if(this.order_by_type != 'asc') _.reverse(g.files);
           break;
         }
       }
@@ -244,7 +282,8 @@ export default {
       this.on_refresh();
     },
     update_file_list(files){
-      g.files = files;
+      if(files) g.files = files;
+      this.sort();
       this.$root.$emit("update_file_list", g.files);
     },
     // ws onopen emit

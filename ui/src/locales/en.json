@@ -6,7 +6,7 @@
   "please-cnn": "please connect to ",
   "same-innet": "the same intranet",
   "browse": ", use browser to upload or browse files",
-  "upload-prompt": "prompt: connecting phone to charger can act as a server, or it will sleep after a while, result in file server unaccessable.",
+  "upload-prompt": "prompts: connecting phone to charger can act as a server, or it will doze off after a while, maybe result in file server unaccessable.",
   "upload-try": "or try to add app to power whitelist",
   "whitelist": "whitelist it",
   "wifi-disconnected": "wifi disconnected, please connect to intranet and try again!",

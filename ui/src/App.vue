@@ -31,10 +31,10 @@
 
 import util from "./common/util";
 import cfg from "./common/config";
-import adb from "./db";
+
 import ws from "./ws";
 
-const idle_seconds = 99;
+const idle_seconds = 3000;
 export default {
   name: "App",
   created: function() {
@@ -95,8 +95,7 @@ export default {
       this.sub = '';
       $("#main-menu").removeClass("is-open");
     },
-    async deviceready() {
-      window.db = await adb;
+    deviceready() {     
       window.cli_id = `${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`;
       try {
         window.cli_id = util.md5(window.cli_id);
@@ -110,6 +109,7 @@ export default {
 </script>
 <style>
 @import './assets/font.css';
+@import './assets/ol.css';
 :root {
   box-sizing: border-box;
   font-size: calc(1vw + 0.9em);
@@ -258,25 +258,7 @@ footer {
   position: absolute;
   z-index: 1;
 }
-.btn {
-  width: 30%;
-  font-size: 1.1rem;
-  margin: 1.4em;
-  /* background-color: bisque; */
-  border-radius: 0.9em;
-}
-.btn-ok {
-  background-color: aquamarine;
-  float: left;
-}
-.btn-cancel {
-  background-color: rgb(245, 108, 108);
-  float: right;
-}
-.noty_text {
-  font-size: 1.2rem;
-  text-align: center;
-}
+
 button {
   min-height: max-content;
 }

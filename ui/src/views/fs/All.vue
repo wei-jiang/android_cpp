@@ -139,13 +139,21 @@ export default {
       }
     },
     del_file(f) {
-      util.show_confirm(`${this.$t('confirm-del')}[${f.name}]？`, ()=>{
-        const cmd = {
-          cmd: "del_file",
-          path: f.path
-        };
-        ws.send(JSON.stringify(cmd));
-      })
+      navigator.notification.confirm(
+          `[${f.name}]？`, // message
+          i=>{
+            // the index uses one-based indexing, so the value is 1, 2, 3, etc.
+            if(i == 1){
+              const cmd = {
+                cmd: "del_file",
+                path: f.path
+              };
+              ws.send(JSON.stringify(cmd));
+            }
+          },            
+          this.$t('confirm-del'),           // title
+          [this.$t('ok'), this.$t('cancel')]     // buttonLabels
+      );
     
     },
     file_url(file_path) {

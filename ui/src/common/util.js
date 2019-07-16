@@ -4,26 +4,7 @@ import md5 from "./md5";
 import cfg from "./config";
 
 class Util {
-    show_confirm(text, ok_cb) {
-        const n = new Noty({
-            layout: 'center',
-            text: `<div class="noty_text">${text}</div>`,
-            animation: {
-                open: 'animated fadeInDown', // Animate.css class names
-                close: 'animated fadeOutUp' // Animate.css class names
-            },
-            buttons: [
-                Noty.button(i18n.t('ok'), 'btn btn-ok', function () {
-                    ok_cb();
-                    n.close();
-                }),
-                Noty.button(i18n.t('cancel'), 'btn btn-cancel', function () {
-                    n.close();
-                })
-            ]
-        });
-        n.show();
-    }
+    
     md5(s){
         return md5(s);
     }

@@ -4,3 +4,5 @@ vue add i18n
 
 "simple-peer": "^9.3.0", //not work
 "simple-peer": "^9.1.2",
+
+local http server not https, so no need pwa

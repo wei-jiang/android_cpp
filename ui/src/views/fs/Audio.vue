@@ -23,19 +23,19 @@
       <div>
         <audio id="audio-player" v-if="cur_audio" :src="cur_url" controls autoplay @ended="on_end()"/>
         <div v-if="cur_audio" class="play-type">
-          <div @click.stop="play_type=1">
+          <div @click.stop="set_loop_type(1)">
             <input type="radio" value="1" v-model="play_type">
             <label for="1">{{$t('single')}}</label>
           </div>
-          <div @click.stop="play_type=2">
+          <div @click.stop="set_loop_type(2)">
             <input type="radio" value="2" v-model="play_type">
             <label for="2">{{$t('repeat-one')}}</label>
           </div>
-          <div @click.stop="play_type=3">
+          <div @click.stop="set_loop_type(3)">
             <input type="radio" value="3" v-model="play_type">
             <label for="3">{{$t('sequence')}}</label>
           </div>
-          <div @click.stop="play_type=4">
+          <div @click.stop="set_loop_type(4)">
             <input type="radio" value="4" v-model="play_type">
             <label for="4">{{$t('repeat-dir')}}</label>
           </div>
@@ -66,6 +66,8 @@ export default {
       containment: '.audio', 
       handle: '.drag-header'
     });
+    const ui_set = db.ui.findOne({});
+    this.play_type = ui_set.audio_loop_type;
   },
   data() {
     return {
@@ -80,6 +82,12 @@ export default {
     }
   },
   methods: {
+    set_loop_type(type){
+      this.play_type = type;
+      db.ui.findAndUpdate({}, s => {
+        s.audio_loop_type = type;
+      });
+    },
     hash(name){
       return util.md5(name)
     },
