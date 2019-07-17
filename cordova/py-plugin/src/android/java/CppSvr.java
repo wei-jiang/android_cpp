@@ -53,8 +53,14 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
+
+import android.content.Context;
+import android.content.ClipboardManager;
+import android.content.ClipData;
+import android.content.ClipDescription;
+
 public class CppSvr extends CordovaPlugin {
-    private static final String AD_UNIT_ID = "ca-app-pub-3940256099942544~3347511713";
+    private static final String AD_UNIT_ID = "ca-app-pub-9524660171794411~5063915451";
     private InterstitialAd interstitialAd;
 
     protected static final String TAG = "freenet";
@@ -135,6 +141,11 @@ public class CppSvr extends CordovaPlugin {
 	            }
 	        }
 	    }
+    };
+    private final Runnable adsTry = new Runnable() {
+	    public void run() {
+	        interstitialAd.loadAd(new AdRequest.Builder().build());
+	    }
 	};
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -149,7 +160,7 @@ public class CppSvr extends CordovaPlugin {
                 // Create the InterstitialAd and set the adUnitId.
                 interstitialAd = new InterstitialAd(context);
                 // for test
-                interstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+                interstitialAd.setAdUnitId("ca-app-pub-9524660171794411/1096750284");
                 interstitialAd.setAdListener(new AdListener() {
                     @Override
                     public void onAdLoaded() {
@@ -159,6 +170,8 @@ public class CppSvr extends CordovaPlugin {
                     public void onAdFailedToLoad(int errorCode) {
                         // show("onAdFailedToLoad() with error code: " + errorCode);
                         Log.e(LOG_TAG, "onAdFailedToLoad() with error code: " + errorCode);
+                        // interstitialAd.loadAd(new AdRequest.Builder().build());
+                        (new Handler()).postDelayed(adsTry, 2*60*1000);
                     }
                     @Override
                     public void onAdClosed() {
@@ -232,7 +245,20 @@ public class CppSvr extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         Context context = cordova.getActivity().getApplicationContext();
         String packageName = context.getPackageName();
-        if (action.equals("showInterstitialAd")) {
+        if (action.equals("copyText")) {
+            ClipboardManager clipboard = (ClipboardManager) cordova.getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+            try {
+                String text = args.getString(0);
+                ClipData clip = ClipData.newPlainText("Text", text);
+                clipboard.setPrimaryClip(clip);
+                callbackContext.success(text);
+                return true;
+            } catch (JSONException e) {
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.JSON_EXCEPTION));
+            } catch (Exception e) {
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, e.toString()));
+            }
+        } else if (action.equals("showInterstitialAd")) {
             adsCloseCb = callbackContext;
             cordova.getActivity().runOnUiThread(
                 new Runnable() {
@@ -242,6 +268,7 @@ public class CppSvr extends CordovaPlugin {
                         // Log.i(LOG_TAG, "The interstitial shown ....................");
                     } else {
                         Log.d(LOG_TAG, "The interstitial wasn't loaded yet.");
+                        adsCloseCb.success("failed");
                     }
                 }
             });

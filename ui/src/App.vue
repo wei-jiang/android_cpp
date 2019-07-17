@@ -34,7 +34,7 @@ import cfg from "./common/config";
 
 import ws from "./ws";
 
-const idle_seconds = 3000;
+const idle_seconds = 300;
 export default {
   name: "App",
   created: function() {

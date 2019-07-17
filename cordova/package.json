@@ -24,8 +24,8 @@
             "cordova-plugin-networkinterface": {},
             "cordova-plugin-device": {},
             "cordova-plugin-file": {},
-            "novice.cpp.httpserver": {},
-            "cordova-plugin-dialogs": {}
+            "cordova-plugin-dialogs": {},
+            "novice.cpp.httpserver": {}
         },
         "platforms": [
             "android"

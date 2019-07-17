@@ -10,7 +10,7 @@
     <div class="fi" v-for="f in files">
       <input type="checkbox" v-model="f.sel">
       <div class="file-desc">
-        <div>{{f.name}}</div>
+        <div class="fn">{{f.name}}</div>
         <div class="file-time">
           <div>{{f.time}}</div>
           <div class="file-size" v-if="f.type != 'dir'">{{formatFileSize(f.size)}}</div>
@@ -144,7 +144,9 @@ export default {
   display: flex;
   font-size: 0.7rem;
 }
-
+.fn{
+  word-break: break-all;
+}
 .fi {
   display: flex;
   align-items: center;
@@ -159,8 +161,8 @@ button:disabled {
 }
 
 input[type="checkbox"]{
-  height: 1.9em;
-  width: 1.9em;
+  min-height: 1.9em;
+  min-width: 1.9em;
   margin-right: 1.7em;
 }
 button{

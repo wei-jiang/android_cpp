@@ -47,5 +47,7 @@
   "new-file-name": "new file name",
   "same-file": "same file",
   "upload-file": "upload file",
-  "browse-file": "browse file"
+  "browse-file": "browse file",
+  "copy-url": "copy url",
+  "copy-url-done": "copy file url to clipboard done"
 }

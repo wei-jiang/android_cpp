@@ -11,7 +11,10 @@ rm -rf ./platforms/android/app/src/main/cpp
 rm -rf ./platforms/android/app/CMakeLists.txt
 cordova plugin remove novice.cpp.httpserver
 cordova plugin add ./py-plugin
-cordova clean android
+# cordova clean android
 # adb uninstall freenet.cppsvr
 # cordova run android --device
-cordova build android --release
+cordova build android --release --prod -- --versionCode=`date +"%Y%m%d"`
+
+cp -f platforms/android/app/build/outputs/apk/release/app-release.apk ../dist/res.apk
+cp -f platforms/android/app/build/outputs/apk/release/app-release.apk /home/novice/piaoyun/res.apk

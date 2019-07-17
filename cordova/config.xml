@@ -24,6 +24,7 @@
         <preference name="AndroidPersistentFileLocation" value="Compatibility" />
         <!-- android 4.4 and can not use above to build -->
         <preference name="android-minSdkVersion" value="19" />
+        <preference name="android-targetSdkVersion" value="28" />
     </platform>
     <platform name="ios">
         <allow-intent href="itms:*" />

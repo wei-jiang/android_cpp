@@ -19,7 +19,7 @@
         <i class="small material-icons">insert_drive_file</i>
       </div>
       <div class="file-desc">
-        <div>{{f.name}}</div>
+        <div class="fn">{{f.name}}</div>
         <div class="file-time">
           <div>{{f.time}}</div>
           <div class="file-size" v-if="f.type != 'dir'">{{formatFileSize(f.size)}}</div>
@@ -42,6 +42,7 @@
           <div @click="del_file(f)">{{$t('delete')}}</div>
           <div @click="rename_file(f)">{{$t('rename-file')}}</div>
           <div @click="move_to(f)">{{$t('move')}}</div>
+          <div @click="copy_url(f)">{{$t('copy-url')}}</div>
         </div>
       </div>
     </div>
@@ -68,12 +69,12 @@ export default {
     this.$root.$off("update_file_list", this.update_file_list);
   },
   mounted() {
-
     this.files = g.files;
   },
   data() {
     return {
-      files: []
+      files: [],
+      wifi_ip: ""
     };
   },
   computed: {
@@ -93,9 +94,26 @@ export default {
       }
     },
     update_file_list(files) {
+      if(!this.wifi_ip){
+        networkinterface.getWiFiIPAddress(
+          info => {
+            this.wifi_ip = info.ip;
+          },
+          err => {}
+        );
+      }     
       this.files = files;
     },
-    
+    copy_url(f){
+      if(this.wifi_ip){
+        const url = f.path.replace("/sdcard/mystore", `http://${this.wifi_ip}:${cfg.svr_port}/store`);
+        cpp.copyText(url, ()=>{
+          util.show_alert_top_tm( this.$t('copy-url-done') )
+        })
+      } else {
+        util.show_alert_top_tm( this.$t('wifi-disconnected') )
+      }
+    },
     move_to(f) {
       // alert(i18n.t("hello"));
       this.$root.$emit('move_to', f);
@@ -166,10 +184,16 @@ export default {
 };
 </script>
 <style scoped >
-
+.All, .file-desc{
+  max-width: 100%;
+}
 .file-desc {
   flex: 1;
   margin: 0 0.4em;
+  /* border: 1px solid blue; */
+}
+.fn{
+  word-break: break-all;
 }
 .op-menu {
   position: relative;
@@ -226,6 +250,7 @@ export default {
   background-color: rgb(177, 250, 250);
   margin: 0.3em 0;
   border: 2px inset black;
+  max-width: 100%;
 }
 button:disabled {
   /* background-color: #ccc; */

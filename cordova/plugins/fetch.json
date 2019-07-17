@@ -31,18 +31,18 @@
     "is_top_level": true,
     "variables": {}
   },
-  "novice.cpp.httpserver": {
-    "source": {
-      "type": "local",
-      "path": "/data/github/net/cordova/node_modules/py-plugin"
-    },
-    "is_top_level": true,
-    "variables": {}
-  },
   "cordova-plugin-dialogs": {
     "source": {
       "type": "registry",
       "id": "cordova-plugin-dialogs@^2.0.2"
+    },
+    "is_top_level": true,
+    "variables": {}
+  },
+  "novice.cpp.httpserver": {
+    "source": {
+      "type": "local",
+      "path": "/data/github/net/cordova/node_modules/py-plugin"
     },
     "is_top_level": true,
     "variables": {}
