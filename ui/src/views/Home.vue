@@ -215,7 +215,7 @@ export default {
     },
     restore_before_move(){
       this.dir = this.original_dir;
-      this.$router.replace({name: this.original_page});
+      this.switch_page(this.$t(this.original_page), this.original_page)
       this.on_refresh();
     },
     move_to(f){

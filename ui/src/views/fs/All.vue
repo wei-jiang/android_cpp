@@ -94,7 +94,8 @@ export default {
       }
     },
     update_file_list(files) {
-      if(!this.wifi_ip){
+      // maybe in client browser, networkinterface does not exist
+      if(!this.wifi_ip && isCordovaApp){
         networkinterface.getWiFiIPAddress(
           info => {
             this.wifi_ip = info.ip;

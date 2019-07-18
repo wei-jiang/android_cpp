@@ -18,20 +18,38 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
 # set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -D__ANDROID_API__=21")
 
-set(BOOST_ROOT "/data/cpp_libs/android_libs/boost")
-set(BOOST_INCLUDEDIR "${BOOST_ROOT}/include/boost-1_67")
-set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib")
-FOREACH(LIB 
-    libboost_date_time-clang-mt-s-a32-1_67.a
-    libboost_atomic-clang-mt-s-a32-1_67.a
-    libboost_filesystem-clang-mt-s-a32-1_67.a
-    libboost_iostreams-clang-mt-s-a32-1_67.a
-    libboost_system-clang-mt-s-a32-1_67.a
-    libboost_timer-clang-mt-s-a32-1_67.a
-)
+# ${ANDROID_ABI} will be replaced with armeabi-v7a, arm64-v8a, x86 or  x86_64 during the build time
+if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
+    set(BOOST_ROOT "/data/cpp_libs/android_libs/armeabi-v7a/boost")
+    set(BOOST_INCLUDEDIR "${BOOST_ROOT}/include/boost-1_70")
+    set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib")
+    FOREACH(LIB 
+        libboost_date_time-clang-mt-s-a32-1_70.a
+        libboost_atomic-clang-mt-s-a32-1_70.a
+        libboost_filesystem-clang-mt-s-a32-1_70.a
+        libboost_iostreams-clang-mt-s-a32-1_70.a
+        libboost_system-clang-mt-s-a32-1_70.a
+        libboost_timer-clang-mt-s-a32-1_70.a
+    )
     LIST(APPEND Boost_LIBRARIES "${BOOST_LIBRARYDIR}/${LIB}")
-ENDFOREACH(LIB)
-
+    ENDFOREACH(LIB)
+    # set(ANDROID_PLATFORM "android-21")
+else() 
+    set(BOOST_ROOT "/data/cpp_libs/android_libs/arm64-v8a/boost")
+    set(BOOST_INCLUDEDIR "${BOOST_ROOT}/include/boost-1_68")
+    set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib")
+    FOREACH(LIB 
+        libboost_date_time-clang-mt-s-a64-1_68.a
+        libboost_atomic-clang-mt-s-a64-1_68.a
+        libboost_filesystem-clang-mt-s-a64-1_68.a
+        libboost_iostreams-clang-mt-s-a64-1_68.a
+        libboost_system-clang-mt-s-a64-1_68.a
+        libboost_timer-clang-mt-s-a64-1_68.a
+    )
+    LIST(APPEND Boost_LIBRARIES "${BOOST_LIBRARYDIR}/${LIB}")
+    ENDFOREACH(LIB)
+    # set(ANDROID_PLATFORM "android-23")
+endif()
 set(SOURCE_FILES
     src/main/cpp/common.cpp    
     src/main/cpp/cpp_net.cpp
@@ -102,17 +120,17 @@ target_link_libraries( # Specifies the target library.
 include_directories(${BOOST_INCLUDEDIR})
 target_link_libraries(${CXXLIB} ${Boost_LIBRARIES})
 
-
+# ${ANDROID_ABI} will be replaced with armeabi-v7a, arm64-v8a, x86 or  x86_64 during the build time
 set(HEADER_DIR 
-    "/data/cpp_libs/android_libs/libmagic/include"
-    "/data/cpp_libs/android_libs/openssl/include"
+    "/data/cpp_libs/android_libs/${ANDROID_ABI}/libmagic/include"
+    "/data/cpp_libs/android_libs/${ANDROID_ABI}/openssl/include"
     "/data/cpp_libs/Simple-Web-Server"
     "/data/cpp_libs/Simple-WebSocket-Server"   
 )
 target_include_directories(${CXXLIB} PRIVATE ${HEADER_DIR})
 
-set(libmagic "/data/cpp_libs/android_libs/libmagic/lib/libmagic.a")
-set(OPENSSL_LIBRARYDIR "/data/cpp_libs/android_libs/openssl/lib")
+set(libmagic "/data/cpp_libs/android_libs/${ANDROID_ABI}/libmagic/lib/libmagic.a")
+set(OPENSSL_LIBRARYDIR "/data/cpp_libs/android_libs/${ANDROID_ABI}/openssl/lib")
 FOREACH(LIB 
     libssl.a
     libcrypto.a

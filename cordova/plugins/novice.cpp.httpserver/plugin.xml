@@ -7,6 +7,9 @@
 		<clobbers target="cpp" />
 	</js-module>
 	<platform name="android">
+		<edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+			<application android:usesCleartextTraffic="true" />
+		</edit-config>
 		<config-file parent="/*" target="res/xml/config.xml">
 			<feature name="CppSvr">
 				<param name="android-package" value="freego.novice.CppSvr" />
@@ -56,9 +59,10 @@
 		<source-file src="src/android/cpp/util.cpp" target-dir="app/src/main/cpp/" />
         <source-file src="src/android/cpp/util.h" target-dir="app/src/main/cpp/" />
 		<source-file src="src/android/CMakeLists.txt" target-dir="app/" />
+		<!-- <source-file src="src/android/gradle.properties" target-dir="app/" /> -->
 		<!-- notification icon -->
 		<resource-file src="src/android/res/icon.png" target="app/src/main/res/drawable/icon.png" />
-
+		
         <framework src="src/android/build.gradle" custom="true" type="gradleReference" />
 		<!-- <framework src="com.google.android.gms:play-services-ads:18.1.0" /> -->
 		<framework src="src/android/plugin.gradle" custom="true" type="gradleReference"/>

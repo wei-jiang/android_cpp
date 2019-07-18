@@ -10,6 +10,9 @@
     "cordova-plugin-device": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
+    "cordova-plugin-dialogs": {
+      "PACKAGE_NAME": "freenet.cppsvr"
+    },
     "cordova-plugin-file": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
@@ -17,9 +20,6 @@
       "PACKAGE_NAME": "freenet.cppsvr"
     },
     "cordova-plugin-whitelist": {
-      "PACKAGE_NAME": "freenet.cppsvr"
-    },
-    "cordova-plugin-dialogs": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
     "novice.cpp.httpserver": {
