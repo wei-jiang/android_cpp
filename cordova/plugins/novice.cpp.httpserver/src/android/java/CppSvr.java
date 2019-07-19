@@ -118,7 +118,7 @@ public class CppSvr extends CordovaPlugin {
     private final Runnable heartbeat = new Runnable() {
 	    public void run() {
 	        try {
-	        	// Log.d(LOG_TAG, "About to declare ourselves VISIBLE");
+                // Log.d(LOG_TAG, "About to declare ourselves VISIBLE");
 	        	mWebView.getEngine().getView().dispatchWindowVisibilityChanged(View.VISIBLE);
 	        	// if sdk is 23 (android 6) or greater
 				if(android.os.Build.VERSION.SDK_INT > 22){

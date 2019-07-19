@@ -16,13 +16,14 @@
 			</feature>
 		</config-file>
 		<config-file parent="/manifest/application" target="AndroidManifest.xml">
-            <activity android:name="com.google.android.gms.ads.AdActivity"
+			<!-- Interfering ads? -->
+            <!-- <activity android:name="com.google.android.gms.ads.AdActivity"
                 android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
-                android:theme="@android:style/Theme.Translucent" />
+                android:theme="@android:style/Theme.Translucent" /> -->
 			<!-- Sample AdMob App ID: ca-app-pub-3940256099942544~3347511713 -->
             <meta-data
                 android:name="com.google.android.gms.ads.APPLICATION_ID"
-                android:value="ca-app-pub-3940256099942544~3347511713"/> 
+                android:value="ca-app-pub-9524660171794411~5063915451"/> 
         </config-file>
 		<config-file parent="/*" target="AndroidManifest.xml">
 			<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

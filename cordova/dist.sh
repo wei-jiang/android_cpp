@@ -13,11 +13,10 @@ rm -rf ./platforms/android/app/CMakeLists.txt
 cordova plugin remove novice.cpp.httpserver
 cordova plugin add ./py-plugin
 cordova clean android
-# adb uninstall freenet.cppsvr
-# cordova run android --device
 
-cordova build android --release --prod -- --versionCode=`date +"%Y%m%d"`
-cd platforms/android && ./gradlew bundleRelease 
+cordova build android --release --prod -- --versionCode=$(date +"%Y%m%d")
+# vanilla gradle use: -PversionCode=2019071902
+cd platforms/android && ./gradlew bundleRelease -PcdvVersionCode="$(date +"%Y%m%d")02" -PaabBundle=1
 cp -f app/build/outputs/apk/release/*.apk $CurDir/dist/
 cp -f app/build/outputs/bundle/release/*.aab $CurDir/dist/
 cp -f $CurDir/dist/*.{apk,aab} /home/novice/piaoyun/dist/

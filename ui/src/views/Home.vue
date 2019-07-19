@@ -98,12 +98,10 @@ export default {
     });
     this.draggie.on( 'dragStart', ()=>{
       // $(".fs-menu").removeClass("is-open");
-      this.$root.$emit('reset_timer', '');
     });
     this.draggie.on( 'staticClick', ()=>{
       $(".fs-menu").toggleClass("is-open");
       // console.log('staticClick');
-      this.$root.$emit('reset_timer', '');
     });
     const ui_set = db.ui.findOne({})
     this.set_sort_criteria(ui_set.sort_type, ui_set.sort_asc, false);
@@ -259,7 +257,7 @@ export default {
     },
     create_folder() {
       let name = prompt(this.$t('new-folder-name'), this.$t('new-folder'));
-      if(!name) return util.show_alert_top_tm(`${this.$t('new-folder-name')}${this.$t('can-not-be-empty')}`)
+      if(!name) return; //this is cancelled?
       name = name.replace(/[\n\r]/gm, "");
       if(!name) return util.show_alert_top_tm(`${this.$t('new-folder-name')}${this.$t('can-not-be-empty')}`)
       let i = _.findIndex( g.files, f=> f.type == 'dir' && f.name == name );

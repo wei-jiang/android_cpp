@@ -42,7 +42,7 @@
         </p>
       </li>
       <li>
-        <h3>Is it determine file type by file suffix？</h3>
+        <h3>Is it determine file type by file extension？</h3>
         <p>
         No, it using magic tests.
         </p>

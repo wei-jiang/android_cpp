@@ -1,5 +1,5 @@
 <template>
-  <div id="app" @click="reset_timer">
+  <div id="app">
     
     <header>{{title}}{{sub_title}}</header>
     <nav class="menu" id="main-menu">
@@ -22,35 +22,34 @@
     </div>
     <footer>
       <div class="mb selected" @click="to_page('/', $t('file-mgr'), $event)"><i class="material-icons">store</i>{{$t('file-mgr')}}</div>
-      <div class="mb" @click="to_page('/intranet', $t('svr-addr'), $event)"><i class="material-icons">wifi</i>{{$t('svr-addr')}}</div>
+      <div class="mb" @click="show_svr_addr($event)"><i class="material-icons">wifi</i>{{$t('svr-addr')}}</div>
 
     </footer>
   </div>
 </template>
 <script>
 
-import util from "./common/util";
-import cfg from "./common/config";
+import util from "@/common/util";
+import cfg from "@/common/config";
 
-import ws from "./ws";
+import ws from "@/ws";
 
-const idle_seconds = 200;
+
 export default {
   name: "App",
   created: function() {
     this.$root.$on("sub_title_chg", this.sub_title_chg);
-    this.$root.$on("reset_timer", this.reset_timer);
     document.addEventListener("deviceready", this.deviceready, false);
     window.vm = this.$root;
+    util.restart_ads_tm();
   },
   beforeDestroy() {},
   destroyed() {
     this.$root.$off("sub_title_chg", this.sub_title_chg);
-    this.$root.$off("reset_timer", this.reset_timer);
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
-    this.reset_timer();
+    
   },
   data() {
     return {
@@ -68,14 +67,13 @@ export default {
       cpp.showInterstitialAd();
       this.toggle_menu()
     },
-    reset_timer(){
-      // console.log('reset idle timer ...............')
-      clearTimeout(this.idle_timer);
-      this.idle_timer = setTimeout(()=>{
+    show_svr_addr(e){
+      this.to_page('/intranet', this.$t('svr-addr'), e);
+      if(is_ads_tm){
         cpp.showInterstitialAd(()=>{
-          this.reset_timer();
+          util.restart_ads_tm();
         });
-      }, idle_seconds*1000);
+      }     
     },
     toggle_menu() {
       const menu = document.getElementById("main-menu");
