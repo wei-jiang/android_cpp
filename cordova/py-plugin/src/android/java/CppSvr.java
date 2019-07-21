@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.DisplayMetrics;
 import android.os.Handler;
 import android.os.Message;
 
@@ -48,9 +49,18 @@ import android.content.Intent;
 import android.view.View;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
+import android.widget.FrameLayout;
+// import android.view.ViewGroup.LayoutParams;
+import android.widget.FrameLayout.LayoutParams;
+import android.view.Gravity;
+import android.widget.TextView;
+
+import android.graphics.Color;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 
@@ -60,6 +70,15 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 
 public class CppSvr extends CordovaPlugin {
+    public static final int REQUEST_CODE = 0x0ba7c0de;
+    private static final String ENCODE = "encode";
+    private static final String CANCELLED = "cancelled";
+    private static final String FORMAT = "format";
+    private static final String TEXT = "text";
+    public static final String CAMERA = Manifest.permission.CAMERA;
+    public static final int CAMERA_REQ_CODE = 0x510719;
+    public static final int PERMISSION_DENIED_ERROR = 20;
+    // above for qr scan
     private static final String AD_UNIT_ID = "ca-app-pub-9524660171794411~5063915451";
     private InterstitialAd interstitialAd;
 
@@ -68,7 +87,8 @@ public class CppSvr extends CordovaPlugin {
 	private PowerManager powerManager = null;
     private Handler handler;
 	private PendingIntent wakeupIntent;
-	private CordovaWebView webView;
+    private CordovaWebView webView;
+    private AdView mAdView;
     static {
         // Use the name of the Java wrapper library (which is already linked to the original library)
         System.loadLibrary("cpp_lib");
@@ -123,7 +143,7 @@ public class CppSvr extends CordovaPlugin {
 	        	// if sdk is 23 (android 6) or greater
 				if(android.os.Build.VERSION.SDK_INT > 22){
 		            if (wakeLock != null && powerManager != null && powerManager.isDeviceIdleMode()) {
-		                Log.i(LOG_TAG, "Poking location service");
+		                // Log.i(LOG_TAG, "Poking location service");
 		                try {
 		                    wakeupIntent.send();
 		                } catch (SecurityException e) {
@@ -146,9 +166,88 @@ public class CppSvr extends CordovaPlugin {
 	    public void run() {
 	        interstitialAd.loadAd(new AdRequest.Builder().build());
 	    }
-	};
+    };
+    boolean isBannerLoaded = false;
+
+    private void showBanner(){
+        if(mAdView.getParent() != null) return;
+        FrameLayout layout = (FrameLayout) mWebView.getView().getParent();
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, 200, Gravity.TOP);
+        LayoutParams wvLayoutParas = (LayoutParams) mWebView.getView().getLayoutParams();
+        wvLayoutParas.gravity = Gravity.BOTTOM;
+        // ----------------------
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        cordova.getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int height = displayMetrics.heightPixels;
+        int width = displayMetrics.widthPixels;
+        // dp
+        // DisplayMetrics displayMetrics = cordova.getActivity().getResources().getDisplayMetrics();    
+        // float dpHeight = displayMetrics.heightPixels / displayMetrics.density;
+        // float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
+        // ----------------------------
+        // wvLayoutParas.height = height - 300;
+        // params.setMargins(left, top, right, bottom);
+        wvLayoutParas.height = LayoutParams.MATCH_PARENT;
+        wvLayoutParas.setMargins(0, 210, 0, 0);
+        mAdView.setLayoutParams(params);   
+        // ((ViewGroup)mAdView.getParent()).removeView(mAdView);
+        layout.addView(mAdView);
+        layout.setBackgroundColor(Color.rgb(175, 245, 245));
+        layout.requestLayout();
+    }
+    private void loadBanner(){
+        Context context = cordova.getActivity();
+        mAdView = new AdView(context);
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                Log.i(LOG_TAG, "onAdLoaded()-----------------------");
+                isBannerLoaded = true;
+            }
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // Code to be executed when an ad request fails.
+                Log.i(LOG_TAG, "onAdFailedToLoad(), errorCode="+String.valueOf(errorCode));
+                if(mAdView.getParent() == null){
+                    (new Handler()).postDelayed(new Runnable() {
+                        public void run() {
+                            mAdView.loadAd(new AdRequest.Builder().build());
+                        }
+                    }, 1*60*1000);
+                }
+            }
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+                Log.i(LOG_TAG, "onAdOpened()-----------------------");
+            }
+            @Override
+            public void onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+                Log.i(LOG_TAG, "onAdClicked()-----------------------");
+            }       
+            @Override
+            public void onAdLeftApplication() {
+                // Code to be executed when the user has left the app.
+                Log.i(LOG_TAG, "onAdLeftApplication()-----------------------");
+            }
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when the user is about to return
+                // to the app after tapping on an ad.
+                Log.i(LOG_TAG, "onAdClosed()-----------------------");
+            }
+        });
+        mAdView.setAdSize(AdSize.SMART_BANNER);
+        mAdView.setAdUnitId("ca-app-pub-9524660171794411/7360869758");     
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);       
+    }
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
+        mWebView = webView;
         final Context context = cordova.getActivity().getApplicationContext();
         cordova.getActivity().runOnUiThread(
             new Runnable() {
@@ -157,9 +256,10 @@ public class CppSvr extends CordovaPlugin {
                 // callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
                 // Initialize the Mobile Ads SDK.
                 MobileAds.initialize(context, AD_UNIT_ID);
+                // banner ads
+                loadBanner();
                 // Create the InterstitialAd and set the adUnitId.
                 interstitialAd = new InterstitialAd(context);
-                // for test
                 interstitialAd.setAdUnitId("ca-app-pub-9524660171794411/1096750284");
                 interstitialAd.setAdListener(new AdListener() {
                     @Override
@@ -184,8 +284,6 @@ public class CppSvr extends CordovaPlugin {
                 // ads end 
             }
         });
-        
-        mWebView = webView;
         assetManager = getActivity().getBaseContext().getAssets();
         this.powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
 		handler = new Handler();
@@ -212,8 +310,45 @@ public class CppSvr extends CordovaPlugin {
     private void show(String txt) {
         Toast.makeText(cordova.getActivity().getApplicationContext(), txt, Toast.LENGTH_SHORT).show();
     }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                JSONObject obj = new JSONObject();
+                try {
+                    obj.put(TEXT, data.getStringExtra("qr_code"));
+                    obj.put(FORMAT, data.getStringExtra("format"));
+                    obj.put(CANCELLED, false);
+                } catch (JSONException e) {
+                    Log.d(LOG_TAG, "This should never happen");
+                }
+                // this.success(new PluginResult(PluginResult.Status.OK, obj), this.callback);
+                this.scan_cb.success(obj);
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                JSONObject obj = new JSONObject();
+                try {
+                    obj.put(TEXT, "");
+                    obj.put(FORMAT, "");
+                    obj.put(CANCELLED, true);
+                } catch (JSONException e) {
+                    Log.d(LOG_TAG, "This should never happen");
+                }
+                // this.success(new PluginResult(PluginResult.Status.OK, obj), this.callback);
+                this.scan_cb.success(obj);
+            } else {
+                // this.error(new PluginResult(PluginResult.Status.ERROR), this.callback);
+                this.scan_cb.error("Unexpected error");
+            }
+        }
+    }
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
     {
+        if(requestCode == CAMERA_REQ_CODE){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                start_scan();
+            }
+            return;
+        }
         for(int r:grantResults)
         {
             if(r == PackageManager.PERMISSION_DENIED)
@@ -241,11 +376,27 @@ public class CppSvr extends CordovaPlugin {
         handler.postDelayed(heartbeat, 10000);
         // this.cppStartCb.sendPluginResult(result);
     }
+    CallbackContext scan_cb;
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         Context context = cordova.getActivity().getApplicationContext();
         String packageName = context.getPackageName();
-        if (action.equals("copyText")) {
+        if (action.equals("showBanner")) {
+            cordova.getActivity().runOnUiThread(
+                new Runnable() {
+                public void run() {
+                    if(isBannerLoaded){
+                        showBanner();
+                        // Log.i(LOG_TAG, "isBannerLoaded="+Boolean.toString(isBannerLoaded) );
+                        callbackContext.success("ok");
+                    } else{
+                        // Log.i(LOG_TAG, "isBannerLoaded="+Boolean.toString(isBannerLoaded) );
+                        callbackContext.error("fail");
+                    }
+                }
+            });
+            // return true;            
+        } else if (action.equals("copyText")) {
             ClipboardManager clipboard = (ClipboardManager) cordova.getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
             try {
                 String text = args.getString(0);
@@ -380,7 +531,17 @@ public class CppSvr extends CordovaPlugin {
                     );
                 }
             });
-        } else {
+        } else if (action.equals("scan_by_camera")) {
+            // Log.i(LOG_TAG, "in scan_by_camera");
+            scan_cb = callbackContext;
+            if (cordova.hasPermission(CAMERA)) {
+                start_scan();
+            } else {
+                cordova.requestPermission(this, CAMERA_REQ_CODE, CAMERA);
+            }
+            // callbackContext.success(); // Thread-safe.
+            return true;
+        }else {
             return false;
         }
         return true;
@@ -467,5 +628,17 @@ public class CppSvr extends CordovaPlugin {
             Toast.makeText(cordova.getActivity().getApplicationContext(), message, Toast.LENGTH_LONG).show();
         }
     }
-
+    private void start_scan() {
+        cordova.setActivityResultCallback(this);
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Context context = cordova.getActivity().getApplicationContext();
+                Intent intent = new Intent(context, Scanner.class);
+                cordova.getActivity().startActivityForResult(intent, REQUEST_CODE);
+                // cordova.setActivityResultCallback (self);
+                // cordova.startActivityForResult(self, intent, 0);
+            }
+        });
+    }
 }

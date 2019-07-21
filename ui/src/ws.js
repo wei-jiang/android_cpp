@@ -30,7 +30,7 @@ class WS {
     }
   }
   on_error(err) {
-    console.log('onerror: ' + err)
+    console.log('onerror: ' + JSON.stringify(err) )
   }
   on_close() {
     clearInterval(this.connected)

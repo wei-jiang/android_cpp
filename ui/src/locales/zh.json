@@ -49,5 +49,11 @@
   "upload-file": "上传文件",
   "browse-file": "浏览文件",
   "copy-url": "拷贝url",
-  "copy-url-done": "已拷贝文件地址到剪切板"
+  "copy-url-done": "已拷贝文件地址到剪切板",
+  "scan": "扫码",
+  "copy-done": "已拷贝内容到剪切板",
+  "copy": "拷贝",
+  "close": "关闭",
+  "read-code-content": "读取内容",
+  "back": "返回"
 }

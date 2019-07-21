@@ -49,5 +49,11 @@
   "upload-file": "upload file",
   "browse-file": "browse file",
   "copy-url": "copy url",
-  "copy-url-done": "copy file url to clipboard done"
+  "copy-url-done": "copy file url to clipboard done",
+  "scan": "scan",
+  "copy-done": "copy content to clipboard done",
+  "copy": "copy",
+  "close": "close",
+  "read-code-content": "read code content",
+  "back": "back"
 }

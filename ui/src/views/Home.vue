@@ -55,6 +55,7 @@
 
 <script>
 import _ from 'lodash'
+import moment from "moment";
 import cfg from "@/common/config";
 import util from "@/common/util";
 import ws from "@/ws";
@@ -69,7 +70,7 @@ export default {
     this.$root.$on("create_dir", this.on_create_dir);
     this.$root.$on("refresh_file_list", this.on_refresh);
     this.$root.$on('move_to', this.move_to);
-    this.$root.$on('cancel', this.cancel);
+    this.$root.$on('back', this.back);
     this.$root.$on('confirm_move', this.confirm_move);
 
     this.in_app = util.in_app();
@@ -80,7 +81,7 @@ export default {
     this.$root.$off("create_dir", this.on_create_dir);
     this.$root.$off("refresh_file_list", this.on_refresh);
     this.$root.$off('move_to', this.move_to);
-    this.$root.$off('cancel', this.cancel);
+    this.$root.$off('back', this.back);
     this.$root.$off('confirm_move', this.confirm_move);
   },
   watch: {
@@ -193,7 +194,7 @@ export default {
         }
       }
     },
-    cancel(){
+    back(){
       this.original_page = 'all'
       this.restore_before_move()
     },
@@ -279,9 +280,23 @@ export default {
       this.dir.push(name);
       this.on_refresh();
     },
+    show_banner_or_not(){
+      if(isCordovaApp && g.files.length > 0){
+        const t = g.files[0].time;
+        if( moment().diff(moment(t), "hours") > 1 ){
+          cpp.showBanner(()=>{
+            // console.log('show banner success')
+          }, ()=>{
+            console.log('show banner faled')
+            setTimeout(this.show_banner_or_not.bind(this), 2*60*1000);
+          });
+        }
+      }
+    },
     update_file_list(files){
       // maybe empty string, because Boost property-tree represent empty array as empty string
       if(files != null) g.files = files || [];
+      this.show_banner_or_not();
       // console.log('before sort: '+JSON.stringify(g.files))
       this.sort();
       // console.log('after sort: '+JSON.stringify(g.files))

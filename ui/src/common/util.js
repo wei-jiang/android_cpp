@@ -3,7 +3,7 @@ import moment from "moment";
 import md5 from "./md5";
 import cfg from "./config";
 
-const free_seconds = 200 * 1000;
+const free_seconds = 10 * 60 * 1000;
 class Util {
     restart_ads_tm(){
         window.is_ads_tm = false;

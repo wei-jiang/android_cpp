@@ -7,6 +7,12 @@
     "files": {}
   },
   "installed_plugins": {
+    "cordova-plugin-androidx": {
+      "PACKAGE_NAME": "freenet.cppsvr"
+    },
+    "cordova-plugin-androidx-adapter": {
+      "PACKAGE_NAME": "freenet.cppsvr"
+    },
     "cordova-plugin-device": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },

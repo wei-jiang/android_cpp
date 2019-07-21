@@ -7,6 +7,9 @@
       <div class="menu-dropdown">
         <ul class="nav-menu">
           <li>
+            <a class="mb" @click="scan_qr()"><i class="material-icons">phone_android</i>&nbsp;&nbsp;{{$t('scan')}}</a>
+          </li>
+          <li>
             <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
           <!-- <li>
@@ -41,7 +44,6 @@ export default {
     this.$root.$on("sub_title_chg", this.sub_title_chg);
     document.addEventListener("deviceready", this.deviceready, false);
     window.vm = this.$root;
-    util.restart_ads_tm();
   },
   beforeDestroy() {},
   destroyed() {
@@ -64,7 +66,46 @@ export default {
   },
   methods: {
     test(){
-      cpp.showInterstitialAd();
+      // cpp.showInterstitialAd();
+      cpp.showBanner(()=>{
+        console.log('show banner success')
+      }, ()=>{
+        console.log('show banner faled')
+      });
+      this.toggle_menu()
+    },
+    scan_qr(){
+      cpp.scan_by_camera(
+        data => {
+          // util.show_alert_top(JSON.stringify(data) );
+          if (!data.cancelled) {
+            const qr_code = data.text;
+            console.log(`qr_code=${qr_code}`);
+            if(qr_code.startsWith("http")){
+              window.open(qr_code);
+            } else {
+              navigator.notification.confirm(
+                qr_code, // message
+                i=>{
+                  // the index uses one-based indexing, so the value is 1, 2, 3, etc.
+                  if(i == 1){
+                    cpp.copyText(qr_code, ()=>{
+                      util.show_alert_top_tm( this.$t('copy-done') )
+                    })
+                  }
+                },            
+                this.$t('read-code-content'),           // title
+                [this.$t('copy'), this.$t('close')]     // buttonLabels
+              );
+            }            
+          } else {
+            console.log(`scan qr cancelled`);
+          }
+        },
+        err => {
+          util.show_alert_top(err);
+        }
+      );
       this.toggle_menu()
     },
     show_svr_addr(e){
@@ -94,6 +135,7 @@ export default {
       $("#main-menu").removeClass("is-open");
     },
     deviceready() {     
+      util.restart_ads_tm();
       window.cli_id = `${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`;
       try {
         window.cli_id = util.md5(window.cli_id);

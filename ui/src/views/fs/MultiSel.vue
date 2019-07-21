@@ -1,7 +1,7 @@
 <template>
   <div class="multi-sel">
     <div class="op-btn">
-      <button @click="cancel">{{$t('cancel')}}</button>
+      <button @click="back">{{$t('back')}}</button>
       <button @click="del_file" :disabled="!is_selected">{{$t('delete')}}</button>
       <button @click="move_to" :disabled="!is_selected">{{$t('move')}}</button>
     </div>
@@ -70,8 +70,8 @@ export default {
     }
   },
   methods: {
-    cancel(){
-      this.$root.$emit('cancel', '');
+    back(){
+      this.$root.$emit('back', '');
     },
     open_file_or_folder(f) {
       if (f.type == 'dir') {
