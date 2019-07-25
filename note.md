@@ -40,3 +40,10 @@ openssl req -x509 \
  -keyout py.key \
  -out py.crt \
  -subj "/C=CN/ST=HuNan/L=ChangSha/O=piaoyun/OU=IT Department/CN=piaoyun.shop"
+
+git checkout master~1            # Checkout previous commit on master
+git checkout -b new_master       # Create branch for new master
+git branch -D master             # Delete old master
+git branch -mv new_master master # Make new_master master
+<!-- or -->
+git reset --hard master~1
