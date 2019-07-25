@@ -1,6 +1,28 @@
 <template>
   <div class="help_en">
     <!-- only support android5.0 and above -->
+    <h2>Instruction</h2>
+    <ol>
+      <li>
+        <p>
+        connected to wifi, if only use it locally, skip this step.
+        </p>
+      </li>
+      <li>
+        <p>
+        start app,  if it is first run will prompt requesting sdcard writing permision, 
+        click "allow", it will list all files and folders in /sdcard/mystore.
+        </p>
+      </li>
+      <li>
+        <p>
+        Click "service address" button on the below, it will show mobile wifi ip address, <br>
+        that can be used open in browser, either on PC or other mobile, 
+        then will entered your android mobile website, in here you can browse, download, upload files, or streaming audio or video.
+        </p>
+      </li>
+    </ol>
+
     <h2>FAQ</h2>
     <ol>
       <li>
@@ -39,12 +61,6 @@
         click top-right<i class="yellow-new material-icons">create_new_folder</i>create new folder in current dir.<br>
         <span>tip: </span>when select sub type, it only show this type files, will not show sub folders.
         so if want to enter another folder, must select "all" first and then click folder that you want to enter.
-        </p>
-      </li>
-      <li>
-        <h3>Is it determine file type by file extension？</h3>
-        <p>
-        No, it using magic tests.
         </p>
       </li>
       <li>

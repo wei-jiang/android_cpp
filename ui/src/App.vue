@@ -110,11 +110,12 @@ export default {
     },
     show_svr_addr(e){
       this.to_page('/intranet', this.$t('svr-addr'), e);
-      if(is_ads_tm){
-        cpp.showInterstitialAd(()=>{
-          util.restart_ads_tm();
-        });
-      }     
+      //disable ads for now
+      // if(is_ads_tm){
+      //   cpp.showInterstitialAd(()=>{
+      //     util.restart_ads_tm();
+      //   });
+      // }     
     },
     toggle_menu() {
       const menu = document.getElementById("main-menu");
@@ -135,7 +136,8 @@ export default {
       $("#main-menu").removeClass("is-open");
     },
     deviceready() {     
-      util.restart_ads_tm();
+      //disable ads for now
+      // util.restart_ads_tm();
       window.cli_id = `${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`;
       try {
         window.cli_id = util.md5(window.cli_id);

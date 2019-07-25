@@ -20,3 +20,23 @@ terminal.integrated.fontFamily:  monospace
 cordova plugin add cordova-plugin-androidx
 # add plugin to patch existing plugin source that uses the Android Support Library to use AndroidX
 cordova plugin add cordova-plugin-androidx-adapter
+
+openssl req -x509 -nodes -days 36500 -newkey rsa:4096 -keyout py.key -out py.csr \
+-subj "/C=CN/ST=HuNan/L=ChangSha/O=PiaoYun Inc. /OU=IT Department/CN=piaoyun.shop"
+
+openssl req -nodes -newkey rsa:2048 -keyout py.key -out py.csr -subj "/C=CN/ST=HuNan/L=ChangSha/O=piaoyun/OU=IT Department/CN=piaoyun.shop"
+
+openssl x509 -req -days 36500 -in py.csr -signkey py.key -out py.crt
+
+openssl x509 \
+       -signkey py.key \
+       -in py.csr \
+       -req -days 2048 -out py.crt
+
+openssl req -nodes -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+
+openssl req -x509 \
+ -nodes -days 36500 -newkey rsa:4096 \
+ -keyout py.key \
+ -out py.crt \
+ -subj "/C=CN/ST=HuNan/L=ChangSha/O=piaoyun/OU=IT Department/CN=piaoyun.shop"
