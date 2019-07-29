@@ -8,6 +8,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.IBinder;
+import android.os.Binder;
 import android.os.Build;
 import android.util.Log;
 import android.os.Bundle;
@@ -30,7 +31,15 @@ public class ForegroundService extends Service {
     private PowerManager.WakeLock wakeLock;
 
     private FreeNet mCpp = new FreeNet();
-
+    class ForegroundBinder extends Binder
+    {
+        ForegroundService getService()
+        {
+            // Return this instance of ForegroundService
+            // so clients can call public methods
+            return ForegroundService.this;
+        }
+    }
     @Override
     public void onCreate()
     {
@@ -113,13 +122,16 @@ public class ForegroundService extends Service {
         }
         startForeground(NOTIFICATION_ID, notification.build());
             
-        int ret = mCpp.start_svr(CppSvr.listenPort, CppSvr.mPubDir);
+        int ret = startSvr();
         // Log.i(LOG_TAG, "in startFGService(), start c++ server return : " +  ret);
         
     }
-
+    public int startSvr(){
+        return mCpp.start_svr(CppSvr.listenPort, CppSvr.mAssetsDir);
+    }
+    private final IBinder binder = new ForegroundBinder();
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 }

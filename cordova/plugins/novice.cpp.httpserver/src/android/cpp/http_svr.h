@@ -11,10 +11,11 @@ class HttpSvr
 {
     HttpServer server_;
     WsSvr ws_svr_;
-    std::string pub_dir_, store_path_;
+    std::string assets_dir_, store_path_;
     std::map<std::string, std::shared_ptr<std::ofstream>> writers_;
 public:
     HttpSvr(int port, const std::string& dir);
+    ~HttpSvr();
     void init();
     void ws_to_all(const std::string& json);
 private:

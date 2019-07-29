@@ -1,13 +1,16 @@
 package freego.novice;
 
 import android.app.Activity;
+import android.os.IBinder;
 import android.widget.Toast;
 import android.annotation.SuppressLint;
 import android.util.Base64;
 // import android.content.BroadcastReceiver;
 // import android.content.Context;
-// import android.content.Intent;
 // import android.content.IntentFilter;
+// import android.content.ComponentName;
+// import android.content.Intent;
+// import android.content.ServiceConnection;
 import android.content.*;
 import android.content.res.AssetManager;
 import android.Manifest;
@@ -68,7 +71,8 @@ import android.content.Context;
 import android.content.ClipboardManager;
 import android.content.ClipData;
 import android.content.ClipDescription;
-
+import static android.content.Context.BIND_AUTO_CREATE;
+import freego.novice.ForegroundService.ForegroundBinder;
 public class CppSvr extends CordovaPlugin {
     public static final int REQUEST_CODE = 0x0ba7c0de;
     private static final String ENCODE = "encode";
@@ -101,8 +105,7 @@ public class CppSvr extends CordovaPlugin {
     };
     static int listenPort;
     CallbackContext cppStartCb, adsCloseCb;
-    static String mPubDir;
-    static String mMagicPath;
+    static String mAssetsDir;
     
     private static final String LOG_TAG = "cpp_svr";
     private CordovaWebView mWebView;
@@ -114,6 +117,13 @@ public class CppSvr extends CordovaPlugin {
         }
         String str = new String(byteArray);
         return str;
+    }
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        Activity context = cordova.getActivity();
+        context.unbindService(connection);
     }
     private PluginResult acquire_partial_lock() {
 		PluginResult result = null;
@@ -291,16 +301,12 @@ public class CppSvr extends CordovaPlugin {
         self = this;
         try{
             ContextWrapper c = new ContextWrapper(getActivity().getBaseContext());
-            mPubDir = c.getFilesDir().getPath() + "/www";
-            mMagicPath = c.getFilesDir().getPath() + "/magic.mgc";
-            if( new File(mPubDir).exists() ){
-                // show(mPubDir + " already exist skip copying");
-            } else {
-                // copyAssetFolder("www", "/sdcard/www");
-                copyAssetFolder("www", mPubDir);
-                copyAssetFolder("magic.mgc", mMagicPath);
-            }
-            // show(mPubDir);
+            mAssetsDir = c.getFilesDir().getPath();
+            String wwwPath = mAssetsDir + "/www";
+            String magicPath = mAssetsDir + "/magic.mgc";
+            if( !(new File(mAssetsDir).exists()) ) copyAssetFolder("www", wwwPath);
+            if( !(new File(magicPath).exists()) ) copyAssetFolder("magic.mgc", magicPath);
+            // show(mAssetsDir);
             
         } catch(IOException e){
 
@@ -361,6 +367,23 @@ public class CppSvr extends CordovaPlugin {
         }
         startService();
     }
+    private ForegroundService service;
+    // Used to (un)bind the service to with the activity
+    private final ServiceConnection connection = new ServiceConnection()
+    {
+        @Override
+        public void onServiceConnected (ComponentName name, IBinder service)
+        {
+            ForegroundBinder binder = (ForegroundBinder) service;
+            CppSvr.this.service = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected (ComponentName name)
+        {
+            Log.i(LOG_TAG, "service disconnected");
+        }
+    };
     void startService(){
         Activity activity = cordova.getActivity();
         Intent intent = new Intent(activity, ForegroundService.class);
@@ -371,6 +394,7 @@ public class CppSvr extends CordovaPlugin {
             activity.getApplicationContext().startService(intent);
             Log.i(LOG_TAG, "activity.getApplicationContext().startService");
         }
+        activity.getApplicationContext().bindService(intent, connection, BIND_AUTO_CREATE);
         this.cppStartCb.success("http service started");
         PluginResult result = this.acquire_partial_lock();
         handler.postDelayed(heartbeat, 10000);
@@ -520,6 +544,16 @@ public class CppSvr extends CordovaPlugin {
                 // show("需要访问sd卡以存取文件！");
                 cordova.requestPermissions(this, 0, permissions);
             }
+        } else if (action.equals("restart")) {
+            listenPort = args.getInt(0);
+            if(service != null) {
+                int ret = service.startSvr();
+                Log.i(LOG_TAG, "service.startSvr()=" + ret);
+                callbackContext.sendPluginResult(new PluginResult(Status.OK, ret));
+            } else{
+                callbackContext.sendPluginResult(new PluginResult(Status.OK, -1));
+            }
+            
         } else if(action.equals("echoAsync")) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {

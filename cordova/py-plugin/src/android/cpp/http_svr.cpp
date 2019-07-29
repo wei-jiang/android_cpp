@@ -6,15 +6,19 @@ using namespace boost::property_tree;
 
 string g_ms;
 HttpSvr::HttpSvr(int port, const std::string& dir)
-:pub_dir_(dir),store_path_("/sdcard/mystore/")
+:assets_dir_(dir),store_path_("/sdcard/mystore/")
 {
-    g_ms = dir;
-    boost::replace_all(g_ms, "www", "magic.mgc");
-    // g_ms = regex_replace(pub_dir_, regex("www"), "magic.mgc");
+    g_ms = dir + "/magic.mgc";
+    // boost::replace_all(g_ms, "www", "magic.mgc");
+    // g_ms = regex_replace(assets_dir_, regex("www"), "magic.mgc");
     // LOGI("magic_source = %s", g_ms.c_str());
     server_.config.port = port;
     server_.io_service = g_io;
     init();
+}
+HttpSvr::~HttpSvr()
+{
+    server_.stop();
 }
 void HttpSvr::ws_to_all(const std::string &json)
 {
@@ -30,7 +34,7 @@ void HttpSvr::init()
     }
     handle_upload();
     serve_res();
-    static_dir(pub_dir_);
+    static_dir(assets_dir_ + "/www");
     get_files();
     emplace_ws();
     server_.start();

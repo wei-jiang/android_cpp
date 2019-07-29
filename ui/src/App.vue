@@ -12,9 +12,9 @@
           <li>
             <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
-          <!-- <li>
+          <li>
             <a class="mb" @click="test">&nbsp;&nbsp;test</a>
-          </li> -->
+          </li>
         </ul>
       </div>
     </nav>
@@ -67,11 +67,12 @@ export default {
   methods: {
     test(){
       // cpp.showInterstitialAd();
-      cpp.showBanner(()=>{
-        console.log('show banner success')
-      }, ()=>{
-        console.log('show banner faled')
-      });
+      // cpp.showBanner(()=>{
+      //   console.log('show banner success')
+      // }, ()=>{
+      //   console.log('show banner faled')
+      // });
+      cpp.restart(57001);
       this.toggle_menu()
     },
     scan_qr(){
