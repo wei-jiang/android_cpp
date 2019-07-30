@@ -6,7 +6,7 @@ using namespace boost::property_tree;
 
 string g_ms;
 HttpSvr::HttpSvr(int port, const std::string& dir)
-:assets_dir_(dir),store_path_("/sdcard/mystore/")
+:assets_dir_(dir),store_path_("/sdcard/mystore/"),port_(port)
 {
     g_ms = dir + "/magic.mgc";
     // boost::replace_all(g_ms, "www", "magic.mgc");
@@ -38,6 +38,17 @@ void HttpSvr::init()
     get_files();
     emplace_ws();
     server_.start();
+    static boost::asio::deadline_timer routine_timer(*g_io, boost::posix_time::seconds(1));
+    // can not use std::bind
+    routine_timer.async_wait(boost::bind(&HttpSvr::routine, this, boost::asio::placeholders::error, &routine_timer));
+}
+void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadline_timer* t)
+{
+    auto tid = Util::get_tid();
+    // LOGI("thread[%s] in routine...", tid.c_str()); 
+    t->expires_at(t->expires_at() + boost::posix_time::seconds(2));
+    t->async_wait(boost::bind(&HttpSvr::routine, this,
+                              boost::asio::placeholders::error, t));
 }
 void HttpSvr::emplace_ws()
 {

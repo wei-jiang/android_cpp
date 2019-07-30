@@ -11,6 +11,13 @@ function populate_default(){
             audio_loop_type: '1'
         });
     }
+    if ( !db.svr.findOne({}) ) {
+        db.svr.insert({
+            http_port: 57000,
+            socks_port: 57100,
+            sig_svrs: []
+        });
+    }
 }
 //export promise?
 export default new Promise((resolve, reject) => {
@@ -23,7 +30,8 @@ export default new Promise((resolve, reject) => {
             autoloadCallback: () => {
                 db = {
                     user: mgrDB.getCollection("user") ? mgrDB.getCollection("user") : mgrDB.addCollection("user"),
-                    ui: mgrDB.getCollection("ui") ? mgrDB.getCollection("ui") : mgrDB.addCollection("ui")
+                    ui: mgrDB.getCollection("ui") ? mgrDB.getCollection("ui") : mgrDB.addCollection("ui"),
+                    svr: mgrDB.getCollection("svr") ? mgrDB.getCollection("svr") : mgrDB.addCollection("svr")
                 }
                 populate_default();
                 resolve(db);

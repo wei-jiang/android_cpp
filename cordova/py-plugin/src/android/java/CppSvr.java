@@ -122,8 +122,12 @@ public class CppSvr extends CordovaPlugin {
     public void onDestroy()
     {
         super.onDestroy();
-        Activity context = cordova.getActivity();
-        context.unbindService(connection);
+        Log.i(LOG_TAG, "CppSvr::onDestroy()");
+        android.os.Process.killProcess(android.os.Process.myPid());
+        // if(service != null){
+        //     Activity context = cordova.getActivity();
+        //     context.unbindService(connection);
+        // }       
     }
     private PluginResult acquire_partial_lock() {
 		PluginResult result = null;
@@ -304,7 +308,7 @@ public class CppSvr extends CordovaPlugin {
             mAssetsDir = c.getFilesDir().getPath();
             String wwwPath = mAssetsDir + "/www";
             String magicPath = mAssetsDir + "/magic.mgc";
-            if( !(new File(mAssetsDir).exists()) ) copyAssetFolder("www", wwwPath);
+            if( !(new File(wwwPath).exists()) ) copyAssetFolder("www", wwwPath);
             if( !(new File(magicPath).exists()) ) copyAssetFolder("magic.mgc", magicPath);
             // show(mAssetsDir);
             
@@ -381,6 +385,7 @@ public class CppSvr extends CordovaPlugin {
         @Override
         public void onServiceDisconnected (ComponentName name)
         {
+            CppSvr.this.service = null;
             Log.i(LOG_TAG, "service disconnected");
         }
     };

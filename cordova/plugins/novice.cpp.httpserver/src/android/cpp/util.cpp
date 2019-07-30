@@ -64,6 +64,14 @@ std::string file_type(const std::string &path)
 	}
 	return ::magic_file(handle, path.c_str());
 }
+std::string get_tid()
+{
+	std::thread::id this_id = std::this_thread::get_id();
+	stringstream ss;
+	ss << this_id;
+	string tid = ss.str();
+	return tid;
+}
 std::string get_files_json(const std::string &path)
 {	
 	pt::ptree root;

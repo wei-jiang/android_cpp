@@ -1,7 +1,7 @@
 <template>
   <div class="intranet">
     <div v-show="wifi_ip">
-      <h3>{{address}}</h3>
+      <h3>http://{{wifi_ip}}:<span class="chg-port" @click.prevent="chg_http_port">{{port}}</span></h3>
       <!-- can not use v-if, cause not be able to get element -->
       <canvas id="addr_qr"></canvas>
       <p>
@@ -21,8 +21,8 @@
 
 <script>
 import QRious from "qrious";
-import cfg from "@/common/config";
 import util from "@/common/util";
+import WS from "@/ws";
 export default {
   name: "Intranet",
   props: {
@@ -37,18 +37,37 @@ export default {
   destroyed() {},
   mounted() {
     this.gen_qr_address();
+    this.port = util.http_port();
   },
   data() {
     return {
-      wifi_ip: ""
+      wifi_ip: "",
+      port: 57000
     };
   },
   computed: {
     address() {
-      return `http://${this.wifi_ip}:${cfg.svr_port}`;
+      return `http://${this.wifi_ip}:${this.port}`;
     }
   },
   methods: {
+    chg_http_port(){
+      let new_port = prompt(this.$t('new-port'), util.http_port());
+      if (new_port === null) {
+        return; //break out of the function early
+      }
+      new_port = parseInt(new_port)
+      if( isNaN(new_port) ) return util.show_alert_top_tm( this.$t('invalid-format') )
+      if( new_port <= 1024 || new_port > 65534) return util.show_alert_top_tm( this.$t('invalid-ports') )
+      db.svr.findAndUpdate({}, s => {
+        s.http_port = new_port;
+      });
+      cpp.restart(new_port);
+      console.log('new http-port: ' + util.http_port() )
+      this.port = util.http_port();
+      window.ws = new WS();
+      ws.init();
+    },
     req_whitelist() {
       cpp.isIgnoringBatteryOptimizations(
         (responce)=> {
@@ -101,9 +120,16 @@ canvas {
   width: 200px;
   height: 200px;
 }
-P {
+.chg-port{
+  background-color: aquamarine;
+}
+p {
   margin: 0.7em 1.7em;
   text-align: left;
+}
+.svr_addr{
+  display: flex;
+  justify-content: space-between;
 }
 .intranet {
   display: flex;

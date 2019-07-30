@@ -16,4 +16,5 @@ namespace Util
     unsigned char hexToChar(const std::string &str);
     std::string refresh_files_noty();
     std::string file_type(const std::string &path);
+    std::string get_tid();
 };

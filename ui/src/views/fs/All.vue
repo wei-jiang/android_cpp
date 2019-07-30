@@ -51,9 +51,9 @@
 </template>
 
 <script>
-import cfg from "@/common/config";
+
 import util from "@/common/util";
-import ws from "@/ws";
+
 export default {
   name: "All",
   created: function() {
@@ -108,7 +108,7 @@ export default {
     },
     copy_url(f){
       if(this.wifi_ip){
-        const url = f.path.replace("/sdcard/mystore", `http://${this.wifi_ip}:${cfg.svr_port}/store`);
+        const url = f.path.replace("/sdcard/mystore", `http://${this.wifi_ip}:${util.http_port()}/store`);
         cpp.copyText(url, ()=>{
           util.show_alert_top_tm( this.$t('copy-url-done') )
         })

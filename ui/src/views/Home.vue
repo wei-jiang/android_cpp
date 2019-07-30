@@ -56,9 +56,8 @@
 <script>
 import _ from 'lodash'
 import moment from "moment";
-import cfg from "@/common/config";
 import util from "@/common/util";
-import ws from "@/ws";
+
 window.g = {
   files: []
 };

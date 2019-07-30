@@ -78,8 +78,10 @@ public class ForegroundService extends Service {
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Log.i(LOG_TAG, "in ForegroundService::onStartCommand");
-        return START_STICKY;
+        Log.i(LOG_TAG, "in ForegroundService::onStartCommand");
+        // return START_STICKY;
+        int ret = startSvr();
+        return START_NOT_STICKY;
     }
 
     private void startFGService() {
@@ -122,7 +124,7 @@ public class ForegroundService extends Service {
         }
         startForeground(NOTIFICATION_ID, notification.build());
             
-        int ret = startSvr();
+        // int ret = startSvr();
         // Log.i(LOG_TAG, "in startFGService(), start c++ server return : " +  ret);
         
     }

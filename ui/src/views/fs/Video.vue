@@ -28,7 +28,6 @@
 
 <script>
 import _ from 'lodash'
-import cfg from "@/common/config";
 import util from "@/common/util";
 
 export default {

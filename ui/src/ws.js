@@ -4,7 +4,6 @@ import moment from "moment";
 import Noty from "noty";
 import Peer from 'simple-peer';
 
-import cfg from "./common/config";
 import util from "./common/util";
 class WS {
   constructor() {
@@ -60,11 +59,11 @@ class WS {
       ws_uri = "ws:";
     } else {
       ws_uri = "ws:";
-      h = `localhost:${cfg.svr_port}`;
+      h = `localhost:${util.http_port()}`;
     }
     ws_uri += "//" + h + "/cpp_channel";
     console.log(ws_uri)
     return ws_uri;
   }
 }
-export default new WS;
+export default WS;

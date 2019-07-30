@@ -55,5 +55,9 @@
   "copy": "拷贝",
   "close": "关闭",
   "read-code-content": "读取内容",
-  "back": "返回"
+  "back": "返回",
+  "change-port": "改端口号",
+  "new-port": "新端口号",
+  "invalid-format": "格式不正确",
+  "invalid-ports": "监听端口需大于1024，小于65535"
 }

@@ -55,5 +55,9 @@
   "copy": "copy",
   "close": "close",
   "read-code-content": "read code content",
-  "back": "back"
+  "back": "back",
+  "change-port": "change port",
+  "new-port": "new port",
+  "invalid-format": "invalid format",
+  "invalid-ports": "service listen port must between [1025-65535]"
 }

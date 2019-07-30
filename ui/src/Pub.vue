@@ -18,7 +18,7 @@
 import util from "@/common/util";
 import uuidv1 from 'uuid/v1'
 // import screenfull from 'screenfull'
-import ws from "@/ws";
+import WS from "@/ws";
 import vhCheck from 'vh-check'
 const test = vhCheck()
 window.cli_id = localStorage.getItem('cli_id')
@@ -30,6 +30,7 @@ export default {
   name: "Pub",
   created: async function() {
     window.vm = this.$root;
+    window.ws = new WS();
     ws.init()
   },
   destroyed() {

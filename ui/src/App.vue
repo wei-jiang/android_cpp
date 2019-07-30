@@ -33,10 +33,7 @@
 <script>
 
 import util from "@/common/util";
-import cfg from "@/common/config";
-
-import ws from "@/ws";
-
+import WS from "@/ws";
 
 export default {
   name: "App",
@@ -145,7 +142,8 @@ export default {
       } catch (err) {
         console.log(err)
       }
-      cpp.start( cfg.svr_port, () => {ws.init()}, err => {} );     
+      window.ws = new WS();
+      cpp.start( util.http_port(), () => {ws.init()}, err => {} );     
     }
   }
 };

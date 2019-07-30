@@ -1,7 +1,6 @@
 import Noty from 'noty';
 import moment from "moment";
 import md5 from "./md5";
-import cfg from "./config";
 
 const free_seconds = 10 * 60 * 1000;
 class Util {
@@ -82,7 +81,7 @@ class Util {
         return res;
     }
     async post_local(url, data) {       
-        const host = location.host || `127.0.0.1:${cfg.svr_port}`;
+        const host = location.host || `127.0.0.1:${this.http_port()}`;
         url = `http://${host}/${url}`;
         // console.log(`post_local url=${url}`)
         const res = await $.ajax({
@@ -108,6 +107,10 @@ class Util {
     path2url(path){
         return path.replace("/sdcard/mystore", this.store_url());
     }
+    http_port(){
+        const svr_cfg = db.svr.findOne({});
+        return svr_cfg.http_port;
+    }
     store_url() {
         let loc = window.location,
           store_url,
@@ -116,7 +119,7 @@ class Util {
           store_url = loc.protocol;
         } else {
           store_url = "http:";
-          h = `localhost:${cfg.svr_port}`;
+          h = `localhost:${this.http_port()}`;
         }
         store_url += "//" + h + "/store";
         // console.log(store_url);
