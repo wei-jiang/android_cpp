@@ -70,6 +70,18 @@
         in this situation, must plug in charger to use phone as a server. 
         </p>
       </li>
+      <li>
+        <h3>Can service listening port be changed？</h3>
+        <p>
+        Yes, in "service address" page, click port number that is aquamarine background color with a hand sign pointed to, and port changing dialog box popup.
+        </p>
+      </li>
+      <li>
+        <h3>How to use customized pac file？</h3>
+        <p>
+        Write your own pac file, name it like my.pac, upload it to /sdcard/mystore, and via http://your_android_ip:port/store/my.pac to access it.
+        </p>
+      </li>
     </ol>
   </div>
 </template>

@@ -115,6 +115,26 @@ class Util {
         const svr_cfg = db.svr.findOne({});
         return svr_cfg.socks_port;
     }
+    // must be called after deviceready
+    write_socks_pac(ip, port){
+        window.resolveLocalFileSystemURL(cordova.file.dataDirectory + "www/proxy.pac", fileEntry=> {
+            // console.log('file system open: ' + JSON.stringify(fileEntry) );
+            fileEntry.createWriter( fileWriter=> {
+                fileWriter.onwriteend = function() {
+                    console.log("write pac file successful...");
+                };
+                fileWriter.onerror = function (e) {
+                    console.log("write pac file failed: " + e.toString());
+                };
+                const pac = 
+`function FindProxyForURL(url, host){
+    return "SOCKS5 ${ip}:${port}; DIRECT";
+}`;
+                const dataObj = new Blob([pac], { type: 'text/plain' });
+                fileWriter.write(dataObj);
+            });
+        }, ()=>{});
+    }
     store_url() {
         let loc = window.location,
           store_url,

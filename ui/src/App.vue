@@ -150,6 +150,12 @@ export default {
       }
       window.ws = new WS();
       cpp.start( util.http_port(), () => {ws.init()}, err => {} );     
+      networkinterface.getWiFiIPAddress(
+        info => {
+          util.write_socks_pac( info.ip, util.socks_port() ); 
+        },
+        err => {}
+      );  
     }
   }
 };

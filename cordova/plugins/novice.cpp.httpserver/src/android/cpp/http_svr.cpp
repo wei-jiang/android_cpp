@@ -81,9 +81,15 @@ void HttpSvr::static_dir(const std::string &dir)
                 path /= "index.html";
 
             SimpleWeb::CaseInsensitiveMultimap header;
-            // Uncomment the following line to enable Cache-Control
-            header.emplace("Cache-Control", "max-age=86400");
-
+            if( Util::is_pac(path.string()) )
+            {
+                header.emplace("Cache-Control", "no-cache, no-store, must-revalidate");
+            }
+            else
+            {
+                header.emplace("Cache-Control", "max-age=86400");
+            }
+            
             auto ifs = make_shared<ifstream>();
             ifs->open(path.string(), ifstream::in | ios::binary | ios::ate);
 
@@ -257,8 +263,15 @@ void HttpSvr::serve_res()
                 path /= "index.html";
 
             SimpleWeb::CaseInsensitiveMultimap header;
-            // enable Cache-Control
-            header.emplace("Cache-Control", "max-age=86400");
+            // enable Cache-Control, except pac file
+            if( Util::is_pac(path.string()) )
+            {
+                header.emplace("Cache-Control", "no-cache, no-store, must-revalidate");
+            }
+            else
+            {
+                header.emplace("Cache-Control", "max-age=86400");
+            }
             auto ifs = make_shared<ifstream>();
             ifs->open(path.string(), ifstream::in | ios::binary | ios::ate);
 

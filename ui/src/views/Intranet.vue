@@ -7,6 +7,10 @@
       <p>
         {{$t('please-cnn')}}<b>{{$t('same-innet')}}</b>{{$t('browse')}}
       </p>
+      <h3 class="socks">
+        socks5: {{wifi_ip}}:<span class="chg-port" @click.prevent="chg_socks_port">{{socks_port}}</span><span @click.prevent="chg_socks_port">&#9756;</span>
+      </h3>
+      {{address}}/proxy.pac
       <p>{{$t('upload-prompt')}}</p>
       <div v-if="isAboveAndroid6">
         <div>{{$t('upload-try')}}</div>
@@ -43,7 +47,8 @@ export default {
   data() {
     return {
       wifi_ip: "",
-      port: 57000
+      port: 57000,
+      socks_port: 57100
     };
   },
   computed: {
@@ -52,6 +57,21 @@ export default {
     }
   },
   methods: {
+    chg_socks_port(){
+      let new_port = prompt(this.$t('new-port'), util.socks_port());
+      if (new_port === null) {
+        return; //break out of the function early
+      }
+      new_port = parseInt(new_port)
+      if( isNaN(new_port) ) return util.show_alert_top_tm( this.$t('invalid-format') )
+      if( new_port <= 1024 || new_port > 65534) return util.show_alert_top_tm( this.$t('invalid-ports') )
+      db.svr.findAndUpdate({}, s => {
+        s.socks_port = new_port;
+      });
+      cpp.start_socks( new_port )
+      util.write_socks_pac( this.wifi_ip, util.socks_port() );
+      this.socks_port = util.socks_port();
+    },
     chg_http_port(){
       let new_port = prompt(this.$t('new-port'), util.http_port());
       if (new_port === null) {
@@ -123,6 +143,9 @@ canvas {
 }
 .chg-port{
   background-color: aquamarine;
+}
+.socks{
+  display: inline;
 }
 p {
   margin: 0.7em 1.7em;

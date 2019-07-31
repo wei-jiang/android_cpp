@@ -64,6 +64,18 @@ std::string file_type(const std::string &path)
 	}
 	return ::magic_file(handle, path.c_str());
 }
+bool is_pac(const std::string &path)
+{
+	using boost::iequals;
+    auto const ext = [&path]()->string
+    {
+        auto const pos = path.rfind(".");
+        if(pos == string::npos)
+            return "";
+        return path.substr(pos);
+    }();
+	return iequals(ext, ".pac");
+}
 std::string mime_type(const std::string &path)
 {
     using boost::iequals;
