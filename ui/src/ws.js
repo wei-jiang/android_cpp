@@ -43,6 +43,7 @@ class WS {
       }
     }, 20*1000);
     console.log('onopen')
+    vm.$emit('ws_open', '');
   }
 
   send(data) {

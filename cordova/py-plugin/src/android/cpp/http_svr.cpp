@@ -37,11 +37,13 @@ void HttpSvr::init()
     static_dir(assets_dir_ + "/www");
     get_files();
     emplace_ws();
+    client_info();
     server_.start();
     static boost::asio::deadline_timer routine_timer(*g_io, boost::posix_time::seconds(1));
     // can not use std::bind
     routine_timer.async_wait(boost::bind(&HttpSvr::routine, this, boost::asio::placeholders::error, &routine_timer));
 }
+
 void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadline_timer* t)
 {
     auto tid = Util::get_tid();
@@ -91,8 +93,8 @@ void HttpSvr::static_dir(const std::string &dir)
                 ifs->seekg(0, ios::beg);
 
                 header.emplace("Content-Length", to_string(length));
-                // text/plain wrong type
-                // header.emplace("Content-Type", Util::file_type(path.string()) );
+                // determine type by extension
+                header.emplace("Content-Type", Util::mime_type(path.string()) );
                 response->write(header);
 
                 // Trick to define a recursive function within this scope (for example purposes)
@@ -146,6 +148,26 @@ void HttpSvr::get_files()
             response->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
         }
     };
+}
+void HttpSvr::client_info()
+{
+    server_.resource["^/info$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    stringstream stream;
+    stream << "<h1>Request from " << request->remote_endpoint_address() << ":" << request->remote_endpoint_port() << "</h1>";
+
+    stream << request->method << " " << request->path << " HTTP/" << request->http_version;
+
+    stream << "<h2>Query Fields</h2>";
+    auto query_fields = request->parse_query_string();
+    for(auto &field : query_fields)
+      stream << field.first << ": " << field.second << "<br>";
+
+    stream << "<h2>Header Fields</h2>";
+    for(auto &field : request->header)
+      stream << field.first << ": " << field.second << "<br>";
+
+    response->write(stream);
+  };
 }
 void HttpSvr::handle_upload()
 {
@@ -242,6 +264,7 @@ void HttpSvr::serve_res()
 
             if (*ifs)
             {
+                header.emplace("Content-Type", Util::mime_type(path.string()) );
                 size_t file_len = ifs->tellg();
                 ifs->seekg(0, ios::beg);
                 size_t length = file_len;

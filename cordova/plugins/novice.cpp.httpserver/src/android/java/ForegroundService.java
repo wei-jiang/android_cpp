@@ -131,6 +131,9 @@ public class ForegroundService extends Service {
     public int startSvr(){
         return mCpp.start_svr(CppSvr.listenPort, CppSvr.mAssetsDir);
     }
+    public void startSocks(){
+        mCpp.start_socks_proxy(CppSvr.socksPort);
+    }
     private final IBinder binder = new ForegroundBinder();
     @Override
     public IBinder onBind(Intent intent) {

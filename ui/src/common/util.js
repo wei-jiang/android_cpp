@@ -111,6 +111,10 @@ class Util {
         const svr_cfg = db.svr.findOne({});
         return svr_cfg.http_port;
     }
+    socks_port(){
+        const svr_cfg = db.svr.findOne({});
+        return svr_cfg.socks_port;
+    }
     store_url() {
         let loc = window.location,
           store_url,

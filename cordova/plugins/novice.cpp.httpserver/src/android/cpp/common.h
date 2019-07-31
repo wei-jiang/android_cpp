@@ -103,6 +103,15 @@ public:
         return data_queue.empty();
     }
 };
+class Service
+{
+public:
+    virtual int get_port() = 0;
+    virtual int get_type(){return 0;}
+    virtual ~Service(){}
+};
 
-extern std::shared_ptr<boost::asio::io_context> g_io;
+
+
+extern std::shared_ptr<boost::asio::io_context> g_io, g_socks_io;
 extern std::string g_ms;

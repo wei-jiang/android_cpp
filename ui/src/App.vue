@@ -12,9 +12,9 @@
           <li>
             <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
-          <li>
+          <!-- <li>
             <a class="mb" @click="test">&nbsp;&nbsp;test</a>
-          </li>
+          </li> -->
         </ul>
       </div>
     </nav>
@@ -39,12 +39,14 @@ export default {
   name: "App",
   created: function() {
     this.$root.$on("sub_title_chg", this.sub_title_chg);
+    this.$root.$on("ws_open", this.ws_open);
     document.addEventListener("deviceready", this.deviceready, false);
     window.vm = this.$root;
   },
   beforeDestroy() {},
   destroyed() {
     this.$root.$off("sub_title_chg", this.sub_title_chg);
+    this.$root.$off("ws_open", this.ws_open);
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
@@ -69,8 +71,12 @@ export default {
       // }, ()=>{
       //   console.log('show banner faled')
       // });
-      cpp.restart(57001);
+      // cpp.restart(57001);
+      cpp.start_socks( util.socks_port() )
       this.toggle_menu()
+    },
+    ws_open(){
+      cpp.start_socks( util.socks_port() )
     },
     scan_qr(){
       cpp.scan_by_camera(

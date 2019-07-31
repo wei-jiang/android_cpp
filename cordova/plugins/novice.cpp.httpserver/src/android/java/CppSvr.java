@@ -103,7 +103,7 @@ public class CppSvr extends CordovaPlugin {
         // ,Manifest.permission.FOREGROUND_SERVICE
         // ,Manifest.permission.WAKE_LOCK
     };
-    static int listenPort;
+    static int listenPort, socksPort;
     CallbackContext cppStartCb, adsCloseCb;
     static String mAssetsDir;
     
@@ -410,7 +410,17 @@ public class CppSvr extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         Context context = cordova.getActivity().getApplicationContext();
         String packageName = context.getPackageName();
-        if (action.equals("showBanner")) {
+        if (action.equals("start_socks")) {
+            socksPort = args.getInt(0);
+            if(service != null) {
+                service.startSocks();
+                Log.i(LOG_TAG, "service.start_socks()");
+                callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));
+            } else{
+                callbackContext.sendPluginResult(new PluginResult(Status.OK, -1));
+            }
+            // return true;            
+        } else if (action.equals("showBanner")) {
             cordova.getActivity().runOnUiThread(
                 new Runnable() {
                 public void run() {

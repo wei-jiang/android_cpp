@@ -1,7 +1,7 @@
 <template>
   <div class="intranet">
     <div v-show="wifi_ip">
-      <h3>http://{{wifi_ip}}:<span class="chg-port" @click.prevent="chg_http_port">{{port}}</span></h3>
+      <h3>http://{{wifi_ip}}:<span class="chg-port" @click.prevent="chg_http_port">{{port}}</span><span @click.prevent="chg_http_port">&#9756;</span></h3>
       <!-- can not use v-if, cause not be able to get element -->
       <canvas id="addr_qr"></canvas>
       <p>
@@ -38,6 +38,7 @@ export default {
   mounted() {
     this.gen_qr_address();
     this.port = util.http_port();
+    this.socks_port = util.socks_port();
   },
   data() {
     return {

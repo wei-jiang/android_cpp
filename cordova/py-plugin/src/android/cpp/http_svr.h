@@ -7,7 +7,7 @@
 using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 // typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
 
-class HttpSvr
+class HttpSvr: public Service
 {
     HttpServer server_;
     WsSvr ws_svr_;
@@ -25,6 +25,7 @@ private:
     void serve_res();
     void get_files();
     void handle_upload();
+    void client_info();
     void emplace_ws();
     void read_and_send(const std::shared_ptr<HttpServer::Response> &response, const std::shared_ptr<std::ifstream> &ifs, size_t len);
     void routine(const boost::system::error_code& /*e*/, boost::asio::deadline_timer* t);
