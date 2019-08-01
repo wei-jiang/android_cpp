@@ -71,8 +71,8 @@ import android.content.Context;
 import android.content.ClipboardManager;
 import android.content.ClipData;
 import android.content.ClipDescription;
-import static android.content.Context.BIND_AUTO_CREATE;
-import freego.novice.ForegroundService.ForegroundBinder;
+
+
 public class CppSvr extends CordovaPlugin {
     public static final int REQUEST_CODE = 0x0ba7c0de;
     private static final String ENCODE = "encode";
@@ -124,10 +124,7 @@ public class CppSvr extends CordovaPlugin {
         super.onDestroy();
         Log.i(LOG_TAG, "CppSvr::onDestroy()");
         android.os.Process.killProcess(android.os.Process.myPid());
-        // if(service != null){
-        //     Activity context = cordova.getActivity();
-        //     context.unbindService(connection);
-        // }       
+      
     }
     private PluginResult acquire_partial_lock() {
 		PluginResult result = null;
@@ -371,24 +368,7 @@ public class CppSvr extends CordovaPlugin {
         }
         startService();
     }
-    private ForegroundService service;
-    // Used to (un)bind the service to with the activity
-    private final ServiceConnection connection = new ServiceConnection()
-    {
-        @Override
-        public void onServiceConnected (ComponentName name, IBinder service)
-        {
-            ForegroundBinder binder = (ForegroundBinder) service;
-            CppSvr.this.service = binder.getService();
-        }
-
-        @Override
-        public void onServiceDisconnected (ComponentName name)
-        {
-            CppSvr.this.service = null;
-            Log.i(LOG_TAG, "service disconnected");
-        }
-    };
+  
     void startService(){
         Activity activity = cordova.getActivity();
         Intent intent = new Intent(activity, ForegroundService.class);
@@ -399,7 +379,7 @@ public class CppSvr extends CordovaPlugin {
             activity.getApplicationContext().startService(intent);
             Log.i(LOG_TAG, "activity.getApplicationContext().startService");
         }
-        activity.getApplicationContext().bindService(intent, connection, BIND_AUTO_CREATE);
+    
         this.cppStartCb.success("http service started");
         PluginResult result = this.acquire_partial_lock();
         handler.postDelayed(heartbeat, 10000);
@@ -412,13 +392,9 @@ public class CppSvr extends CordovaPlugin {
         String packageName = context.getPackageName();
         if (action.equals("start_socks")) {
             socksPort = args.getInt(0);
-            if(service != null) {
-                service.startSocks();
-                Log.i(LOG_TAG, "service.start_socks()");
-                callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));
-            } else{
-                callbackContext.sendPluginResult(new PluginResult(Status.OK, -1));
-            }
+            ForegroundService.mCpp.start_socks_proxy(socksPort);
+            Log.i(LOG_TAG, "service.start_socks()");
+            callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));
             // return true;            
         } else if (action.equals("showBanner")) {
             cordova.getActivity().runOnUiThread(
@@ -561,18 +537,13 @@ public class CppSvr extends CordovaPlugin {
             }
         } else if (action.equals("restart")) {
             listenPort = args.getInt(0);
-            if(service != null) {
-                int ret = service.startSvr();
-                Log.i(LOG_TAG, "service.startSvr()=" + ret);
-                callbackContext.sendPluginResult(new PluginResult(Status.OK, ret));
-            } else{
-                callbackContext.sendPluginResult(new PluginResult(Status.OK, -1));
-            }
-            
+            int ret = ForegroundService.mCpp.start_svr(CppSvr.listenPort, CppSvr.mAssetsDir);
+            Log.i(LOG_TAG, "service.startSvr()=" + ret);
+            callbackContext.sendPluginResult(new PluginResult(Status.OK, ret));      
         } else if(action.equals("echoAsync")) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
-                    String str = "mCpp.get_str()";
+                    String str = ForegroundService.mCpp.get_str();
                     callbackContext.sendPluginResult( 
                         new PluginResult(
                             PluginResult.Status.OK, args.optString(0)+" from java; cpp ret="+str

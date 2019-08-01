@@ -103,11 +103,16 @@ public:
         return data_queue.empty();
     }
 };
+enum 
+{
+    SVR_HTTP = 0,
+    SVR_SOCKS,
+};
 class Service
 {
 public:
     virtual int get_port() = 0;
-    virtual int get_type(){return 0;}
+    virtual int get_type(){return SVR_HTTP;}
     virtual ~Service(){}
 };
 

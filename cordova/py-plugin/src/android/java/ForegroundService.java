@@ -30,16 +30,8 @@ public class ForegroundService extends Service {
     private static final String LOG_TAG = "cpp_svr";
     private PowerManager.WakeLock wakeLock;
 
-    private FreeNet mCpp = new FreeNet();
-    class ForegroundBinder extends Binder
-    {
-        ForegroundService getService()
-        {
-            // Return this instance of ForegroundService
-            // so clients can call public methods
-            return ForegroundService.this;
-        }
-    }
+    public static FreeNet mCpp = new FreeNet();
+
     @Override
     public void onCreate()
     {
@@ -131,12 +123,9 @@ public class ForegroundService extends Service {
     public int startSvr(){
         return mCpp.start_svr(CppSvr.listenPort, CppSvr.mAssetsDir);
     }
-    public void startSocks(){
-        mCpp.start_socks_proxy(CppSvr.socksPort);
-    }
-    private final IBinder binder = new ForegroundBinder();
+
     @Override
     public IBinder onBind(Intent intent) {
-        return binder;
+        return null;
     }
 }

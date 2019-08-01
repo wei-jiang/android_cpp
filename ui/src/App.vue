@@ -12,9 +12,9 @@
           <li>
             <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
-          <!-- <li>
+          <li>
             <a class="mb" @click="test">&nbsp;&nbsp;test</a>
-          </li> -->
+          </li>
         </ul>
       </div>
     </nav>
@@ -72,7 +72,7 @@ export default {
       //   console.log('show banner faled')
       // });
       // cpp.restart(57001);
-      cpp.start_socks( util.socks_port() )
+      cpp.echo('jiang', res=>alert(res) )
       this.toggle_menu()
     },
     ws_open(){

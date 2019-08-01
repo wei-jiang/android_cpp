@@ -373,6 +373,7 @@ public:
 		do_accept();
 	}
 	int get_port(){return port_;}
+	virtual int get_type(){return SVR_SOCKS;}
 private:
 	void do_accept()
 	{
