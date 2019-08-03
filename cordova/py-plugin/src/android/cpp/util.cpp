@@ -76,6 +76,17 @@ bool is_pac(const std::string &path)
     }();
 	return iequals(ext, ".pac");
 }
+std::string to_json(std::map <std::string, std::string> data)
+{
+	pt::ptree json;
+	for( auto const& [key, val] : data )
+	{
+		json.put(key, val);
+	}
+	stringstream ss;
+    pt::write_json(ss, json);
+	return ss.str();
+}
 std::string mime_type(const std::string &path)
 {
     using boost::iequals;

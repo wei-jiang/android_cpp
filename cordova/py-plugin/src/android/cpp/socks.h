@@ -366,7 +366,7 @@ Fields marked RESERVED (RSV) must be set to X'00'.
 class Socks: public Service
 {
 public:
-	Socks(short port)
+	Socks(int port)
 		: port_(port), acceptor_(*g_socks_io, tcp::endpoint(tcp::v4(), port)), 
 		in_socket_(*g_socks_io), buffer_size_(65536)
 	{

@@ -12,9 +12,9 @@
           <li>
             <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
-          <li>
+          <!-- <li>
             <a class="mb" @click="test">&nbsp;&nbsp;test</a>
-          </li>
+          </li> -->
         </ul>
       </div>
     </nav>
@@ -39,14 +39,14 @@ export default {
   name: "App",
   created: function() {
     this.$root.$on("sub_title_chg", this.sub_title_chg);
-    this.$root.$on("ws_open", this.ws_open);
+    this.$root.$on("http_ready", this.http_ready);
     document.addEventListener("deviceready", this.deviceready, false);
     window.vm = this.$root;
   },
   beforeDestroy() {},
   destroyed() {
     this.$root.$off("sub_title_chg", this.sub_title_chg);
-    this.$root.$off("ws_open", this.ws_open);
+    this.$root.$off("http_ready", this.http_ready);
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
@@ -75,7 +75,17 @@ export default {
       cpp.echo('jiang', res=>alert(res) )
       this.toggle_menu()
     },
-    ws_open(){
+    cpp_noty(data) {
+      console.log("from C++++++++++++++ " + data + " +++++++++++++++C");
+      try {
+        data = JSON.parse(data);
+        this.$root.$emit(data.cmd, data);
+      } catch (err) {
+        const hex_str = Buffer.from(data, "binary").toString('hex');
+        console.log(`hex_str=${hex_str}`);
+      }
+    },
+    http_ready(){
       cpp.start_socks( util.socks_port() )
     },
     scan_qr(){
@@ -150,6 +160,7 @@ export default {
       }
       window.ws = new WS();
       cpp.start( util.http_port(), () => {ws.init()}, err => {} );     
+      cpp.reg_cpp_cb(this.cpp_noty.bind(this));
       networkinterface.getWiFiIPAddress(
         info => {
           util.write_socks_pac( info.ip, util.socks_port() ); 

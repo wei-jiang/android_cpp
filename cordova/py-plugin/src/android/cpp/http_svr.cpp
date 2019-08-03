@@ -48,7 +48,7 @@ void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadl
 {
     auto tid = Util::get_tid();
     // LOGI("thread[%s] in routine...", tid.c_str()); 
-    ws_svr_.to_all("cpp ws server alive");
+    // ws_svr_.to_all("cpp ws server alive");
     t->expires_at(t->expires_at() + boost::posix_time::seconds(2));
     t->async_wait(boost::bind(&HttpSvr::routine, this,
                               boost::asio::placeholders::error, t));

@@ -295,7 +295,7 @@ export default {
     update_file_list(files){
       // maybe empty string, because Boost property-tree represent empty array as empty string
       if(files != null) g.files = files || [];
-      // this.show_banner_or_not(); //disable ads for now
+      this.show_banner_or_not(); //disable ads for now
       // console.log('before sort: '+JSON.stringify(g.files))
       this.sort();
       // console.log('after sort: '+JSON.stringify(g.files))

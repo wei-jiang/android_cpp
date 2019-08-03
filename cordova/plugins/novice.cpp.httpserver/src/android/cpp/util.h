@@ -19,4 +19,5 @@ namespace Util
     std::string get_tid();
     std::string mime_type(const std::string &path);
     bool is_pac(const std::string &path);
+    std::string to_json(std::map <std::string, std::string> data);
 };

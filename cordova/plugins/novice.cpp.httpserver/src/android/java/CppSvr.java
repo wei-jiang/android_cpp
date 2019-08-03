@@ -72,6 +72,9 @@ import android.content.ClipboardManager;
 import android.content.ClipData;
 import android.content.ClipDescription;
 
+import my.free.net.IntVector;
+import my.free.net.StringVector;
+import my.free.net.FreeNet;
 
 public class CppSvr extends CordovaPlugin {
     public static final int REQUEST_CODE = 0x0ba7c0de;
@@ -82,6 +85,10 @@ public class CppSvr extends CordovaPlugin {
     public static final String CAMERA = Manifest.permission.CAMERA;
     public static final int CAMERA_REQ_CODE = 0x510719;
     public static final int PERMISSION_DENIED_ERROR = 20;
+    String last_action; 
+    JSONArray last_args;
+    private Thread cppRetThread = null;
+    private CallbackContext cppCb;
     // above for qr scan
     private static final String AD_UNIT_ID = "ca-app-pub-9524660171794411~5063915451";
     private InterstitialAd interstitialAd;
@@ -93,6 +100,7 @@ public class CppSvr extends CordovaPlugin {
 	private PendingIntent wakeupIntent;
     private CordovaWebView webView;
     private AdView mAdView;
+    
     static {
         // Use the name of the Java wrapper library (which is already linked to the original library)
         System.loadLibrary("cpp_lib");
@@ -118,14 +126,14 @@ public class CppSvr extends CordovaPlugin {
         String str = new String(byteArray);
         return str;
     }
-    @Override
-    public void onDestroy()
-    {
-        super.onDestroy();
-        Log.i(LOG_TAG, "CppSvr::onDestroy()");
-        android.os.Process.killProcess(android.os.Process.myPid());
+    // @Override
+    // public void onDestroy()
+    // {
+    //     super.onDestroy();
+    //     Log.i(LOG_TAG, "CppSvr::onDestroy()");
+    //     android.os.Process.killProcess(android.os.Process.myPid());
       
-    }
+    // }
     private PluginResult acquire_partial_lock() {
 		PluginResult result = null;
 		if (this.wakeLock == null) {
@@ -312,6 +320,9 @@ public class CppSvr extends CordovaPlugin {
         } catch(IOException e){
 
         }
+        Log.i(LOG_TAG, "--- java plugin initialized ---");
+        PluginResult result = this.acquire_partial_lock();
+        handler.postDelayed(heartbeat, 10000);
     }
 
     private void show(String txt) {
@@ -366,12 +377,14 @@ public class CppSvr extends CordovaPlugin {
                 System.exit(0);
             }
         }
-        startService();
+        startService(last_action, last_args);
     }
-  
-    void startService(){
+
+    void startService(String action, JSONArray args){
         Activity activity = cordova.getActivity();
         Intent intent = new Intent(activity, ForegroundService.class);
+        intent.putExtra("action", action);  
+        intent.putExtra("args", args.toString());
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
             activity.getApplicationContext().startForegroundService(intent);
             Log.i(LOG_TAG, "activity.getApplicationContext().startForegroundService");
@@ -379,10 +392,8 @@ public class CppSvr extends CordovaPlugin {
             activity.getApplicationContext().startService(intent);
             Log.i(LOG_TAG, "activity.getApplicationContext().startService");
         }
-    
-        this.cppStartCb.success("http service started");
-        PluginResult result = this.acquire_partial_lock();
-        handler.postDelayed(heartbeat, 10000);
+        
+        this.cppStartCb.success("http service started");       
         // this.cppStartCb.sendPluginResult(result);
     }
     CallbackContext scan_cb;
@@ -390,10 +401,28 @@ public class CppSvr extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         Context context = cordova.getActivity().getApplicationContext();
         String packageName = context.getPackageName();
-        if (action.equals("start_socks")) {
+        if(action.equals("reg_cpp_cb")) {
+            cppCb = callbackContext;
+            if(cppRetThread != null){
+                cppRetThread.interrupt();
+            }
+            Log.i(LOG_TAG, "reg_cpp_cb()");
+            cppRetThread = new Thread(new Runnable() {
+                public void run() {
+                    while(true){
+                        String n = ForegroundService.mCpp.get_noty();
+                        Log.i(LOG_TAG, "noty from cpp "+n);
+                        PluginResult result = new PluginResult(PluginResult.Status.OK, n);
+                        result.setKeepCallback(true);
+                        cppCb.sendPluginResult(result);
+                    }
+                }
+            });
+            cppRetThread.start();
+            return true;
+        } else if (action.equals("start_socks")) {
             socksPort = args.getInt(0);
-            ForegroundService.mCpp.start_socks_proxy(socksPort);
-            Log.i(LOG_TAG, "service.start_socks()");
+            startService(action, args);
             callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));
             // return true;            
         } else if (action.equals("showBanner")) {
@@ -510,7 +539,6 @@ public class CppSvr extends CordovaPlugin {
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intent);
                     }
-
                     callbackContext.success("requested");
                     return true;
                 }
@@ -525,21 +553,22 @@ public class CppSvr extends CordovaPlugin {
             }
         } else if (action.equals("start")) {
             listenPort = args.getInt(0);
-            this.cppStartCb = callbackContext;
+            this.cppStartCb = callbackContext;            
             if(cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))
             {
-                startService();
+                startService(action, args);
             }
             else
             {
+                last_action = action;
+                last_args = args;
                 // show("需要访问sd卡以存取文件！");
                 cordova.requestPermissions(this, 0, permissions);
             }
         } else if (action.equals("restart")) {
             listenPort = args.getInt(0);
-            int ret = ForegroundService.mCpp.start_svr(CppSvr.listenPort, CppSvr.mAssetsDir);
-            Log.i(LOG_TAG, "service.startSvr()=" + ret);
-            callbackContext.sendPluginResult(new PluginResult(Status.OK, ret));      
+            startService("start", args);
+            callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));      
         } else if(action.equals("echoAsync")) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {

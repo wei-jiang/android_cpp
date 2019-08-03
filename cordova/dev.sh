@@ -11,7 +11,7 @@ rm -rf ./platforms/android/app/src/main/cpp
 rm -rf ./platforms/android/app/CMakeLists.txt
 cordova plugin remove novice.cpp.httpserver
 cordova plugin add ./py-plugin
-# cordova clean android
+cordova clean android
 # adb uninstall freenet.cppsvr
 cordova run android --release --device
 # cordova build android

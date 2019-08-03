@@ -10,8 +10,9 @@ namespace FL {
     public:
         FreeNet();
         virtual ~FreeNet();
-        int start_svr(int port, const std::string& path);
-        void start_socks_proxy(int port);
+        int start_http(int port, const std::string& path);
+        void start_socks(int port);
+        std::string get_noty();
         std::string get_str(){
             return "string from c++ 666";
         }

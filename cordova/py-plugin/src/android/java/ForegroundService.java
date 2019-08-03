@@ -16,11 +16,16 @@ import android.graphics.Color;
 import android.annotation.TargetApi;
 import android.os.PowerManager;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 
 import my.free.net.IntVector;
 import my.free.net.StringVector;
 import my.free.net.FreeNet;
+
 public class ForegroundService extends Service {
     public static final int NOTIFICATION_ID = -574543954;
     private static final String NOTIFICATION_TITLE = "App is running in background";
@@ -29,9 +34,7 @@ public class ForegroundService extends Service {
     public static final String NOTIFICATION_CHANNEL_ID = "foreground.service.channel"; 
     private static final String LOG_TAG = "cpp_svr";
     private PowerManager.WakeLock wakeLock;
-
     public static FreeNet mCpp = new FreeNet();
-
     @Override
     public void onCreate()
     {
@@ -71,9 +74,22 @@ public class ForegroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(LOG_TAG, "in ForegroundService::onStartCommand");
-        // return START_STICKY;
-        int ret = startSvr();
-        return START_NOT_STICKY;
+        String action = intent.getStringExtra("action");
+        String s = intent.getStringExtra("args");
+        try {
+            JSONArray args = new JSONArray(s);
+        } catch (JSONException e) {
+            Log.d(LOG_TAG, "get json args exception, this should never happen");
+        }
+        if(action.equals("start")) {
+            int ret = mCpp.start_http(CppSvr.listenPort, CppSvr.mAssetsDir);
+            Log.i(LOG_TAG, "start cpp http server return="+String.valueOf(ret) );
+        } else if( action.equals("start_socks") ){
+            mCpp.start_socks(CppSvr.socksPort);
+            Log.i(LOG_TAG, "service.start_socks()");
+        }
+        return START_STICKY;
+        // return START_NOT_STICKY;
     }
 
     private void startFGService() {
@@ -115,13 +131,7 @@ public class ForegroundService extends Service {
             notification.setContentIntent(contentIntent);
         }
         startForeground(NOTIFICATION_ID, notification.build());
-            
-        // int ret = startSvr();
-        // Log.i(LOG_TAG, "in startFGService(), start c++ server return : " +  ret);
         
-    }
-    public int startSvr(){
-        return mCpp.start_svr(CppSvr.listenPort, CppSvr.mAssetsDir);
     }
 
     @Override

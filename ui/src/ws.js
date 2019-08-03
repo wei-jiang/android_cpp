@@ -25,7 +25,7 @@ class WS {
       // console.log(evt.data);
       vm.$emit(data.cmd, data);
     }catch(err){
-      console.log(data)
+      console.log(evt.data)
     }
   }
   on_error(err) {

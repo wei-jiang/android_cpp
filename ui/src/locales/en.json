@@ -59,5 +59,7 @@
   "change-port": "change port",
   "new-port": "new port",
   "invalid-format": "invalid format",
-  "invalid-ports": "service listen port must between [1025-65535]"
+  "invalid-ports": "service listen port must between [1025-65535]",
+  "chg-port-success": "change service port success",
+  "chg-port-failed": "change service port failed, target port is occupied"
 }
