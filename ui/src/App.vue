@@ -34,7 +34,7 @@
 
 import util from "@/common/util";
 import WS from "@/ws";
-
+import WSS from "@/wss";
 export default {
   name: "App",
   created: function() {
@@ -135,6 +135,18 @@ export default {
       const menu = document.getElementById("main-menu");
       menu.classList.toggle("is-open");
     },
+    go_pub(){
+      try{
+        const addrs = util.ss_addrs();
+        // console.log(`go_pub()------------${JSON.stringify(addrs)}`)
+        addrs.forEach(addr=>{
+          new WSS(addr, null)
+        })
+      }catch(err){
+        console.log(`go_pub() exception`)
+      }
+      
+    },
     sub_title_chg(sub){
       this.sub = sub;
     },
@@ -154,11 +166,13 @@ export default {
       // util.restart_ads_tm();
       window.cli_id = `${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`;
       try {
-        window.cli_id = util.md5(window.cli_id);
+        window.peer_id = util.hash_code(window.cli_id);
+        window.cli_id = util.md5(window.cli_id);      
       } catch (err) {
         console.log(err)
       }
       window.ws = new WS();
+      // this.go_pub();
       cpp.start( util.http_port(), () => {ws.init()}, err => {} );     
       cpp.reg_cpp_cb(this.cpp_noty.bind(this));
       networkinterface.getWiFiIPAddress(

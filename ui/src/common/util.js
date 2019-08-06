@@ -8,6 +8,9 @@ class Util {
         window.is_ads_tm = false;
         setTimeout(()=>window.is_ads_tm = true, free_seconds)
     }
+    randomInt(low = 0, high = 4294967295) {
+        return Math.floor(Math.random() * (high - low) + low)
+    }
     md5(s){
         return md5(s);
     }
@@ -106,6 +109,10 @@ class Util {
     }
     path2url(path){
         return path.replace("/sdcard/mystore", this.store_url());
+    }
+    ss_addrs(){
+        const svr_cfg = db.svr.findOne({});
+        return svr_cfg.sig_svrs;
     }
     http_port(){
         const svr_cfg = db.svr.findOne({});

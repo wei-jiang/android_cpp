@@ -15,3 +15,7 @@ cordova clean android
 # adb uninstall freenet.cppsvr
 cordova run android --release --device
 # cordova build android
+
+
+# sed -i '/\/\/ debug = false/!b;n;c handler.proceed();' \
+# /data/github/net/cordova/platforms/android/CordovaLib/src/org/apache/cordova/engine/SystemWebViewClient.java

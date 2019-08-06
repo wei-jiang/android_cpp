@@ -13,6 +13,8 @@ rm -rf ./platforms/android/app/CMakeLists.txt
 cordova plugin remove novice.cpp.httpserver
 cordova plugin add ./py-plugin
 cordova clean android
+# sed -i '/\/\/ debug = false/!b;n;c handler.proceed();' \
+# /data/github/net/cordova/platforms/android/CordovaLib/src/org/apache/cordova/engine/SystemWebViewClient.java
 
 cordova build android --release --prod -- --versionCode=$(date +"%Y%m%d")
 # vanilla gradle use: -PversionCode=2019071902
