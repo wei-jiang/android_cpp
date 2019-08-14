@@ -1,7 +1,7 @@
 #include "cpp_net.h"
 
 #include "common.h"
-#include "udp.h"
+
 #include "util.h"
 #include "http_svr.h"
 #include "socks.h"
@@ -9,28 +9,13 @@ using namespace std;
 using namespace FL;
 
 static vector<shared_ptr<Service>> servers;
-std::shared_ptr<UdpSvr> udp_server;
+
 FreeNet::FreeNet() {
 
 }
 
 FreeNet::~FreeNet() {}
-void FreeNet::udp_on_svr(const std::string& svr_addr, int32_t id, uint32_t token)
-{
-    if(g_socks_io){
-        g_socks_io->post([svr_addr, id, token]{
-            udp_server->on_svr(svr_addr, id, token);
-        });
-    }
-}
-void FreeNet::udp_off_svr(const std::string& svr_addr)
-{
-    if(g_socks_io){
-        g_socks_io->post([svr_addr]{
-            udp_server->off_svr(svr_addr);
-        });
-    }
-}
+
 std::string FreeNet::get_noty()
 {
     // LOGI("begin FreeNet::get_noty()");
@@ -79,7 +64,6 @@ void FreeNet::start_socks(int port)
             {
                 g_socks_io = make_shared<boost::asio::io_context>();
                 servers.push_back( make_shared<Socks>(port) );
-                udp_server = make_shared<UdpSvr>(port);
                 for(auto&& s: servers) LOGI("thread[%s] port=%d;type=%d", tid.c_str(), s->get_port(), s->get_type());
                 g_socks_io->run();          
             }
@@ -143,7 +127,7 @@ int FreeNet::start_http(int port, const string& path)
         {
             g_io = make_shared<boost::asio::io_context>();
             servers.push_back( make_shared<HttpSvr>(port, path) );
-            // udp_server = make_shared<UdpSvr>(port);  
+             
             // do not use while/poll, too much power consumed
             cpp2java_que.push(Util::to_json({
                 {"cmd", "http_ready"},

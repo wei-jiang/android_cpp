@@ -61,5 +61,11 @@
   "invalid-format": "invalid format",
   "invalid-ports": "service listen port must between [1025-65535]",
   "chg-port-success": "change service port success",
-  "chg-port-failed": "change service port failed, target port is occupied"
+  "chg-port-failed": "change service port failed, target port is occupied",
+  "outer": "outer",
+  "peer": "peer",
+  "my": "my",
+  "how-to-setup-ss": "how to setup signaling server",
+  "how-to-setup-ss-content": "This signaling server is open sourced, you can run it in your own public server, and set its ip:port address in here. If multiple addresses are available, then you can contact multiple servers's peers same time. More info: ",
+  "add": "add"
 }

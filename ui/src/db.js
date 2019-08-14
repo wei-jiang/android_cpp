@@ -15,7 +15,12 @@ function populate_default(){
         db.svr.insert({
             http_port: 57000,
             socks_port: 57100,
-            sig_svrs: ['139.224.228.83:57000']
+            sig_svrs: [
+                {
+                    addr: '139.224.228.83:57000',
+                    enabled: true
+                }
+            ]
         });
     }
 }

@@ -36,14 +36,29 @@ export default new Router({
       component: () => import(/* webpackChunkName: "intranet" */ './views/Intranet.vue')
     },
     {
+      path: '/outer',
+      name: 'outer',
+      component: () => import('./views/Outer.vue')
+    },
+    {
+      path: '/peer',
+      name: 'peer',
+      component: () => import('./views/Peer.vue')
+    },
+    {
+      path: '/my',
+      name: 'my',
+      component: () => import('./views/My.vue')
+    },
+    {
       path: '/help',
       name: 'help',
-      component: () => import(/* webpackChunkName: "intranet" */ './views/Help.vue')
+      component: () => import(/* webpackChunkName: "help" */ './views/Help.vue')
     },
     {
       path: '/help-en',
       name: 'help-en',
-      component: () => import(/* webpackChunkName: "intranet" */ './views/Help_en.vue')
+      component: () => import(/* webpackChunkName: "help-en" */ './views/Help_en.vue')
     },
   ]
 });

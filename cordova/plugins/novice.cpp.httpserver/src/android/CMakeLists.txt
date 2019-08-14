@@ -57,6 +57,7 @@ set(SOURCE_FILES
     src/main/cpp/udp.cpp
     src/main/cpp/ws_svr.cpp
     src/main/cpp/util.cpp
+    src/main/cpp/peer.cpp
 )
 
 # Include a location to the header files
@@ -74,6 +75,9 @@ add_library( # Sets the name of the library.
 
     # Provides the list of files to compile.
     ${SOURCE_FILES} )
+
+# this line no effect, maybe already stripped
+# set_target_properties( ${CXXLIB} PROPERTIES LINK_FLAGS_RELEASE -s)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -126,7 +130,9 @@ set(HEADER_DIR
     "/data/cpp_libs/android_libs/${ANDROID_ABI}/openssl/include"
     "/data/cpp_libs/Simple-Web-Server"
     "/data/cpp_libs/Simple-WebSocket-Server"   
+    "/data/cpp_libs"
 )
+# "/data/cpp_libs" for nlohmann/json.hpp
 target_include_directories(${CXXLIB} PRIVATE ${HEADER_DIR})
 
 set(libmagic "/data/cpp_libs/android_libs/${ANDROID_ABI}/libmagic/lib/libmagic.a")

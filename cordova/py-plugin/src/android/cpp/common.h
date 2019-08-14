@@ -116,6 +116,8 @@ public:
     virtual ~Service(){}
 };
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 extern TSQueue<std::string> cpp2java_que;
 extern std::shared_ptr<boost::asio::io_context> g_io, g_socks_io;

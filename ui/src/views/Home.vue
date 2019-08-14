@@ -287,7 +287,7 @@ export default {
             // console.log('show banner success')
           }, ()=>{
             console.log('show banner faled')
-            setTimeout(this.show_banner_or_not.bind(this), 2*60*1000);
+            setTimeout(this.show_banner_or_not.bind(this), 3*60*1000);
           });
         }
       }

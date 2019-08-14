@@ -64,7 +64,7 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.InterstitialAd;
+// import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 
 import android.content.Context;
@@ -91,7 +91,7 @@ public class CppSvr extends CordovaPlugin {
     private CallbackContext cppCb;
     // above for qr scan
     private static final String AD_UNIT_ID = "ca-app-pub-9524660171794411~5063915451";
-    private InterstitialAd interstitialAd;
+    // private InterstitialAd interstitialAd;
 
     protected static final String TAG = "freenet";
     private PowerManager.WakeLock wakeLock = null;
@@ -181,11 +181,11 @@ public class CppSvr extends CordovaPlugin {
 	        }
 	    }
     };
-    private final Runnable adsTry = new Runnable() {
-	    public void run() {
-	        interstitialAd.loadAd(new AdRequest.Builder().build());
-	    }
-    };
+    // private final Runnable adsTry = new Runnable() {
+	//     public void run() {
+	//         interstitialAd.loadAd(new AdRequest.Builder().build());
+	//     }
+    // };
     boolean isBannerLoaded = false;
 
     private void showBanner(){
@@ -233,7 +233,7 @@ public class CppSvr extends CordovaPlugin {
                         public void run() {
                             mAdView.loadAd(new AdRequest.Builder().build());
                         }
-                    }, 1*60*1000);
+                    }, 2*60*1000);
                 }
             }
             @Override
@@ -278,28 +278,28 @@ public class CppSvr extends CordovaPlugin {
                 // banner ads
                 loadBanner();
                 // Create the InterstitialAd and set the adUnitId.
-                interstitialAd = new InterstitialAd(context);
-                interstitialAd.setAdUnitId("ca-app-pub-9524660171794411/1096750284");
-                interstitialAd.setAdListener(new AdListener() {
-                    @Override
-                    public void onAdLoaded() {
-                        // show("onAdLoaded()");
-                    }
-                    @Override
-                    public void onAdFailedToLoad(int errorCode) {
-                        // show("onAdFailedToLoad() with error code: " + errorCode);
-                        Log.e(LOG_TAG, "onAdFailedToLoad() with error code: " + errorCode);
-                        // interstitialAd.loadAd(new AdRequest.Builder().build());
-                        (new Handler()).postDelayed(adsTry, 2*60*1000);
-                    }
-                    @Override
-                    public void onAdClosed() {
-                        // Load the next interstitial.
-                        interstitialAd.loadAd(new AdRequest.Builder().build());
-                        if(adsCloseCb != null) adsCloseCb.success("closed");
-                    }
-                });
-                interstitialAd.loadAd(new AdRequest.Builder().build());
+                // interstitialAd = new InterstitialAd(context);
+                // interstitialAd.setAdUnitId("ca-app-pub-9524660171794411/1096750284");
+                // interstitialAd.setAdListener(new AdListener() {
+                //     @Override
+                //     public void onAdLoaded() {
+                //         // show("onAdLoaded()");
+                //     }
+                //     @Override
+                //     public void onAdFailedToLoad(int errorCode) {
+                //         // show("onAdFailedToLoad() with error code: " + errorCode);
+                //         Log.e(LOG_TAG, "onAdFailedToLoad() with error code: " + errorCode);
+                //         // interstitialAd.loadAd(new AdRequest.Builder().build());
+                //         (new Handler()).postDelayed(adsTry, 2*60*1000);
+                //     }
+                //     @Override
+                //     public void onAdClosed() {
+                //         // Load the next interstitial.
+                //         interstitialAd.loadAd(new AdRequest.Builder().build());
+                //         if(adsCloseCb != null) adsCloseCb.success("closed");
+                //     }
+                // });
+                // interstitialAd.loadAd(new AdRequest.Builder().build());
                 // ads end 
             }
         });
@@ -458,13 +458,13 @@ public class CppSvr extends CordovaPlugin {
             cordova.getActivity().runOnUiThread(
                 new Runnable() {
                 public void run() {
-                    if (interstitialAd.isLoaded()) {
-                        interstitialAd.show();
-                        // Log.i(LOG_TAG, "The interstitial shown ....................");
-                    } else {
-                        Log.d(LOG_TAG, "The interstitial wasn't loaded yet.");
-                        adsCloseCb.success("failed");
-                    }
+                    // if (interstitialAd.isLoaded()) {
+                    //     interstitialAd.show();
+                    //     // Log.i(LOG_TAG, "The interstitial shown ....................");
+                    // } else {
+                    //     Log.d(LOG_TAG, "The interstitial wasn't loaded yet.");
+                    //     adsCloseCb.success("failed");
+                    // }
                 }
             });
             return true;

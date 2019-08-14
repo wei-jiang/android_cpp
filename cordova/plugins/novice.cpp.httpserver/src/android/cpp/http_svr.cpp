@@ -1,6 +1,8 @@
 
 #include "http_svr.h"
 #include "util.h"
+#include "udp.h"
+#include "peer.h"
 using namespace std;
 using namespace boost::property_tree;
 
@@ -12,19 +14,29 @@ HttpSvr::HttpSvr(int port, const std::string& dir)
     // boost::replace_all(g_ms, "www", "magic.mgc");
     // g_ms = regex_replace(assets_dir_, regex("www"), "magic.mgc");
     // LOGI("magic_source = %s", g_ms.c_str());
-    server_.config.port = port;
-    server_.io_service = g_io;
+    server_ = make_shared<HttpServer>();
+    server_->config.port = port;
+    server_->io_service = g_io;
+    udp_ = make_shared<UdpSvr>(port); 
+    peer_ = make_shared<Peer>(this);
     init();
 }
 HttpSvr::~HttpSvr()
 {
-    server_.stop();
+    server_->stop();
 }
 void HttpSvr::ws_to_all(const std::string &json)
 {
     g_io->post([this, json] {
         ws_svr_.to_all(json);
     });
+}
+void HttpSvr::res_json(std::shared_ptr<HttpServer::Response> response, json &data)
+{
+    SimpleWeb::CaseInsensitiveMultimap header;
+    header.emplace("Content-Type", "application/json;charset=utf-8");
+    header.emplace("Connection", "keep-alive");
+    response->write(data.dump(), header);
 }
 void HttpSvr::init()
 {    
@@ -38,7 +50,7 @@ void HttpSvr::init()
     get_files();
     emplace_ws();
     client_info();
-    server_.start();
+    server_->start();
     static boost::asio::deadline_timer routine_timer(*g_io, boost::posix_time::seconds(1));
     // can not use std::bind
     routine_timer.async_wait(boost::bind(&HttpSvr::routine, this, boost::asio::placeholders::error, &routine_timer));
@@ -56,7 +68,7 @@ void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadl
 void HttpSvr::emplace_ws()
 {
     auto &ws_server = ws_svr_.get_ws_svr();
-    server_.on_upgrade = [&ws_server](unique_ptr<SimpleWeb::HTTP> &socket, shared_ptr<HttpServer::Request> request) {
+    server_->on_upgrade = [&ws_server](unique_ptr<SimpleWeb::HTTP> &socket, shared_ptr<HttpServer::Request> request) {
         auto connection = std::make_shared<WsServer::Connection>(std::move(socket));
         connection->method = std::move(request->method);
         connection->path = std::move(request->path);
@@ -69,7 +81,7 @@ void HttpSvr::emplace_ws()
 
 void HttpSvr::static_dir(const std::string &dir)
 {
-    server_.default_resource["GET"] = [dir](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server_->default_resource["GET"] = [dir](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         try
         {
             auto web_root_path = boost::filesystem::canonical(dir);
@@ -141,7 +153,7 @@ void HttpSvr::static_dir(const std::string &dir)
 }
 void HttpSvr::get_files()
 {
-    server_.resource["^/get_files$"]["POST"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server_->resource["^/get_files$"]["POST"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         try {
             ptree pt;
             read_json(request->content, pt);
@@ -158,7 +170,7 @@ void HttpSvr::get_files()
 }
 void HttpSvr::client_info()
 {
-    server_.resource["^/info$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server_->resource["^/info$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
     stringstream stream;
     stream << "<h1>Request from " << request->remote_endpoint_address() << ":" << request->remote_endpoint_port() << "</h1>";
 
@@ -178,7 +190,7 @@ void HttpSvr::client_info()
 }
 void HttpSvr::handle_upload()
 {
-    server_.resource["^/upload$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server_->resource["^/upload$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         try
         {
             const string& data = request->content.string();
@@ -253,7 +265,7 @@ void HttpSvr::read_and_send(const shared_ptr<HttpServer::Response> &response, co
 }
 void HttpSvr::serve_res()
 {
-    server_.resource["^/store/(.+)$"]["GET"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server_->resource["^/store/(.+)$"]["GET"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         try
         {
             auto fn = request->path_match[1].str();

@@ -2,14 +2,18 @@
 #include "common.h"
 // #include "server_ws.hpp"
 #include "server_http.hpp"
-
 #include "ws_svr.h"
 using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 // typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
 
+class Peer;
+class UdpSvr;
 class HttpSvr: public Service
 {
-    HttpServer server_;
+    friend class Peer;
+    std::shared_ptr<UdpSvr> udp_;
+    std::shared_ptr<HttpServer> server_;
+    std::shared_ptr<Peer> peer_;
     WsSvr ws_svr_;
     std::string assets_dir_, store_path_;
     std::map<std::string, std::shared_ptr<std::ofstream>> writers_;
@@ -20,6 +24,7 @@ public:
     void init();
     void ws_to_all(const std::string& json);
     int get_port(){return port_;}
+    void res_json(std::shared_ptr<HttpServer::Response> response, json& data);
 private:
     void static_dir(const std::string& dir);
     void serve_res();

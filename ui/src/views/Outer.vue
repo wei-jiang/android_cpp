@@ -1,0 +1,99 @@
+<template>
+  <div class="outer">
+    <div v-for="s in sss">
+      <input v-model="s.addr" />
+      <input type="checkbox" v-model="s.enabled">
+      <button>{{$t('delete')}}</button>
+    </div>
+    <button>{{$t('add')}}</button>
+    <h3 @click.prevent="how_to = !how_to">{{$t('how-to-setup-ss')}}&#x2753;</h3>
+    <div v-show="how_to" @click.prevent="how_to = !how_to">
+      {{$t('how-to-setup-ss-content')}}
+      <a href="https://github.com/novice79/ss.git" target="_blank">https://github.com/novice79/ss.git</a>
+    </div>
+  </div>
+</template>
+
+<script>
+
+import util from "@/common/util";
+export default {
+  name: "Outer",
+  props: {
+    msg: String
+  },
+  created: async function() {
+
+  },
+  destroyed() {
+
+  },
+  mounted() {
+    this.sss = util.ss_addrs()
+  },
+  data() {
+    return {
+      sss: [],
+      how_to: false
+    };
+  },
+  computed: {
+    address() {
+      return `http://${this.wifi_ip}:${this.port}`;
+    }
+  },
+  methods: {
+    chg_socks_port_back(data) {
+
+    },
+    chg_http_port_back(data) {
+
+    },
+    
+    
+  }
+};
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+canvas {
+  margin: 0.3em auto;
+  width: 200px;
+  height: 200px;
+}
+.chg-port {
+  background-color: aquamarine;
+}
+.socks {
+  display: inline;
+}
+p {
+  margin: 0.7em 1.7em;
+  text-align: left;
+}
+.svr_addr {
+  display: flex;
+  justify-content: space-between;
+}
+.outer {
+  display: flex;
+  /* justify-content: space-between; */
+  align-items: center;
+  flex-flow: column;
+  /* overflow: hidden; */
+  font-weight: 700;
+}
+button {
+  border-radius: 1em;
+  font-size: 1.2em;
+  padding: 0 1em;
+  margin-top: 0.5em;
+}
+b {
+  color: red;
+}
+i {
+  color: green;
+}
+</style>

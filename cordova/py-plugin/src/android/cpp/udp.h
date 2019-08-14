@@ -15,14 +15,17 @@ class UdpSvr
         int32_t id; 
         uint32_t token;
         boost::asio::ip::udp::endpoint ep;
+        std::vector<uint8_t> ping_data;
     };
   public:
     UdpSvr(short port);
     void do_receive();
     void do_send(std::size_t length);
+    void do_send(std::vector<uint8_t> buff, boost::asio::ip::udp::endpoint& ep);
     void on_svr(const std::string& svr_addr, int32_t id, uint32_t token);
     void off_svr(const std::string& svr_addr);
   private:
+    void routine(const boost::system::error_code& /*e*/, boost::asio::deadline_timer* t);
     boost::asio::ip::udp::socket socket_;
     boost::asio::ip::udp::endpoint sender_endpoint_;
     enum

@@ -10,6 +10,15 @@
             <a class="mb" @click="scan_qr()"><i class="material-icons">phone_android</i>&nbsp;&nbsp;{{$t('scan')}}</a>
           </li>
           <li>
+            <a class="mb" @click="to_page('/outer', $t('outer'), $event)"><i class="material-icons">language</i>&nbsp;&nbsp;{{$t('outer')}}</a>
+          </li>
+          <li>
+            <a class="mb" @click="to_page('/peer', $t('peer'), $event)"><i class="material-icons">people</i>&nbsp;&nbsp;{{$t('peer')}}</a>
+          </li>
+          <li>
+            <a class="mb" @click="to_page('/my', $t('my'), $event)"><i class="material-icons">person</i>&nbsp;&nbsp;{{$t('my')}}</a>
+          </li>
+          <li>
             <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
           </li>
           <!-- <li>
@@ -33,15 +42,16 @@
 <script>
 
 import util from "@/common/util";
+import busi from "@/common/busi";
 import WS from "@/ws";
-import WSS from "@/wss";
+
 export default {
   name: "App",
   created: function() {
+    window.vm = this.$root;
     this.$root.$on("sub_title_chg", this.sub_title_chg);
     this.$root.$on("http_ready", this.http_ready);
     document.addEventListener("deviceready", this.deviceready, false);
-    window.vm = this.$root;
   },
   beforeDestroy() {},
   destroyed() {
@@ -75,6 +85,7 @@ export default {
       cpp.echo('jiang', res=>alert(res) )
       this.toggle_menu()
     },
+
     cpp_noty(data) {
       console.log("from C++++++++++++++ " + data + " +++++++++++++++C");
       try {
@@ -135,18 +146,7 @@ export default {
       const menu = document.getElementById("main-menu");
       menu.classList.toggle("is-open");
     },
-    go_pub(){
-      try{
-        const addrs = util.ss_addrs();
-        // console.log(`go_pub()------------${JSON.stringify(addrs)}`)
-        addrs.forEach(addr=>{
-          new WSS(addr, null)
-        })
-      }catch(err){
-        console.log(`go_pub() exception`)
-      }
-      
-    },
+    
     sub_title_chg(sub){
       this.sub = sub;
     },
@@ -172,7 +172,7 @@ export default {
         console.log(err)
       }
       window.ws = new WS();
-      // this.go_pub();
+      busi.init();
       cpp.start( util.http_port(), () => {ws.init()}, err => {} );     
       cpp.reg_cpp_cb(this.cpp_noty.bind(this));
       networkinterface.getWiFiIPAddress(
