@@ -186,7 +186,7 @@ export default {
 };
 </script>
 <style scoped >
-.All, .file-desc{
+.All {
   max-width: 100%;
 }
 .file-desc {

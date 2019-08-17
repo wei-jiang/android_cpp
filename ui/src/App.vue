@@ -40,7 +40,7 @@
   </div>
 </template>
 <script>
-
+import Peer from 'simple-peer';
 import util from "@/common/util";
 import busi from "@/common/busi";
 import WS from "@/ws";
@@ -82,7 +82,14 @@ export default {
       //   console.log('show banner faled')
       // });
       // cpp.restart(57001);
-      cpp.echo('jiang', res=>alert(res) )
+      // cpp.echo('jiang', res=>alert(res) )
+      if (Peer.WEBRTC_SUPPORT) {
+        // webrtc support!
+        alert('webrtc support')
+      } else {
+        // fallback
+        alert('webrtc not support')
+      }
       this.toggle_menu()
     },
 

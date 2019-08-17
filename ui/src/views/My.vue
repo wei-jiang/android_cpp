@@ -1,6 +1,15 @@
 <template>
   <div class="my">
-    个人设置
+    <nav>
+      <div class="selected" @click.prevent="switch_to('settings', $event)">{{$t('settings')}}</div>
+      <div @click.prevent="switch_to('friends', $event)">{{$t('friends')}}</div>
+      <div @click.prevent="switch_to('blacklist', $event)">{{$t('blacklist')}}</div>
+    </nav>
+    <div class="main">
+      <keep-alive>
+        <router-view/>
+      </keep-alive>
+    </div>
   </div>
 </template>
 
@@ -19,52 +28,52 @@ export default {
 
   },
   mounted() {
-    this.sss = util.ss_addrs()
+  
   },
   data() {
     return {
-      sss: [],
-      how_to: false
+
+
     };
   },
   computed: {
     address() {
-      return `http://${this.wifi_ip}:${this.port}`;
+      return ``;
     }
   },
   methods: {
-    chg_socks_port_back(data) {
-
+    switch_to(tab, e) {
+      this.$router.replace({name: tab})
+      $("nav > div").removeClass("selected");
+      $(e.target).addClass("selected");
     },
-    chg_http_port_back(data) {
 
-    },
-    
-    
   }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-canvas {
-  margin: 0.3em auto;
-  width: 200px;
-  height: 200px;
+.main {
+  width: 100%;
+  height: calc(100vh - 6.5rem);
+  overflow-y: auto;
 }
-.chg-port {
-  background-color: aquamarine;
-}
-.socks {
-  display: inline;
-}
-p {
-  margin: 0.7em 1.7em;
-  text-align: left;
-}
-.svr_addr {
+
+nav {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: nowrap;
+  margin: 0.5em 0;
+  width: 100%;
+}
+nav > div {
+  background-color: aquamarine;
+  flex: 1;
+  font-size: 1.2em;
+  border: 2px outset;
+}
+.selected {
+  border: 2px inset;
 }
 .my {
   display: flex;
@@ -74,16 +83,5 @@ p {
   /* overflow: hidden; */
   font-weight: 700;
 }
-button {
-  border-radius: 1em;
-  font-size: 1.2em;
-  padding: 0 1em;
-  margin-top: 0.5em;
-}
-b {
-  color: red;
-}
-i {
-  color: green;
-}
+
 </style>

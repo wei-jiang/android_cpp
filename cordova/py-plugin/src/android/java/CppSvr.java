@@ -172,7 +172,7 @@ public class CppSvr extends CordovaPlugin {
 		                }
 		            }
 		        } else {
-                    Log.d(LOG_TAG, "below android 6(api 23)");
+                    // Log.d(LOG_TAG, "below android 6(api 23)");
                 }
 	        } finally {
 	            if (handler != null) {

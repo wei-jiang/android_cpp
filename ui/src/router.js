@@ -8,6 +8,12 @@ import Image from '@/views/fs/Image.vue';
 import Audio from '@/views/fs/Audio.vue';
 import Video from '@/views/fs/Video.vue';
 import MultiSel from '@/views/fs/MultiSel.vue';
+
+import My from '@/views/My.vue';
+import Settings from '@/views/my/Settings.vue';
+import Friends from '@/views/my/Friends.vue';
+import Blacklist from '@/views/my/Blacklist.vue';
+
 Vue.use(Router);
 
 export default new Router({
@@ -48,7 +54,12 @@ export default new Router({
     {
       path: '/my',
       name: 'my',
-      component: () => import('./views/My.vue')
+      component: My,
+      children: [
+        { path: '', name: 'settings', component: Settings },
+        { path: 'friends', name: 'friends', component: Friends },
+        { path: 'blacklist', name: 'blacklist', component: Blacklist },
+      ]
     },
     {
       path: '/help',
