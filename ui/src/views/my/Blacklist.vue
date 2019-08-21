@@ -6,7 +6,7 @@
       </div>
       <div class="peer-info" @click="show_detail(b)">
         <div>{{b.nickname}}<i class=" material-icons">info_outline</i></div>       
-        <div v-if="b.shown">
+        <div v-if="b.show_type">
           <img :src="b.avatar">
           <div>{{b.signature}}</div>
         </div>
@@ -25,10 +25,10 @@ import util from "@/common/util";
 export default {
   name: "blacklist",
   created: function() {
-    
+    this.$root.$on("block_it", this.refresh);
   },
   destroyed() {
-   
+    this.$root.$off("block_it", this.refresh);
   },
   mounted() {
     this.refresh();
@@ -44,13 +44,13 @@ export default {
   methods: {
     refresh(){
       this.block_list = db.blacklist.find({}).map(b=>{
-        b.shown = false;
+        b.show_type = false;
         return b;
       });
     },
     show_detail(b){
-      b.shown = !b.shown
-      // console.log(`b.shown=${b.shown}`)
+      b.show_type = !b.show_type
+   
     },
     remove(b){
       navigator.notification.confirm(

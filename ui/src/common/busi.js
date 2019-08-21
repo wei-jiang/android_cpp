@@ -4,14 +4,30 @@ import _ from 'lodash'
 import util from "./util";
 import WSS from "@/wss";
 
-const sss = {}
+window.sss = {}
 class Busi {
     constructor() {
-        _.bindAll(this, ['init', 'reg_evt']);
+        _.bindAll(this, ['init', 'reg_evt', 'routine']);
     }
     init() {
         this.reg_evt();
         this.go_pub();
+        this.routine();
+    }
+    routine(){
+        setTimeout(()=>{
+            for (let [id, sp] of peers) {
+                const span = moment.duration(moment().diff(moment(sp.activity))).asSeconds();
+                // console.log(`span=${span}`)
+                if(span > 9){
+                    console.log('remove inactive peer: '+ id)
+                    sp.destroy();
+                    peers.delete(id);
+                    vm.$emit('peer_changed', '');
+                }
+            }
+            this.routine();
+        }, 1500)
     }
     go_pub() {
         try {
@@ -38,7 +54,6 @@ class Busi {
             if( sss.hasOwnProperty(addr) ){
                 sss[addr].destroy();
                 delete sss[addr];
-                // noty udp off these addr
             }
         });
         // no need replace

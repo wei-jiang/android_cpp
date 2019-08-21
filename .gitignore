@@ -106,3 +106,4 @@ www/
 .settings/
 admob/
 ssl-keys/
+*.local

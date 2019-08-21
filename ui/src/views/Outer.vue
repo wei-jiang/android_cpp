@@ -1,6 +1,7 @@
 <template>
   <div class="outer">
     <div v-for="s in sss" class="server">
+      <div class="bubble">{{s.count}}</div>
       <input v-model="s.addr" />
       <div @click="enable_svr_or_not(s)">
         <i v-if="s.enabled" class="small material-icons">check_box</i>
@@ -27,10 +28,10 @@ export default {
     msg: String
   },
   created: async function() {
-
+    this.$root.$on("online_count", this.refresh_count);
   },
   destroyed() {
-
+    this.$root.$off("online_count", this.refresh_count);
   },
   mounted() {
     this.refresh();
@@ -47,16 +48,31 @@ export default {
     }
   },
   methods: {
+    refresh_count(data){
+      const the_ss = this.sss.find(s=>s.addr === data.addr);
+      if(the_ss) the_ss.count = data.total;
+      
+    },
     add_server(){
       let addr = prompt(this.$t('svr-addr'), '');
       if(!addr) return;
       // check addr format
       if( !util.check_addr(addr) ) return util.show_alert_top_tm( this.$t('invalid-format') )
+      const the_ss = this.sss.find(s=>s.addr === addr);
+      if( the_ss ) return util.show_alert_top_tm( this.$t('already-exist') )
       db.ss.insert({ addr, enabled: true });
       this.refresh();
+      this.$root.$emit("add_ss", {addr});
     },
     refresh(){
-      this.sss = util.ss_addrs()
+      this.sss = util.ss_addrs().map(s=>{
+        if(sss[s.addr] && sss[s.addr].total){
+          s.count = sss[s.addr].total;
+        } else {
+          s.count = 0;
+        }       
+        return s;
+      })
     },
     enable_svr_or_not(s) {
       let title;
@@ -73,10 +89,11 @@ export default {
               s.enabled = !s.enabled;
               db.ss.update(s);
               if(s.enabled){
-
+                this.$root.$emit("add_ss", {addr:s.addr});
               }else{
-
-              }
+                this.$root.$emit("del_ss", {addr:s.addr});
+                s.count = 0;
+              }        
             }
           },            
           title,           // title
@@ -92,6 +109,7 @@ export default {
             if(i == 1){
               db.ss.remove(s);
               this.refresh();
+              this.$root.$emit("del_ss", {addr:s.addr});
             }
           },            
           this.$t('confirm-del'),           // title
@@ -104,14 +122,11 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-canvas {
-  margin: 0.3em auto;
-  width: 200px;
-  height: 200px;
-}
+
 .server{
   display: flex;
-  margin: 0.7em 0.5em;
+  margin: 0.7em 0.5em 0.5em 0;
+  align-items: center;
 }
 input {
   /* flex: 1; */
@@ -124,6 +139,16 @@ input {
 p {
   margin: 0.7em 1.7em;
   text-align: left;
+}
+.bubble{
+  background: #666;
+  border-radius: 50%;
+  color: #fff;
+  display: inline-block;
+  font-weight: bold;
+  line-height: 2.7em;
+  text-align: center;
+  min-width: 2.7em; 
 }
 
 .outer {

@@ -13,10 +13,32 @@ Peer::Peer(HttpSvr * http_svr)
 void Peer::init()
 {
     mount_pub_svr();
+    dismount_pub_svr();
     connect_to_peer();
 
 }
-
+void Peer::dismount_pub_svr()
+{
+    server_->resource["^/dismount_pub_svr$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+        json res;
+        try
+        {
+            auto data = json::parse(request->content);
+            auto svr_addr = data["svr_addr"].get<string>();
+            LOGI("dismount_pub_svr : svr_addr=%s;", svr_addr.c_str());
+            udp_->off_svr(svr_addr);
+            res["ret"] = 0;
+        }
+        catch (const exception &e)
+        {
+            // response->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
+            res["ret"] = -1;
+            res["msg"] = e.what();
+        }
+        http_svr_->res_json(response, res);
+        // response->write(res.dump(), header);
+    };
+}
 void Peer::mount_pub_svr()
 {
     server_->resource["^/mount_pub_svr$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {

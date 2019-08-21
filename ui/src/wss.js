@@ -5,10 +5,13 @@ import Noty from "noty";
 import Peer from 'simple-peer';
 
 import util from "@/common/util";
+import PDealer from "@/common/peer_dealer";
 
-const peers = new Map();
-class WSS {
+window.peers = new Map();
+// id --> sp --> {info --> {id, ep}, usr }
+class WSS extends PDealer {
   constructor(addr) {
+    super();
     this.addr = addr;
     this.svr_ip = addr.substring(0, addr.indexOf(':'))
     this.url = `wss://${addr}/`;
@@ -28,7 +31,7 @@ class WSS {
   }
   create_peer(p, initiator = false) {
     const s_ip = this.svr_ip;
-    console.log(`s_ip=${s_ip}`)
+    // console.log(`s_ip=${s_ip}`)
     const sp = new Peer({
       initiator,
       trickle: true,
@@ -43,7 +46,7 @@ class WSS {
         ]
       }
     });
-    sp.info = p;
+    sp.passive = !initiator;
     sp.on('signal', (sig_data) => {
       let data = {
         to: p.id,
@@ -58,35 +61,81 @@ class WSS {
     });
     sp.on('close', () => {
       console.log('peer channel closed');
-
+      peers.delete(sp.info.id)
+      // not fired, need custom heartbeat?
+      vm.$emit('peer_changed', '');
     })
     sp.on('connect', () => {
       console.log('peer channel connect');
+      const ui = db.user.findOne({})
+      sp.send_json({
+        cmd: 'handshake',
+        usr: {
+          // id: peer_id,
+          nickname: ui.nickname,
+          avatar: ui.avatar,
+          signature: ui.signature
+        }
+      })
     });
     sp.on('stream', (stream) => {
       console.log('on peer channel stream');
     });
- 
+    sp.on('data', data => {
+      if(typeof data === 'object'){
+        data = data.toString();
+      }
+      sp.activity = new Date();
+      this.handle_msg(sp, data);
+    })
     return sp;
   }
   on_message(evt) {
     try {
       const data = JSON.parse(evt.data)
       switch (data.cmd) {
-        case 'peers': {
-          // todo: filter with blacklist
-          const ps = data.peers;
+        // return order: res_peer_online -> peers -> total
+        case 'res_peer_online': {
+          // after ws register successfully, then start udp ping
+          util.post_local('mount_pub_svr', {
+            svr_addr: this.addr,
+            id: peer_id,
+            token: data.token
+          });
+          break;
+        }
+        case 'total': {
+          this.total = data.total;
+          vm.$emit('online_count', {
+            addr: this.addr,
+            total: data.total
+          })
+          break;
+        }
+        case 'peers': {          
+          let ps = data.peers;
+          // filter out blacklist
+          ps = ps.filter( p=>!( peers.has(p.id) || db.blacklist.findOne({id: p.id}) ) );
+          // ps = _.difference( ps, [...peers.keys()] );
           _.each(ps, p => {
             const sp = this.create_peer(p, true)
-            peers.set(p.id, sp);
+            this.postfix_peer(sp, p);
           })
           break;
         }
         case 'send_sig': {
-          console.log(`send_sig: ${JSON.stringify(data)}`);
-          const sp = this.create_peer(data.from)
+          // console.log(`send_sig: ${JSON.stringify(data)}`);
+          // to establish connection, this will be called multiple times, so must be sure only create peer instance one time
+          let sp;
+          let p = data.from;
+          if(peers.has(p.id) && peers.get(p.id).passive ){
+            sp = peers.get(p.id)
+          } else{
+            if( peers.has(p.id) ) peers.get(p.id).destroy();
+            sp = this.create_peer(p)
+            this.postfix_peer(sp, p)
+          }
           sp.signal(data.sig_data);
-          peers.set(data.from.id, sp);
           break;
         }
         case 'return_sig': {
@@ -102,27 +151,42 @@ class WSS {
       console.log(`parse ws message error: `+evt.data)
     }
   }
+  postfix_peer(sp, p){
+    sp.info = p;
+    sp.send_json = (j)=>sp.send(JSON.stringify(j));
+    sp.activity = new Date();
+    peers.set(p.id, sp);  //-----------------------------------
+    console.log(`add ${p.id} to Map`)
+    function send_ping(id){
+      setTimeout(()=>{
+        console.log('keep_alive send ping ...')
+        if( peers.has(id) && !peers.get(id).passive ){
+          peers.get(id).send('ping');
+          send_ping(id);
+        }
+      }, 3000);
+    }
+    send_ping(p.id);
+  }
   on_error(err) {
     console.log(`${this.url} onerror:  ` + JSON.stringify(err))
   }
   on_close() {
-    // 5 seconds, reconnect
-    setTimeout(this.init, 5 * 1000);
-    console.log(`${this.url} onclose`)
+    if(this.ws){
+      // 5 seconds, reconnect
+      setTimeout(this.init, 5 * 1000);
+      console.log(`${this.url} onclose`)
+    } else {
+      console.log(`${this.url} onclose, and not try to reconnect`)
+    }    
   }
   on_open() {
     console.log(`${this.url} onopen`)
-    const token = util.randomInt();
     this.send({
       cmd: 'peer_online',
       id: peer_id,
-      token
+      token: util.randomInt()
     });
-    util.post_local('mount_pub_svr', {
-      svr_addr: this.addr,
-      id: peer_id,
-      token
-    })
   }
 
   send(data) {
@@ -131,7 +195,13 @@ class WSS {
     this.ws.send(JSON.stringify(data));
   }
   destroy() {
+    const t = this.ws;
     this.ws = null;
+    // noty udp off these addr
+    util.post_local('dismount_pub_svr', {
+      svr_addr: this.addr
+    });
+    t.close();
   }
 }
 export default WSS;

@@ -1,7 +1,7 @@
 import Noty from 'noty';
 import moment from "moment";
 import md5 from "./md5";
-import gImg from "./gen_img";
+// import gImg from "./gen_img";
 import gFace from "./face";
 const free_seconds = 10 * 60 * 1000;
 class Util {

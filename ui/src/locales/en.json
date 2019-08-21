@@ -82,5 +82,7 @@
   "disallow": "disallowed",
   "chg-img": "change image",
   "confirm-disable": "confirm disable",
-  "confirm-enable": "confirm enable"
+  "confirm-enable": "confirm enable",
+  "add-friend": "add to friend",
+  "block-it": "block this guy"
 }

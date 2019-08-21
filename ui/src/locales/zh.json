@@ -18,7 +18,7 @@
   "sort-by-name": "按名称排序",
   "sort-by-type": "按类型排序",
   "multi-sel": "多选",
-  "already-exist": "已存在当前目录",
+  "already-exist": "项目已存在",
   "no-selection": "没有选择文件",
   "create-folder": "创建文件夹",
   "success": "成功",
@@ -82,5 +82,8 @@
   "disallow": "禁止",
   "chg-img": "替换图片",
   "confirm-disable": "确认禁用",
-  "confirm-enable": "确认启用"
+  "confirm-enable": "确认启用",
+  "add-friend": "加为好友",
+  "block-it": "屏蔽此人"
+  
 }

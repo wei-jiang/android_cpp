@@ -19,6 +19,7 @@ public:
     void init();
 private:
     void mount_pub_svr();
+    void dismount_pub_svr();
     void connect_to_peer();
 
 };
