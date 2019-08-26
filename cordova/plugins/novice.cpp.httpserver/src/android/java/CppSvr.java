@@ -359,8 +359,18 @@ public class CppSvr extends CordovaPlugin {
             }
         }
     }
+    int permissionHashCode = -1;
+    CallbackContext requestPermissionCb;
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
     {
+        if(requestCode == permissionHashCode){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                requestPermissionCb.sendPluginResult(new PluginResult(Status.OK, 0));
+            } else {
+                requestPermissionCb.sendPluginResult(new PluginResult(Status.ERROR, -1));
+            }
+            return;
+        }
         if(requestCode == CAMERA_REQ_CODE){
             if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 start_scan();
@@ -590,7 +600,26 @@ public class CppSvr extends CordovaPlugin {
             }
             // callbackContext.success(); // Thread-safe.
             return true;
-        }else {
+        } else if (action.equals("hasPermission")) {
+            String permission = args.getString(0);
+            if ( cordova.hasPermission(permission) ) {
+                callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));
+            } else {
+                callbackContext.sendPluginResult(new PluginResult(Status.ERROR, -1));
+            }
+            return true;
+        } else if (action.equals("requestPermission")) {       
+            String permission = args.getString(0);              
+            if (cordova.hasPermission(permission)) {
+                callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));
+            } else {               
+                permissionHashCode = permission.hashCode();   
+                requestPermissionCb = callbackContext;
+                cordova.requestPermission(this, permissionHashCode, permission);
+            }
+            // callbackContext.success(); // Thread-safe.
+            return true;
+        } else {
             return false;
         }
         return true;

@@ -75,7 +75,11 @@ export default new Promise((resolve, reject) => {
                     blacklist: mgrDB.getCollection("blacklist") ? mgrDB.getCollection("blacklist") : mgrDB.addCollection("blacklist"),
                     ui: mgrDB.getCollection("ui") ? mgrDB.getCollection("ui") : mgrDB.addCollection("ui"),
                     svr: mgrDB.getCollection("svr") ? mgrDB.getCollection("svr") : mgrDB.addCollection("svr"),
-                    ss: mgrDB.getCollection("ss") ? mgrDB.getCollection("ss") : mgrDB.addCollection("ss")
+                    ss: mgrDB.getCollection("ss") ? mgrDB.getCollection("ss") : mgrDB.addCollection("ss"),
+                    // id, nickname, content, type, [img, text], dt, dir[0, 1]. where id is chat target id
+                    peer_chat_log: mgrDB.getCollection("peer_chat_log") ? mgrDB.getCollection("peer_chat_log") : mgrDB.addCollection("peer_chat_log"),
+                    nearby_chat_log: mgrDB.getCollection("nearby_chat_log") ? mgrDB.getCollection("nearby_chat_log") : mgrDB.addCollection("nearby_chat_log"),
+                    world_chat_log: mgrDB.getCollection("world_chat_log") ? mgrDB.getCollection("world_chat_log") : mgrDB.addCollection("world_chat_log"),
                 }
                 populate_default();
                 resolve(db);

@@ -84,6 +84,9 @@
   "confirm-disable": "确认禁用",
   "confirm-enable": "确认启用",
   "add-friend": "加为好友",
-  "block-it": "屏蔽此人"
+  "block-it": "屏蔽此人",
+  "connected": "附近玩家",
+  "nearby": "附近频道",
+  "world": "世界频道"
   
 }

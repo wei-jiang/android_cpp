@@ -84,5 +84,8 @@
   "confirm-disable": "confirm disable",
   "confirm-enable": "confirm enable",
   "add-friend": "add to friend",
-  "block-it": "block this guy"
+  "block-it": "block this guy",
+  "connected": "peer",
+  "nearby": "neaby channel",
+  "world": "world channel"
 }

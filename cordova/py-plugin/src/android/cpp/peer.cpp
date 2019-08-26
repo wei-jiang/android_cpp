@@ -47,9 +47,9 @@ void Peer::mount_pub_svr()
         {
             auto data = json::parse(request->content);
             auto svr_addr = data["svr_addr"].get<string>();
-            auto id = data["id"].get<int32_t>();
+            auto id = data["id"].get<string>();
             auto token = data["token"].get<uint32_t>();
-            LOGI("mount_pub_svr : svr_addr=%s; id=%d; token=%u", svr_addr.c_str(), id, token );
+            LOGI("mount_pub_svr : svr_addr=%s; id=%s; token=%u", svr_addr.c_str(), id.c_str(), token );
             udp_->on_svr(svr_addr, id, token);
             res["ret"] = 0;
         }

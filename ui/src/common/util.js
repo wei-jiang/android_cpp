@@ -3,8 +3,9 @@ import moment from "moment";
 import md5 from "./md5";
 // import gImg from "./gen_img";
 import gFace from "./face";
+import Cordova from "./cordova";
 const free_seconds = 10 * 60 * 1000;
-class Util {
+class Util extends Cordova {
     restart_ads_tm() {
         window.is_ads_tm = false;
         setTimeout(() => window.is_ads_tm = true, free_seconds)

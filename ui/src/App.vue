@@ -1,46 +1,66 @@
 <template>
   <div id="app">
-    
     <header>{{title}}{{sub_title}}</header>
     <nav class="menu" id="main-menu">
       <div class="menu-toggle" @click="toggle_menu">{{ $t('main-menu') }}</div>
       <div class="menu-dropdown">
         <ul class="nav-menu">
           <li>
-            <a class="mb" @click="scan_qr()"><i class="material-icons">phone_android</i>&nbsp;&nbsp;{{$t('scan')}}</a>
+            <!-- crop_free phone_android center_focus_strong center_focus_weak-->
+            <a class="mb" @click="scan_qr()">
+              <i class="material-icons">center_focus_weak</i>
+              &nbsp;&nbsp;{{$t('scan')}}
+            </a>
           </li>
           <li>
-            <a class="mb" @click="to_page('/outer', $t('outer'), $event)"><i class="material-icons">language</i>&nbsp;&nbsp;{{$t('outer')}}</a>
+            <a class="mb" @click="to_page('/outer', $t('outer'), $event)">
+              <i class="material-icons">language</i>
+              &nbsp;&nbsp;{{$t('outer')}}
+            </a>
           </li>
           <li>
-            <a class="mb" @click="to_page('/peer', $t('peer'), $event)"><i class="material-icons">people</i>&nbsp;&nbsp;{{$t('peer')}}</a>
+            <a class="mb" @click="to_page('/peer', $t('peer'), $event)">
+              <i class="material-icons">people</i>
+              &nbsp;&nbsp;{{$t('peer')}}
+            </a>
           </li>
           <li>
-            <a class="mb" @click="to_page('/my', $t('my'), $event)"><i class="material-icons">person</i>&nbsp;&nbsp;{{$t('my')}}</a>
+            <a class="mb" @click="to_page('/my', $t('my'), $event)">
+              <i class="material-icons">person</i>
+              &nbsp;&nbsp;{{$t('my')}}
+            </a>
           </li>
           <li>
-            <a class="mb" @click="to_page('/help', $t('help'), $event)"><i class="material-icons">help_outline</i>&nbsp;&nbsp;{{$t('help')}}</a>
+            <a class="mb" @click="to_page('/help', $t('help'), $event)">
+              <i class="material-icons">help_outline</i>
+              &nbsp;&nbsp;{{$t('help')}}
+            </a>
           </li>
           <!-- <li>
             <a class="mb" @click="test">&nbsp;&nbsp;test</a>
-          </li> -->
+          </li>-->
         </ul>
       </div>
     </nav>
     <div class="content">
       <keep-alive>
-        <router-view/>
+        <router-view />
       </keep-alive>
     </div>
     <footer>
-      <div class="mb selected" @click="to_page('/', $t('file-mgr'), $event)"><i class="material-icons">store</i>{{$t('file-mgr')}}</div>
-      <div class="mb" @click="show_svr_addr($event)"><i class="material-icons">wifi</i>{{$t('svr-addr')}}</div>
-
+      <div class="mb selected" @click="to_page('/', $t('file-mgr'), $event)">
+        <i class="material-icons">store</i>
+        {{$t('file-mgr')}}
+      </div>
+      <div class="mb" @click="show_svr_addr($event)">
+        <i class="material-icons">wifi</i>
+        {{$t('svr-addr')}}
+      </div>
     </footer>
   </div>
 </template>
 <script>
-import Peer from 'simple-peer';
+import Peer from "simple-peer";
 import util from "@/common/util";
 import busi from "@/common/busi";
 import WS from "@/ws";
@@ -59,22 +79,20 @@ export default {
     this.$root.$off("http_ready", this.http_ready);
     document.removeEventListener("deviceready", this.deviceready, false);
   },
-  mounted() {
-    
-  },
+  mounted() {},
   data() {
     return {
       title: this.$t("file-mgr"),
-      sub: ''
+      sub: ""
     };
   },
   computed: {
     sub_title() {
-      return this.sub ? `(${this.sub})`:"";
+      return this.sub ? `(${this.sub})` : "";
     }
   },
   methods: {
-    test(){
+    test() {
       // cpp.showInterstitialAd();
       // cpp.showBanner(()=>{
       //   console.log('show banner success')
@@ -85,12 +103,12 @@ export default {
       // cpp.echo('jiang', res=>alert(res) )
       if (Peer.WEBRTC_SUPPORT) {
         // webrtc support!
-        alert('webrtc support')
+        alert("webrtc support");
       } else {
         // fallback
-        alert('webrtc not support')
+        alert("webrtc not support");
       }
-      this.toggle_menu()
+      this.toggle_menu();
     },
 
     cpp_noty(data) {
@@ -99,37 +117,37 @@ export default {
         data = JSON.parse(data);
         this.$root.$emit(data.cmd, data);
       } catch (err) {
-        const hex_str = Buffer.from(data, "binary").toString('hex');
+        const hex_str = Buffer.from(data, "binary").toString("hex");
         console.log(`hex_str=${hex_str}`);
       }
     },
-    http_ready(){
-      cpp.start_socks( util.socks_port() )
+    http_ready() {
+      cpp.start_socks(util.socks_port());
     },
-    scan_qr(){
+    scan_qr() {
       cpp.scan_by_camera(
         data => {
           // util.show_alert_top(JSON.stringify(data) );
           if (!data.cancelled) {
             const qr_code = data.text;
             console.log(`qr_code=${qr_code}`);
-            if(qr_code.startsWith("http")){
+            if (qr_code.startsWith("http")) {
               window.open(qr_code);
             } else {
               navigator.notification.confirm(
                 qr_code, // message
-                i=>{
+                i => {
                   // the index uses one-based indexing, so the value is 1, 2, 3, etc.
-                  if(i == 1){
-                    cpp.copyText(qr_code, ()=>{
-                      util.show_alert_top_tm( this.$t('copy-done') )
-                    })
+                  if (i == 1) {
+                    cpp.copyText(qr_code, () => {
+                      util.show_alert_top_tm(this.$t("copy-done"));
+                    });
                   }
-                },            
-                this.$t('read-code-content'),           // title
-                [this.$t('copy'), this.$t('close')]     // buttonLabels
+                },
+                this.$t("read-code-content"), // title
+                [this.$t("copy"), this.$t("close")] // buttonLabels
               );
-            }            
+            }
           } else {
             console.log(`scan qr cancelled`);
           }
@@ -138,69 +156,92 @@ export default {
           util.show_alert_top(err);
         }
       );
-      this.toggle_menu()
+      this.toggle_menu();
     },
-    show_svr_addr(e){
-      this.to_page('/intranet', this.$t('svr-addr'), e);
+    show_svr_addr(e) {
+      this.to_page("/intranet", this.$t("svr-addr"), e);
       //disable ads for now
       // if(is_ads_tm){
       //   cpp.showInterstitialAd(()=>{
       //     util.restart_ads_tm();
       //   });
-      // }     
+      // }
     },
     toggle_menu() {
       const menu = document.getElementById("main-menu");
       menu.classList.toggle("is-open");
     },
-    
-    sub_title_chg(sub){
+
+    sub_title_chg(sub) {
       this.sub = sub;
     },
-    to_page(name, title, e) {      
+    to_page(name, title, e) {
       // router.replace(location, onComplete?, onAbort?)
-      this.$router.replace(name, ()=>{
-        
-      });
+      this.$router.replace(name, () => {});
       this.title = title;
       $(".mb").removeClass("selected");
       $(e.target).addClass("selected");
-      this.sub = '';
+      this.sub = "";
       $("#main-menu").removeClass("is-open");
     },
-    deviceready() {     
+    deviceready() {
       //disable ads for now
       // util.restart_ads_tm();
       window.cli_id = `${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`;
       try {
-        window.peer_id = util.hash_code(window.cli_id);
-        window.cli_id = util.md5(window.cli_id);      
+        // 32bit hashCode likely has conflict, so just use md5 hash string
+        window.cli_id = util.md5(window.cli_id);
       } catch (err) {
-        console.log(err)
+        console.log(err);
       }
+      util.create_dir_recursive("mystore/inout/in/img").then(dirEntry => {
+        dirEntry.getFile(
+          "aaa.txt",
+          { create: true, exclusive: false },
+          fileEntry => {
+            fileEntry.createWriter(fileWriter => {
+              fileWriter.onwriteend = function() {
+                console.log("write test file successful...");
+              };
+              fileWriter.onerror = function(e) {
+                console.log("write test file failed: " + e.toString());
+              };
+              const pac = `aaa hello world!!!`;
+              const dataObj = new Blob([pac], { type: "text/plain" });
+              fileWriter.write(dataObj);
+            });
+          },
+          err => {}
+        );
+      });
       window.ws = new WS();
       busi.init();
-      cpp.start( util.http_port(), () => {ws.init()}, err => {} );     
+      cpp.start(
+        util.http_port(),
+        () => {
+          ws.init();
+        },
+        err => {}
+      );
       cpp.reg_cpp_cb(this.cpp_noty.bind(this));
       networkinterface.getWiFiIPAddress(
         info => {
-          util.write_socks_pac( info.ip, util.socks_port() ); 
+          util.write_socks_pac(info.ip, util.socks_port());
         },
         err => {}
-      );  
+      );
     }
   }
 };
 </script>
 <style>
-@import './assets/font.css';
-@import './assets/ol.css';
+@import "./assets/font.css";
+@import "./assets/ol.css";
 :root {
   box-sizing: border-box;
   font-size: calc(1vw + 0.9em);
 }
 @media (min-width: 35em) {
-
 }
 @media (min-width: 50em) {
   :root {
@@ -259,7 +300,7 @@ footer {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  height: calc(100vh - 4.0rem);
+  height: calc(100vh - 4rem);
   overflow-y: auto;
 }
 /* menu */
@@ -347,19 +388,19 @@ footer {
 button {
   min-height: max-content;
 }
-i.material-icons{
-  vertical-align: sub; 
+i.material-icons {
+  vertical-align: sub;
   pointer-events: none;
   /* border: 1px solid; */
 }
 
-.yellow-new{
+.yellow-new {
   color: rgb(87, 67, 1);
 }
-.yellow{
+.yellow {
   color: rgb(199, 173, 87);
 }
-.green{
+.green {
   color: green;
 }
 </style>

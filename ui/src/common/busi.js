@@ -8,6 +8,7 @@ window.sss = {}
 class Busi {
     constructor() {
         _.bindAll(this, ['init', 'reg_evt', 'routine']);
+        this.need_check_friends = new Date();
     }
     init() {
         this.reg_evt();
@@ -15,19 +16,38 @@ class Busi {
         this.routine();
     }
     routine(){
+        let span;
         setTimeout(()=>{
             for (let [id, sp] of peers) {
-                const span = moment.duration(moment().diff(moment(sp.activity))).asSeconds();
-                // console.log(`span=${span}`)
-                if(span > 9){
+                span = moment.duration(moment().diff(moment(sp.activity))).asSeconds();
+                // remove peer in blacklist
+                const to_be_removed = db.blacklist.findOne({id})
+                if(span > 6 || to_be_removed){
                     console.log('remove inactive peer: '+ id)
                     sp.destroy();
                     peers.delete(id);
                     vm.$emit('peer_changed', '');
                 }
             }
+            // check friends
+            span = moment.duration(moment().diff(moment(this.need_check_friends))).asSeconds();
+            if(span > 15){
+                const ids = db.friends.find({}).filter( f=> !peers.has(f.id) ).map(f=>f.id);
+                if(ids.length > 0){
+                    _.each(sss, (v, k)=>{
+                        v.check_friends(ids);
+                    })
+                }
+                this.need_check_friends = new Date();
+            }
+            this.replenish();
             this.routine();
         }, 1500)
+    }
+    replenish(){
+        _.each(sss, (v, k)=>{
+            v.replenish();
+        })
     }
     go_pub() {
         try {
@@ -56,11 +76,13 @@ class Busi {
                 delete sss[addr];
             }
         });
-        // no need replace
-        // vm.$on("replace_ss", data => {
 
-        //     // vm.$emit("refresh_noty", data);
-        // });
+        vm.$on("send_p2p_msg", data => {
+            // {id, type, content}
+            const id = data.id;
+            delete data.id;
+            peers.get(id).send_json(CMD.send_p2p_msg, data)
+        });
     }
 }
 

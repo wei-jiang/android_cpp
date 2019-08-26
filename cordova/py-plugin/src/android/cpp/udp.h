@@ -10,9 +10,9 @@ class UdpSvr
 {    
     struct SsEp
     {
-        SsEp(const std::string& a, int32_t i, uint32_t t);
+        SsEp(const std::string& a, const std::string& i, uint32_t t);
         std::string addr;
-        int32_t id; 
+        std::string id; 
         uint32_t token;
         boost::asio::ip::udp::endpoint ep;
         std::vector<uint8_t> ping_data;
@@ -22,7 +22,7 @@ class UdpSvr
     void do_receive();
     void do_send(std::size_t length);
     void do_send(std::vector<uint8_t> buff, boost::asio::ip::udp::endpoint& ep);
-    void on_svr(const std::string& svr_addr, int32_t id, uint32_t token);
+    void on_svr(const std::string& svr_addr, const std::string& id, uint32_t token);
     void off_svr(const std::string& svr_addr);
   private:
     void routine(const boost::system::error_code& /*e*/, boost::asio::deadline_timer* t);

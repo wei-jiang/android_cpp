@@ -14,6 +14,10 @@ import Settings from '@/views/my/Settings.vue';
 import Friends from '@/views/my/Friends.vue';
 import Blacklist from '@/views/my/Blacklist.vue';
 
+import Connected from '@/views/peer/Connected.vue';
+import Nearby from '@/views/peer/Nearby.vue';
+import World from '@/views/peer/World.vue';
+
 Vue.use(Router);
 
 export default new Router({
@@ -49,7 +53,12 @@ export default new Router({
     {
       path: '/peer',
       name: 'peer',
-      component: () => import('./views/Peer.vue')
+      component: () => import('./views/Peer.vue'),
+      children: [
+        { path: '', name: 'connected', component: Connected },
+        { path: 'nearby', name: 'nearby', component: Nearby },
+        { path: 'world', name: 'world', component: World },
+      ]
     },
     {
       path: '/my',

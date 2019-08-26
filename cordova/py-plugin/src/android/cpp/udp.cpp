@@ -9,7 +9,7 @@
 using namespace std;
 using boost::asio::ip::address;
 using boost::asio::ip::udp;
-UdpSvr::SsEp::SsEp(const std::string &a, int32_t i, uint32_t t)
+UdpSvr::SsEp::SsEp(const std::string &a, const std::string& i, uint32_t t)
     : addr(a), id(i), token(t)
 {
   auto v = Util::split(a, ":");
@@ -17,12 +17,11 @@ UdpSvr::SsEp::SsEp(const std::string &a, int32_t i, uint32_t t)
   {
     ep = udp::endpoint(address::from_string(v[0]), stoi(v[1]));
   }
-  ping_data.resize(9);
+  ping_data.resize(37);
   ping_data[0] = 0x18;
-  i = htonl(id); 
   t = htonl(token);
-  memcpy(&ping_data[1], &i, 4);
-  memcpy(&ping_data[5], &t, 4);
+  memcpy(&ping_data[1], i.c_str(), 32);
+  memcpy(&ping_data[33], &t, 4);
 }
 UdpSvr::UdpSvr(short port)
     : socket_(*g_io, udp::endpoint(udp::v4(), port))
@@ -45,7 +44,7 @@ void UdpSvr::routine(const boost::system::error_code & /*e*/, boost::asio::deadl
   t->async_wait(boost::bind(&UdpSvr::routine, this,
                             boost::asio::placeholders::error, t));
 }
-void UdpSvr::on_svr(const std::string &svr_addr, int32_t id, uint32_t token)
+void UdpSvr::on_svr(const std::string &svr_addr, const std::string& id, uint32_t token)
 {
   off_svr(svr_addr);
   auto s = make_shared<SsEp>(svr_addr, id, token);

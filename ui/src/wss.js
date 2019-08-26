@@ -26,9 +26,15 @@ class WSS extends PDealer {
     this.ws.onerror = this.on_error;
     this.ws.onopen = this.on_open;
   }
-  connect_to_friends() {
-    // todo: periodically check
+  check_friends(ids){
+    if(this.connected){
+      this.send({
+        cmd: 'check_fiends',
+        friends: ids
+      })
+    }
   }
+
   create_peer(p, initiator = false) {
     const s_ip = this.svr_ip;
     // console.log(`s_ip=${s_ip}`)
@@ -68,23 +74,16 @@ class WSS extends PDealer {
     sp.on('connect', () => {
       console.log('peer channel connect');
       const ui = db.user.findOne({})
-      sp.send_json({
-        cmd: 'handshake',
-        usr: {
-          // id: peer_id,
-          nickname: ui.nickname,
-          avatar: ui.avatar,
-          signature: ui.signature
-        }
-      })
+      sp.send_json(CMD.handshake, {
+        nickname: ui.nickname,
+        avatar: ui.avatar,
+        signature: ui.signature
+      });
     });
     sp.on('stream', (stream) => {
       console.log('on peer channel stream');
     });
     sp.on('data', data => {
-      if(typeof data === 'object'){
-        data = data.toString();
-      }
       sp.activity = new Date();
       this.handle_msg(sp, data);
     })
@@ -99,7 +98,7 @@ class WSS extends PDealer {
           // after ws register successfully, then start udp ping
           util.post_local('mount_pub_svr', {
             svr_addr: this.addr,
-            id: peer_id,
+            id: cli_id,
             token: data.token
           });
           break;
@@ -151,17 +150,37 @@ class WSS extends PDealer {
       console.log(`parse ws message error: `+evt.data)
     }
   }
+  replenish(){
+    const aim = Math.min(this.total, 100);
+    if(peers.size < aim){
+      this.send({
+        cmd: 'need_peers',
+        amount: aim - peers.size
+      });
+    }
+  }
   postfix_peer(sp, p){
     sp.info = p;
-    sp.send_json = (j)=>sp.send(JSON.stringify(j));
+    sp.send_json = (cmd, j)=> {
+      const payload = JSON.stringify(j);
+      let buf = Buffer.alloc(2);
+      buf.writeUInt16BE(cmd);
+      buf = Buffer.concat([buf, Buffer.from(payload)]);
+      sp.send(buf) ;
+    };
+    sp.send_cmd = (cmd)=> {
+      let buf = Buffer.alloc(2);
+      buf.writeUInt16BE(cmd);
+      sp.send(buf) ;
+    };
     sp.activity = new Date();
     peers.set(p.id, sp);  //-----------------------------------
     console.log(`add ${p.id} to Map`)
     function send_ping(id){
       setTimeout(()=>{
-        console.log('keep_alive send ping ...')
+        // console.log('keep_alive send ping ...')
         if( peers.has(id) && !peers.get(id).passive ){
-          peers.get(id).send('ping');
+          peers.get(id).send_cmd(CMD.ping);
           send_ping(id);
         }
       }, 3000);
@@ -172,19 +191,21 @@ class WSS extends PDealer {
     console.log(`${this.url} onerror:  ` + JSON.stringify(err))
   }
   on_close() {
+    this.connected = false;
     if(this.ws){
       // 5 seconds, reconnect
-      setTimeout(this.init, 5 * 1000);
+      setTimeout(this.init, 1 * 1000);
       console.log(`${this.url} onclose`)
     } else {
       console.log(`${this.url} onclose, and not try to reconnect`)
     }    
   }
   on_open() {
+    this.connected = true;
     console.log(`${this.url} onopen`)
     this.send({
       cmd: 'peer_online',
-      id: peer_id,
+      id: cli_id,
       token: util.randomInt()
     });
   }
@@ -192,7 +213,12 @@ class WSS extends PDealer {
   send(data) {
     // todo: if closed, reconnect
     // expect data to be object
-    this.ws.send(JSON.stringify(data));
+    try {
+      this.ws.send(JSON.stringify(data));
+    } catch (error) {
+      
+    }
+    
   }
   destroy() {
     const t = this.ws;
