@@ -24,6 +24,7 @@
         <allow-intent href="market:*" />
         <resource-file src="res/magic.mgc" target="app/src/main/assets/magic.mgc" />
         <resource-file src="res/values-zh-rCN/strings.xml" target="app/src/main/res/values-zh-rCN/strings.xml" />
+        <resource-file src="res/xml/provider_paths.xml" target="app/src/main/res/xml/provider_paths.xml" />
         <preference name="AndroidPersistentFileLocation" value="Compatibility" />
         <!-- android 5.0 and can not use above to build -->
         <preference name="android-minSdkVersion" value="21" />

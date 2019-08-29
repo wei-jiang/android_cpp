@@ -1,11 +1,15 @@
 import Noty from 'noty';
 import moment from "moment";
+import uuidv1 from 'uuid/v1'
 import md5 from "./md5";
 // import gImg from "./gen_img";
 import gFace from "./face";
 import Cordova from "./cordova";
 const free_seconds = 10 * 60 * 1000;
 class Util extends Cordova {
+    uuid(){
+        return uuidv1();
+    }
     restart_ads_tm() {
         window.is_ads_tm = false;
         setTimeout(() => window.is_ads_tm = true, free_seconds)
@@ -15,6 +19,9 @@ class Util extends Cordova {
     }
     md5(s) {
         return md5(s);
+    }
+    get_ext_of_file(fn){
+        return fn.slice( fn.lastIndexOf(".") );
     }
     gen_face() {
         return gFace()//gImg()

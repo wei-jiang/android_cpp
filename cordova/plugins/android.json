@@ -22,16 +22,16 @@
     "cordova-plugin-file": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
-    "cordova-plugin-networkinterface": {
-      "PACKAGE_NAME": "freenet.cppsvr"
-    },
-    "cordova-plugin-whitelist": {
+    "cordova-plugin-media": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
     "cordova-plugin-media-capture": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
-    "cordova-plugin-media": {
+    "cordova-plugin-networkinterface": {
+      "PACKAGE_NAME": "freenet.cppsvr"
+    },
+    "cordova-plugin-whitelist": {
       "PACKAGE_NAME": "freenet.cppsvr"
     },
     "novice.cpp.httpserver": {

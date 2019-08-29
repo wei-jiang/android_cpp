@@ -23,6 +23,8 @@ import android.util.Log;
 import android.util.DisplayMetrics;
 import android.os.Handler;
 import android.os.Message;
+import android.webkit.MimeTypeMap;
+import android.support.v4.content.FileProvider;
 
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaWebView;
@@ -328,6 +330,56 @@ public class CppSvr extends CordovaPlugin {
     private void show(String txt) {
         Toast.makeText(cordova.getActivity().getApplicationContext(), txt, Toast.LENGTH_SHORT).show();
     }
+    private String fileExt(String path) {
+        if (path.indexOf("?") > -1) {
+            path = path.substring(0, path.indexOf("?"));
+        }
+        if (path.lastIndexOf(".") == -1) {
+            return null;
+        } else {
+            String ext = path.substring(path.lastIndexOf(".") + 1);
+            if (ext.indexOf("%") > -1) {
+                ext = ext.substring(0, ext.indexOf("%"));
+            }
+            if (ext.indexOf("/") > -1) {
+                ext = ext.substring(0, ext.indexOf("/"));
+            }
+            return ext.toLowerCase();
+    
+        }
+    }
+    private void showFile(String path) 
+    {
+        // Log.i(LOG_TAG, "showFile path="+path);
+        File file = new File(path);
+        MimeTypeMap myMime = MimeTypeMap.getSingleton();
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        String ext = fileExt(path);
+        // Log.i(LOG_TAG, "showFile ext="+ext);
+        String mimeType = myMime.getMimeTypeFromExtension(ext);
+        Log.i(LOG_TAG, "mimeType="+mimeType);
+        // appId=freenet.cppsvr.provider
+        // if(mimeType == null) mimeType = "image/jpeg";
+        if(android.os.Build.VERSION.SDK_INT >=24) {
+            // Log.i(LOG_TAG, "android.os.Build.VERSION.SDK_INT >=24");
+            String appId = getActivity().getApplicationContext().getPackageName() + ".provider";
+            // Log.i(LOG_TAG, "appId="+appId);
+            Uri fileURI = FileProvider.getUriForFile(getActivity(), appId, file);
+            intent.setDataAndType(fileURI, mimeType);
+            // Log.i(LOG_TAG, ">=24, fileURI.toString()="+fileURI.toString());
+        }else {
+            // Log.i(LOG_TAG, "<24, Uri.fromFile(file).toString()="+Uri.fromFile(file).toString());
+            intent.setDataAndType(Uri.fromFile(file), mimeType);           
+        }
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            // Log.i(LOG_TAG, "getActivity().getApplicationContext().startActivity(intent)");
+            getActivity().getApplicationContext().startActivity(intent);
+        }catch (ActivityNotFoundException e){
+            Log.i(LOG_TAG, "No Application found to open this type of file:"+path);
+
+        }
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE) {
@@ -357,10 +409,17 @@ public class CppSvr extends CordovaPlugin {
                 // this.error(new PluginResult(PluginResult.Status.ERROR), this.callback);
                 this.scan_cb.error("Unexpected error");
             }
+        } else if(requestCode == 123) {
+            Uri uri = data.getData(); //The uri with the location of the file
+            Log.i(LOG_TAG, "select uri="+uri.toString());
+            String path = RealFilePathUtil.getPath(getActivity(), uri);
+            this.cb.success( path );
+            Log.i(LOG_TAG, "select file:"+path);
         }
+        Log.i(LOG_TAG, "-----------onActivityResult---------------requestCode="+String.valueOf(requestCode)+"; resultCode=" + String.valueOf(resultCode));
     }
     int permissionHashCode = -1;
-    CallbackContext requestPermissionCb;
+    CallbackContext requestPermissionCb, cb;
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
     {
         if(requestCode == permissionHashCode){
@@ -411,6 +470,7 @@ public class CppSvr extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         Context context = cordova.getActivity().getApplicationContext();
         String packageName = context.getPackageName();
+        this.cb = callbackContext;
         if(action.equals("reg_cpp_cb")) {
             cppCb = callbackContext;
             if(cppRetThread != null){
@@ -618,6 +678,21 @@ public class CppSvr extends CordovaPlugin {
                 cordova.requestPermission(this, permissionHashCode, permission);
             }
             // callbackContext.success(); // Thread-safe.
+            return true;
+        } else if (action.equals("chooseFileByType")) {  
+            // type maybe : "*/*"    
+            String type = args.getString(0);  
+            Intent intent = new Intent()
+            .setType(type)
+            .setAction(Intent.ACTION_GET_CONTENT);
+            cordova.setActivityResultCallback(this);
+            cordova.getActivity().startActivityForResult(Intent.createChooser(intent, "Select a file"), 123);
+            // callbackContext.success(); // Thread-safe.
+            return true;
+        } else if (action.equals("openFileByPath")) {  
+            // path no file:// prefix    
+            String path = args.getString(0);  
+            showFile(path);
             return true;
         } else {
             return false;

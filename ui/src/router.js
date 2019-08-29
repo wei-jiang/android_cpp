@@ -51,6 +51,12 @@ export default new Router({
       component: () => import('./views/Outer.vue')
     },
     {
+      path: '/peer-chat/:tp',
+      props: true,
+      name: 'peer-chat',
+      component: () => import('./views/PeerChat.vue')
+    },
+    {
       path: '/peer',
       name: 'peer',
       component: () => import('./views/Peer.vue'),

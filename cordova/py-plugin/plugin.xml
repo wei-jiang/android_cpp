@@ -10,6 +10,22 @@
 		<edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
 			<application android:usesCleartextTraffic="true" />
 		</edit-config>
+		<edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
+			<manifest xmlns:tools="http://schemas.android.com/tools" />
+		</edit-config>
+		<config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <provider
+				android:name="android.support.v4.content.FileProvider"
+				android:authorities="${applicationId}.provider"
+				android:exported="false"
+				android:grantUriPermissions="true"
+				tools:replace="android:authorities">
+				<meta-data
+					android:name="android.support.FILE_PROVIDER_PATHS"
+					android:resource="@xml/provider_paths"
+					tools:replace="android:resource" />
+			</provider>
+        </config-file>
 		<config-file parent="/*" target="res/xml/config.xml">
 			<feature name="CppSvr">
 				<param name="android-package" value="freego.novice.CppSvr" />
@@ -45,7 +61,8 @@
             <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 		</config-file>
 		<framework src="me.dm7.barcodescanner:zxing:1.9.8" />
-		<framework src="com.google.zxing:core:3.3.0" />
+		<framework src="com.google.zxing:core:3.3.0" />		
+		<source-file src="src/android/java/RealFilePathUtil.java" target-dir="app/src/main/java/freego/novice" />
 		<source-file src="src/android/java/CppSvr.java" target-dir="app/src/main/java/freego/novice" />
 		<source-file src="src/android/java/ForegroundService.java" target-dir="app/src/main/java/freego/novice" />
 		<source-file src="src/android/java/Scanner.java" target-dir="src/freego/novice" />

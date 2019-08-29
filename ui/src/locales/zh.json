@@ -87,6 +87,6 @@
   "block-it": "屏蔽此人",
   "connected": "附近玩家",
   "nearby": "附近频道",
-  "world": "世界频道"
-  
+  "world": "世界频道",
+  "peer-closed": "对方已离线"
 }

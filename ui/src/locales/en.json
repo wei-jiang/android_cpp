@@ -87,5 +87,6 @@
   "block-it": "block this guy",
   "connected": "peer",
   "nearby": "neaby channel",
-  "world": "world channel"
+  "world": "world channel",
+  "peer-closed": "peer closed"
 }

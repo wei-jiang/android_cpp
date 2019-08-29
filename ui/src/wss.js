@@ -70,6 +70,7 @@ class WSS extends PDealer {
       peers.delete(sp.info.id)
       // not fired, need custom heartbeat?
       vm.$emit('peer_changed', '');
+      vm.$emit('peer_closed', sp.info.id);
     })
     sp.on('connect', () => {
       console.log('peer channel connect');
@@ -161,16 +162,25 @@ class WSS extends PDealer {
   }
   postfix_peer(sp, p){
     sp.info = p;
-    sp.send_json = (cmd, j)=> {
-      const payload = JSON.stringify(j);
+    sp.send_string = (cmd, s)=> {
       let buf = Buffer.alloc(2);
       buf.writeUInt16BE(cmd);
-      buf = Buffer.concat([buf, Buffer.from(payload)]);
+      buf = Buffer.concat([buf, Buffer.from(s)]);
       sp.send(buf) ;
+    };
+    sp.send_json = (cmd, j)=> {
+      const payload = JSON.stringify(j);
+      sp.send_string(cmd, payload);
     };
     sp.send_cmd = (cmd)=> {
       let buf = Buffer.alloc(2);
       buf.writeUInt16BE(cmd);
+      sp.send(buf) ;
+    };
+    sp.send_buff = (cmd, buff)=> {
+      let buf = Buffer.alloc(2);
+      buf.writeUInt16BE(cmd);
+      buf = Buffer.concat([buf, buff]);
       sp.send(buf) ;
     };
     sp.activity = new Date();

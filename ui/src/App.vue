@@ -194,26 +194,7 @@ export default {
       } catch (err) {
         console.log(err);
       }
-      util.create_dir_recursive("mystore/inout/in/img").then(dirEntry => {
-        dirEntry.getFile(
-          "aaa.txt",
-          { create: true, exclusive: false },
-          fileEntry => {
-            fileEntry.createWriter(fileWriter => {
-              fileWriter.onwriteend = function() {
-                console.log("write test file successful...");
-              };
-              fileWriter.onerror = function(e) {
-                console.log("write test file failed: " + e.toString());
-              };
-              const pac = `aaa hello world!!!`;
-              const dataObj = new Blob([pac], { type: "text/plain" });
-              fileWriter.write(dataObj);
-            });
-          },
-          err => {}
-        );
-      });
+
       window.ws = new WS();
       busi.init();
       cpp.start(
@@ -237,6 +218,7 @@ export default {
 <style>
 @import "./assets/font.css";
 @import "./assets/ol.css";
+@import "./assets/common.css";
 :root {
   box-sizing: border-box;
   font-size: calc(1vw + 0.9em);
