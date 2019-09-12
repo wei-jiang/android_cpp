@@ -47,3 +47,7 @@ git branch -D master             # Delete old master
 git branch -mv new_master master # Make new_master master
 <!-- or -->
 git reset --hard master~1
+
+echo -n "hello" | nc -4u 222.244.70.87 22080
+
+echo -n "hello" | nc -4u 139.155.50.166 34024

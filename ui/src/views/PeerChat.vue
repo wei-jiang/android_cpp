@@ -1,9 +1,7 @@
 <template>
   <div class="peer-chat">
-    <audio></audio>
-    <div v-if="tp === null">
-      {{$t('peer-closed')}}
-    </div>
+    <audio id="pack_audio"></audio>
+    <div v-if="tp === null">{{$t('peer-closed')}}</div>
     <div v-else class="player">
       <div class="title">
         <div @click="$router.go(-1)" class="small material-icons">keyboard_backspace</div>
@@ -11,7 +9,7 @@
           <img class="small-avatar" :src="tp.avatar" />
           <div>{{tp.nickname}}</div>
         </div>
-        
+
         <div @click.stop="add_friend()">
           <i class="small material-icons">favorite_border</i>
           &nbsp;&nbsp;
@@ -23,14 +21,18 @@
 
       <div class="chat">
         <div class="chat-log">
+          <audio id="rt_audio" autoplay/>
+          <video id="rt_video" controls autoplay/>
+          <video id="rt_video_local" muted/>
           <!-- include variable components -->
           <div v-for="l in chat_logs">
-            <component
-              v-bind:is="select_chat_component(l)"
-              :log="l"
-              :peer="tp"
-              @play_this="play_this"
-            ></component>
+            <ChatText v-if="l.type == 'text'" :log="l" :peer="tp"></ChatText>
+            <ChatImage v-else-if="l.type == 'image'" :log="l" :peer="tp"></ChatImage>
+            <ChatAudio v-else-if="l.type == 'audio'" :log="l" :peer="tp" @play_this="play_this"></ChatAudio>
+            <ChatVideo v-else-if="l.type == 'video'" :log="l" :peer="tp"></ChatVideo>
+            <ChatOthers v-else-if="l.type == 'others'" :log="l" :peer="tp"></ChatOthers>
+            <ChatStream v-else-if="l.type == 'stream'" :log="l" :peer="tp"></ChatStream>
+            <div v-else>不支持的聊天类型</div>
           </div>
         </div>
         <div class="chat-input">
@@ -81,23 +83,25 @@
               <div class="small material-icons">photo_camera</div>
               <div>拍照</div>
             </div>
-            <div>
+            <div @click="capture_video()">
               <div class="small material-icons">perm_camera_mic</div>
               <div>摄像</div>
             </div>
-            <div>
+            <div @click.prevent="open_file('*/*')">
               <div class="small material-icons">insert_drive_file</div>
               <div>文件</div>
             </div>
           </div>
           <div class="realtime">
-            <div>
+            <div @click="audio_chat()">
               <div class="small material-icons">phone</div>
-              <div>语音聊天</div>
+              <div v-if="!audio_streaming">语音聊天</div>
+              <div v-else class="btn-error">挂断</div>
             </div>
-            <div>
+            <div @click="video_chat()">
               <div class="small material-icons">videocam</div>
-              <div>视频聊天</div>
+              <div v-if="!video_streaming">视频聊天</div>
+              <div v-else class="btn-error">挂断</div>
             </div>
           </div>
         </div>
@@ -111,32 +115,68 @@ import ChatText from "@/components/ChatText.vue";
 import ChatImage from "@/components/ChatImage.vue";
 import ChatAudio from "@/components/ChatAudio.vue";
 import ChatVideo from "@/components/ChatVideo.vue";
+import ChatOthers from "@/components/ChatOthers.vue";
+import ChatStream from "@/components/ChatStream.vue";
 import util from "@/common/util";
 import FTrans from "@/common/file_transfer";
+import RTStream from "@/common/rt_stream";
+
 // const chat_record = "chat_record.amr";
 const chat_record = "chat_record.mp3";
 export default {
   name: "peer-chat",
+  components: {
+    ChatText,
+    ChatImage,
+    ChatAudio,
+    ChatVideo,
+    ChatOthers,
+    ChatStream
+  },
   props: {
     // for target peer
     tp: Object
   },
-  watch: { 
-    tp: (newVal, oldVal)=> { // watch it
+  watch: {
+    tp: function(newVal, oldVal) {
+      // watch it
       // console.log('Prop changed: ', newVal, ' | was: ', oldVal)
       // alert(`watch tp changed to: ${newVal}`)
+    },
+    "$route.query.stream_type": function(newVal, oldVal) {
+      console.log(`this.$route.query=${JSON.stringify(this.$route.query)}`)
+      if (newVal == "audio") {
+        this.audio_streaming = true;
+      } else if (newVal == "video") {
+        this.video_streaming = true;
+      }
     }
   },
   created: async function() {
     this.$root.$on("peer_closed", this.peer_closed);
     this.$root.$on("p2p_msg", this.p2p_msg);
+    this.$root.$on("stream_peer_closed", this.stream_peer_closed);
+    this.$root.$on('stream_start', this.stream_start);
+
   },
   destroyed() {
     this.$root.$off("peer_closed", this.peer_closed);
     this.$root.$off("p2p_msg", this.p2p_msg);
+    this.$root.$off("stream_peer_closed", this.stream_peer_closed);
+    this.$root.$off('stream_start', this.stream_start);
+
   },
   mounted() {
     this.update_chat_log();
+    console.log(`this.$route.query=${JSON.stringify(this.$route.query)}`)
+    if (this.$route.query.stream_type) {
+      let stream_type = this.$route.query.stream_type;
+      if (stream_type == "audio") {
+        this.audio_streaming = true;
+      } else if (stream_type == "video") {
+        this.video_streaming = true;
+      }
+    }
     // this.chat_logs = db.peer_chat_log
     //       .chain()
     //       .find({ id: this.tp.id })
@@ -151,45 +191,158 @@ export default {
       record_voice: false,
       additional: false,
       audio: null,
-      record_start: 0
+      record_start: 0,
+      audio_streaming: false,
+      video_streaming: false
     };
   },
   computed: {
-    
-    aaa() {
-
-    }
+    aaa() {}
   },
   methods: {
+    stream_start(data){
+      const av = $(`#rt_${data.type}`)[0];
+      if ('srcObject' in av) {
+        av.srcObject = data.stream
+      } else {
+        av.src = window.URL.createObjectURL(data.stream)
+      }
+      if(data.type == 'video'){
+        const lv = $(`#rt_video_local`)[0];
+        if ('srcObject' in lv) {
+          lv.srcObject = window.video_stream
+        } else {
+          lv.src = window.URL.createObjectURL(window.video_stream)
+        }
+        lv.play();
+        $(`#rt_video_local`).show();
+      }
+      $(`#rt_${data.type}`).show();
+      // <video :src-object.prop.camel="stream">
+      // this.stream = window.URL.createObjectURL(stream);
+    },
+    stream_peer_closed(data) {
+      $(`video, audio`).hide();
+      $(`#rt_video_local`)[0].pause();
+      if (data.id == this.tp.id) {
+        if (data.type == "audio") {
+          this.audio_streaming = false;
+        } else {
+          this.video_streaming = false;
+        }
+      }
+    },
+    async audio_chat() {
+      if (this.audio_streaming) {
+        vm.$emit(`close_stream`, this.tp.id);
+        this.audio_streaming = false;
+        return;
+      }
+      if (window.audio_stream) {
+        new RTStream(this.tp.id, "audio", true);
+        this.audio_streaming = true;
+      } else {
+        try {
+          window.audio_stream = await util.get_audio_stream();
+          new RTStream(this.tp.id, "audio", true);
+          this.audio_streaming = true;
+        } catch (error) {
+          util.show_warn_top("打开设备失败");
+        }
+      }
+    },
+    async video_chat() {
+      if (this.video_streaming) {
+        vm.$emit(`close_stream`, this.tp.id);
+        this.video_streaming = false;
+        return;
+      }
+      if (window.video_stream) {
+        new RTStream(this.tp.id, "video", true);
+        this.video_streaming = true;
+      } else {
+        try {
+          window.video_stream = await util.get_video_stream();
+          new RTStream(this.tp.id, "video", true);
+          this.video_streaming = true;
+        } catch (error) {
+          util.show_warn_top("打开设备失败:" + JSON.stringify(error));
+        }
+      }
+    },
+    capture_video() {
+      navigator.device.capture.captureVideo(
+        async mediaFiles => {
+          // only one
+          const f = mediaFiles[0];
+          const fileEntry = await util.get_fileEntry(f.fullPath);
+          const dirEntry = await util.create_dir_recursive(
+            "mystore/inout/out/video"
+          );
+          const fn = `${util.uuid()}${util.get_ext_of_file(f.name)}`;
+          fileEntry.copyTo(
+            dirEntry,
+            fn,
+            newEntry => {
+              // send file to another peer
+              newEntry.file(
+                file => {
+                  this.send_video(file);
+                },
+                err => {
+                  console.log(`record audio get file from fileEntry failed`);
+                }
+              );
+            },
+            err => {
+              console.log("copying record failed");
+            }
+          );
+        },
+        err => {
+          console.log(`captureImage, err=${JSON.stringify(err)}`);
+        }
+      );
+    },
     open_file(type) {
       // type: '*/*' 'image/*'
-      cpp.chooseFileByType(type, path=>{
-        console.log(`select file paht=${path}`)
-        cpp.openFileByPath(path);
-        window.resolveLocalFileSystemURL(`file://${path}`, fileEntry=>{
-          console.log("File [" + fileEntry.fullPath + "] exists!");
-          console.log(JSON.stringify(fileEntry));
-          console.log(`fileEntry.toURL()=${fileEntry.toURL()}`);
-          // fileEntry.toURL()=file:///storage/emulated/0/Pictures/Screenshots/Screenshot_20190801-165844.jpg
-        }, ()=>{
-          console.log("file does not exist");
-        });
-      })
+      cpp.chooseFileByType(type, path => {
+        // console.log(`select file paht=${path}`)
+        // cpp.openFileByPath(path);
+        window.resolveLocalFileSystemURL(
+          `file://${path}`,
+          fileEntry => {
+            fileEntry.file(file => {
+              if (type == "image/*") {
+                this.send_img(file, fileEntry.toURL());
+              } else {
+                this.send_file(file, fileEntry.toURL());
+              }
+            });
+            // console.log(`fileEntry.toURL()=${fileEntry.toURL()}`);
+            // fileEntry.toURL()=file:///storage/emulated/0/Pictures/Screenshots/Screenshot_20190801-165844.jpg
+          },
+          () => {
+            console.log(`${path} does not exist`);
+          }
+        );
+      });
     },
-    peer_closed(id){
-      if(this.tp && id === this.tp.id){
+    peer_closed(id) {
+      console.log(`peer_closed(id), id==${id}; this.tp.id=${this.tp.id}`)
+      if (this.tp && id == this.tp.id) {
         navigator.notification.alert(
-            this.$t('peer-closed'),  // message
-            ()=>this.$router.go(-1),         // callback
-            this.$t('back'),            // title
-            this.$t('ok')                 // buttonName
+          this.$t("peer-closed"), // message
+          () => this.$router.go(-1), // callback
+          this.$t("back"), // title
+          this.$t("ok") // buttonName
         );
         this.tp = null;
       }
     },
     play_this(data_url) {
       // console.log("in play_this");
-      const audio = $("audio")[0];
+      const audio = $("#pack_audio")[0];
       audio.src = data_url;
       audio.load();
       audio.play();
@@ -238,7 +391,7 @@ export default {
                   // send file to another peer
                   newEntry.file(
                     file => {
-                      new FTrans(p.id, file);
+                      new FTrans(p.id, file, TransAssort.audio);
                     },
                     err => {
                       console.log(
@@ -279,7 +432,53 @@ export default {
         // $('.additional').scrollIntoView()
       });
     },
-    send_img(file) {
+    send_video(file, ab_path) {
+      const p = this.tp;
+      const size = util.formatFileSize(file.size);
+      vm.$once(`${file.name}_end`, () => {
+        vm.$emit("send_p2p_msg", {
+          id: p.id,
+          size,
+          type: "video",
+          content: file.name
+        });
+      });
+      new FTrans(p.id, file, TransAssort.video);
+      db.peer_chat_log.insert({
+        id: p.id,
+        type: "video",
+        size,
+        content: ab_path || file.name,
+        dt: util.now_str(),
+        dir: 0,
+        nickname: db.user.findOne({}).nickname
+      });
+      this.update_chat_log();
+    },
+    send_file(file, ab_path) {
+      const p = this.tp;
+      const size = util.formatFileSize(file.size);
+      vm.$once(`${file.name}_end`, () => {
+        vm.$emit("send_p2p_msg", {
+          id: p.id,
+          size,
+          type: "others",
+          content: file.name
+        });
+      });
+      new FTrans(p.id, file, TransAssort.others);
+      db.peer_chat_log.insert({
+        id: p.id,
+        type: "others",
+        size,
+        content: ab_path || file.name,
+        dt: util.now_str(),
+        dir: 0,
+        nickname: db.user.findOne({}).nickname
+      });
+      this.update_chat_log();
+    },
+    send_img(file, ab_path) {
       const p = this.tp;
       const size = util.formatFileSize(file.size);
       vm.$once(`${file.name}_end`, () => {
@@ -290,12 +489,12 @@ export default {
           content: file.name
         });
       });
-      new FTrans(p.id, file);
+      new FTrans(p.id, file, TransAssort.image);
       db.peer_chat_log.insert({
         id: p.id,
         type: "image",
         size,
-        content: file.name,
+        content: ab_path || file.name,
         dt: util.now_str(),
         dir: 0,
         nickname: db.user.findOne({}).nickname
@@ -303,7 +502,6 @@ export default {
       this.update_chat_log();
     },
     capture_image() {
-      const p = this.tp;
       navigator.device.capture.captureImage(
         async mediaFiles => {
           // only one
@@ -331,7 +529,7 @@ export default {
               // send file to another peer
               newEntry.file(
                 file => {
-                  this.send_img(file, p);
+                  this.send_img(file);
                 },
                 err => {
                   console.log(`record audio get file from fileEntry failed`);
@@ -352,21 +550,9 @@ export default {
       // console.log(`p2p_msg, data=${JSON.stringify(data)}; tp=${JSON.stringify(this.tp)}`)
       if (this.tp.id == data.id) {
         this.update_chat_log();
-        
-      } 
-    },
-    select_chat_component(l) {
-      switch (l.type) {
-        case "text":
-          return ChatText;
-        case "image":
-          return ChatImage;
-        case "audio":
-          return ChatAudio;
-        case "video":
-          return ChatVideo;
       }
     },
+
     put_audio_to_log(url, span) {
       const p = this.tp;
       db.peer_chat_log.insert({
@@ -445,8 +631,10 @@ export default {
       );
     },
     update_chat_log() {
-      // console.log('in update_chat_log()')
       this.chat_logs = db.peer_chat_log.find({ id: this.tp.id }).reverse();
+      // this.chat_logs.forEach(l=>{
+      //   console.log(`l.content=${l.content}`)
+      // })
     }
   }
 };
@@ -484,7 +672,7 @@ export default {
 .peer-name {
   display: flex;
   justify-content: center; /* center items horizontally, in this case */
-  align-items: center;     /* center items vertically, in this case */
+  align-items: center; /* center items vertically, in this case */
   flex: 1;
 }
 
@@ -516,7 +704,7 @@ textarea.ci {
   background-color: rgb(221, 247, 247);
 }
 .chat-log {
-  /* position: relative; */
+  position: relative;
   overflow-y: auto;
   max-width: 100%;
   flex: 1;
@@ -544,7 +732,18 @@ textarea.ci {
 img {
   width: 100%;
 }
-audio {
+audio, video {
   display: none;
+}
+#rt_audio, #rt_video{
+  width: 100%;
+  position: absolute;
+}
+#rt_video_local{
+  max-width: 250px;
+  max-height: 250px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
 </style>

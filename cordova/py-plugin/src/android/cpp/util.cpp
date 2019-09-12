@@ -6,7 +6,22 @@ using namespace std;
 
 namespace Util
 {
-
+std::string ep_to_string(boost::asio::ip::udp::endpoint ep)
+{
+	string s_ep = ep.address().to_string();
+	s_ep += ":" + to_string(ep.port());
+	return s_ep;
+}
+std::vector<uint8_t> uuid()
+{
+	static auto rg = boost::uuids::random_generator();
+	boost::uuids::uuid u = rg();
+    std::vector<uint8_t> v(u.size());
+    std::copy(u.begin(), u.end(), v.begin());
+	// boost::lexical_cast<std::string>(uuid)
+	// boost::uuids::to_string(uuid)
+	return v;
+}
 vector<string> split(const string &s, std::string delim)
 {
 	vector<string> strs;
@@ -29,6 +44,10 @@ std::string byte2str(uint8_t *bytes, int size)
 		str.append(&hex[ch & 0xF], 1);
 	}
 	return str;
+}
+std::string byte2str(std::vector<uint8_t>& v)
+{
+	return byte2str( &v[0], v.size() );
 }
 std::string hexStr(const std::string &buff)
 {

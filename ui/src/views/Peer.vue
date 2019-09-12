@@ -1,10 +1,10 @@
 <template>
   <div class="peer">
-    <nav>
+    <!-- <nav>
       <div class="selected" @click.prevent="switch_to('connected', $event)">{{$t('connected')}}</div>
       <div @click.prevent="switch_to('nearby', $event)">{{$t('nearby')}}</div>
       <div @click.prevent="switch_to('world', $event)">{{$t('world')}}</div>
-    </nav>
+    </nav> -->
     <div class="main">
       <keep-alive>
         <router-view/>

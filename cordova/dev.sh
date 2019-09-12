@@ -4,6 +4,7 @@ export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
 export ANDROID_HOME="/data/android/sdk"
 export ANDROID_SDK_ROOT="/data/android/sdk"
+
 set -x
 rm -rf ./platforms/android/app/src/main/java/freego
 rm -rf ./platforms/android/app/src/main/java/my

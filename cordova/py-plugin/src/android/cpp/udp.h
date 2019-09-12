@@ -30,8 +30,8 @@ class UdpSvr
     boost::asio::ip::udp::endpoint sender_endpoint_;
     enum
     {
-        max_length = 1024
+        max_length = 4 * 1024
     };
-    char data_[max_length];
+    uint8_t data_[max_length];
     std::vector<std::shared_ptr<SsEp>> svrs_;
 };

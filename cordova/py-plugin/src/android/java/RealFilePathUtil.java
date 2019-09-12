@@ -12,11 +12,13 @@ import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 
+import android.util.Log;
 /**
  * Created by rjt on 28/11/18.
  */
 
 public class RealFilePathUtil {
+    private static final String LOG_TAG = "cpp_svr";
   @SuppressLint("NewApi")
         public static String getPath(final Context context, final Uri uri) {
             //check for KITKAT or above
@@ -93,7 +95,11 @@ public class RealFilePathUtil {
                     final int index = cursor.getColumnIndexOrThrow(column);
                     return cursor.getString(index);
                 }
-            } finally {
+            } 
+            catch(Exception e){
+                Log.e(LOG_TAG, "RealFilePathUtil.getDataColumn throws", e);
+            }
+            finally {
                 if (cursor != null)
                     cursor.close();
             }
@@ -115,6 +121,8 @@ public class RealFilePathUtil {
                         return path;
                     }
                 }
+            } catch(Exception e){
+                Log.e(LOG_TAG, "RealFilePathUtil.getDownloadFilePath throws", e);
             } finally {
                 cursor.close();
             }

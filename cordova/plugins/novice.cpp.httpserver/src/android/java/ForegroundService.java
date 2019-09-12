@@ -15,6 +15,17 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.annotation.TargetApi;
 import android.os.PowerManager;
+import android.graphics.PixelFormat;
+import android.view.View;
+import android.view.Gravity;
+import android.view.WindowManager;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.CookieManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,13 +46,60 @@ public class ForegroundService extends Service {
     private static final String LOG_TAG = "cpp_svr";
     private PowerManager.WakeLock wakeLock;
     public static FreeNet mCpp = new FreeNet();
+    public void mountWebView(String url){
+        final WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        int layout_parms;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            layout_parms = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+            Log.i(LOG_TAG, "Build.VERSION.SDK_INT >= Build.VERSION_CODES.O, use: WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY");
+        } else {
+            layout_parms = WindowManager.LayoutParams.TYPE_PHONE;
+            Log.i(LOG_TAG, "Build.VERSION.SDK_INT < Build.VERSION_CODES.O, use: WindowManager.LayoutParams.TYPE_PHONE");
+        }
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                layout_parms,
+                // Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                PixelFormat.TRANSLUCENT
+        );
+        params.gravity = Gravity.TOP | Gravity.START;
+        params.x = 0;
+        params.y = 0;
+        params.width = 0;
+        params.height = 0;
+
+        final WebView wv = new WebView(this);
+        final WebSettings settings = wv.getSettings();
+        settings.setLoadsImagesAutomatically(true);
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAppCacheEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            settings.setSafeBrowsingEnabled(false);
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
+        wv.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            CookieManager.getInstance().setAcceptThirdPartyCookies(wv, true);
+        }
+        // Extras tried for Android 9.0, can be removed if want.
+        settings.setAllowContentAccess(true);
+        settings.setAllowFileAccess(true);
+        settings.setBlockNetworkImage(false);
+
+        wv.loadUrl(url);
+        windowManager.addView(wv, params);
+        Log.i(LOG_TAG, "mount background webview: "+ url);
+    }
     @Override
     public void onCreate()
     {
         // Log.i(LOG_TAG, "in ForegroundService::onCreate");
         super.onCreate();
         startFGService();
-        keepAwake();
+        keepAwake();      
         // Log.i(LOG_TAG, "in ForegroundService::onCreate end...............");
     }
     @Override
@@ -78,16 +136,20 @@ public class ForegroundService extends Service {
         String s = intent.getStringExtra("args");
         try {
             JSONArray args = new JSONArray(s);
+            if(action.equals("start")) {
+                int ret = mCpp.start_http(CppSvr.listenPort, CppSvr.mAssetsDir);
+                Log.i(LOG_TAG, "start cpp http server return="+String.valueOf(ret) );
+            } else if( action.equals("start_socks") ){
+                mCpp.start_socks(CppSvr.socksPort);
+                Log.i(LOG_TAG, "service.start_socks()");
+            } else if( action.equals("mount_webview") ){
+                String url = args.getString(0);
+                mountWebView(url);
+                Log.i(LOG_TAG, "mount_webview");
+            }
         } catch (JSONException e) {
             Log.d(LOG_TAG, "get json args exception, this should never happen");
-        }
-        if(action.equals("start")) {
-            int ret = mCpp.start_http(CppSvr.listenPort, CppSvr.mAssetsDir);
-            Log.i(LOG_TAG, "start cpp http server return="+String.valueOf(ret) );
-        } else if( action.equals("start_socks") ){
-            mCpp.start_socks(CppSvr.socksPort);
-            Log.i(LOG_TAG, "service.start_socks()");
-        }
+        }       
         return START_STICKY;
         // return START_NOT_STICKY;
     }

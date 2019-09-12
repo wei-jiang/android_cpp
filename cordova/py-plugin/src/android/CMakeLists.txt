@@ -58,6 +58,8 @@ set(SOURCE_FILES
     src/main/cpp/ws_svr.cpp
     src/main/cpp/util.cpp
     src/main/cpp/peer.cpp
+    src/main/cpp/peer_handler.cpp
+    src/main/cpp/evt_sys.cpp
 )
 
 # Include a location to the header files
@@ -125,6 +127,7 @@ include_directories(${BOOST_INCLUDEDIR})
 target_link_libraries(${CXXLIB} ${Boost_LIBRARIES})
 
 # ${ANDROID_ABI} will be replaced with armeabi-v7a, arm64-v8a, x86 or  x86_64 during the build time
+# "/data/cpp_libs/android_libs/${ANDROID_ABI}/udt"
 set(HEADER_DIR 
     "/data/cpp_libs/android_libs/${ANDROID_ABI}/libmagic/include"
     "/data/cpp_libs/android_libs/${ANDROID_ABI}/openssl/include"
@@ -134,7 +137,7 @@ set(HEADER_DIR
 )
 # "/data/cpp_libs" for nlohmann/json.hpp
 target_include_directories(${CXXLIB} PRIVATE ${HEADER_DIR})
-
+# set(udt "/data/cpp_libs/android_libs/${ANDROID_ABI}/udt/libudt.a")
 set(libmagic "/data/cpp_libs/android_libs/${ANDROID_ABI}/libmagic/lib/libmagic.a")
 set(OPENSSL_LIBRARYDIR "/data/cpp_libs/android_libs/${ANDROID_ABI}/openssl/lib")
 FOREACH(LIB 

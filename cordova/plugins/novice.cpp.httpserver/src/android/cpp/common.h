@@ -6,6 +6,7 @@
 #include <memory>
 #include <iostream>
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <stdexcept>
 #include <iomanip>
@@ -19,7 +20,9 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <functional>
 #include <unordered_set>
+namespace ph = std::placeholders;
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
@@ -31,6 +34,9 @@
 #include <boost/convert.hpp>
 #include <boost/convert/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+// #include <boost/signals2/signal.hpp>
 
 #include <android/log.h>
 #define TAG "cpp_svr"
@@ -115,6 +121,22 @@ public:
     virtual int get_type(){return SVR_HTTP;}
     virtual ~Service(){}
 };
+template<typename T>
+class Singleton {
+public:
+    static T& instance()
+    {
+        static T instance;
+        return instance;
+    }
+
+    Singleton(const Singleton&) = delete;
+    Singleton& operator= (const Singleton) = delete;
+
+protected:
+    Singleton() {}
+};
+
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -122,3 +144,5 @@ using json = nlohmann::json;
 extern TSQueue<std::string> cpp2java_que;
 extern std::shared_ptr<boost::asio::io_context> g_io, g_socks_io;
 extern std::string g_ms;
+extern std::atomic<uint16_t> g_channel_id;
+// extern boost::signals2::signal<void (uint16_t, const std::vector<uint8_t>& )> g_sig;

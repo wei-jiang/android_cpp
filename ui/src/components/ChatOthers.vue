@@ -1,12 +1,12 @@
 <template>
-  <div class="chat-video">
+  <div class="chat-others">
     <!-- <p>{{ $t('hello') }}</p> -->
     <div class="dt">{{log.dt}}</div>
-    <div :class="log.dir == 0 ? 'right': 'left'" @click="show_video(log)">
+    <div :class="log.dir == 0 ? 'right': 'left'" @click="show_others(log)">
       <img class="small-avatar" :src="log.dir == 0 ? me.avatar: peer.avatar">
-      <div class="video-icon" :class="log.dir == 0 ? 'chat-to': 'chat-from'">
+      <div class="others-icon" :class="log.dir == 0 ? 'chat-to': 'chat-from'">
         <div>{{log.size}}</div>
-        <video id="video-player" :src="get_url(log)" controls />
+        <div class="fn">{{get_file_name(log.content)}}</div>
       </div>
     </div>
     <div v-if="progress != '0%'" class="progressbar">
@@ -76,38 +76,45 @@ export default {
       // console.log(`${this.fn}-- on_trans_end()`);
       this.progress = '0%';
     },
-    show_video(l){
+    show_others(l){
       let path = this.get_url(l);
       if( path.startsWith("file://") ){
         path = path.substring(7);
       }
       path = decodeURI(path);
-      console.log(`show_video, path=${path}`)
+      console.log(`show_others, path=${path}`)
       cpp.openFileByPath(path);      
     },
     get_url(l){
       if( l.content.startsWith("file://") ) return l.content;
       let url = cordova.file.externalRootDirectory + 'mystore/inout/';
       if(l.dir == 0){
-        url += `out/video/${l.content}`
+        url += `out/others/${l.content}`
       } else{
-        url += `in/video/${l.content}`
+        url += `in/others/${l.content}`
       }
       // console.log(`in ChatVideo.vue get_url return ${url}`)
       return url;
+    },
+    get_file_name(content){
+      let fn = content.substring(content.lastIndexOf('/')+1);
+      return decodeURI(fn);
     },
   }
 }
 </script>
 <style scoped>
 @import "../assets/progressbar.css";
-.chat-video{
+.fn{
+  word-break: break-all;
+}
+.chat-others{
   width: 100%;
   flex-flow: column;
   align-items: center;
   margin-bottom: 1em;
 }
-.video-icon{
+.others-icon{
   display: flex;
   flex-flow: column;
   align-items: center;
@@ -142,9 +149,7 @@ export default {
 	background: #82ebf5;
 	border-radius: .4em;
 }
-video{
-  width: 40vw;
-}
+
 .chat-from:after {
 	content: '';
 	position: absolute;
@@ -187,10 +192,4 @@ img{
 	margin-right: -0.625em;
 }
 </style>
-<i18n>
-{
-  "en": {
-    "hello": "Hello i18n in SFC!"
-  }
-}
-</i18n>
+

@@ -9,12 +9,16 @@
         <div class="small material-icons">settings_remote</div>
       </div>
     </div>
-    
+    <div v-if="progress != '0%'" class="progressbar">
+      <div v-bind:style="{width: progress}"></div>
+      <div class="cap">{{`${progress}`}}</div>
+    </div>
   </div>
 </template>
 
 <script>
 // file:///storage/emulated/0/mystore/inout/in/img/8bce8d50-c896-11e9-b0d5-0185c0b36f10.mp3
+import util from "@/common/util";
 export default {
   name: 'ChatAudio',
   // props: {
@@ -28,13 +32,42 @@ export default {
 // }
   props: {
     log: Object,
-    peer: Object
+    peer: Object,
+  },
+  watch: { 
+    // should not use an arrow function to define a watcher 
+    log: function(newVal, oldVal) { // watch it
+      // console.log(`log changed, old_content=${oldVal.content}; new_content=${newVal.content}`)
+      // console.log(`log changed, this.fn=${this.fn}`)
+      const fn = util.get_name_from_path(oldVal.content);
+      this.$root.$off(`${fn}_progress`, this.on_trans_progress);
+      this.$root.$off(`${fn}_end`, this.on_trans_end);
+      this.$root.$on(`${this.fn}_progress`, this.on_trans_progress);
+      this.$root.$once(`${this.fn}_end`, this.on_trans_end);
+    }
+  },
+  created: async function() {
+    // console.log(`on created, log.content=${this.log.content}`);
+    // console.log(`on created, this.fn=${this.fn}`)
+    this.$root.$on(`${this.fn}_progress`, this.on_trans_progress);
+    this.$root.$once(`${this.fn}_end`, this.on_trans_end);
+    // console.log(`on ${this.fn}_progress and ${this.fn}_end event`);
+  },
+  destroyed() {
+    this.$root.$off(`${this.fn}_progress`, this.on_trans_progress);
+    this.$root.$off(`${this.fn}_end`, this.on_trans_end);
+    // console.log(`off ${this.fn}_progress and ${this.fn}_end event`);
   },
   mounted() {
+    // console.log(`on --mounted--, log.content=${this.log.content}`);
     this.me = db.user.findOne({});
+  },
+  beforeDestroy() {
+    
   },
   data() {
     return {
+      progress: '0%',
       me: {
         nickname: "",
         avatar: "",
@@ -42,8 +75,27 @@ export default {
       }
     };
   },
+  computed: {
+    fn() {
+      return util.get_name_from_path(this.log.content);
+    }
+  },
   methods: {
+    on_trans_progress(progress){
+      // console.log(`${this.fn}-- on_trans_progress(progress)=${progress}`);
+      this.progress = progress;
+      if(progress == '100.00%'){
+        setTimeout(()=>{
+          this.progress = '0%';
+        }, 1000);
+      }
+    },
+    on_trans_end(){
+      // console.log(`${this.fn}-- on_trans_end()`);
+      this.progress = '0%';
+    },
     get_url(l){
+      if( l.content.startsWith("file://") ) return l.content;
       let url = cordova.file.externalRootDirectory + 'mystore/inout/';
       if(l.dir == 0){
         url += `out/audio/${l.content}`
@@ -57,6 +109,7 @@ export default {
 }
 </script>
 <style scoped>
+@import "../assets/progressbar.css";
 .chat-audio{
   width: 100%;
   flex-flow: column;

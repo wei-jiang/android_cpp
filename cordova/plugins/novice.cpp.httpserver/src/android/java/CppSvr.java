@@ -79,11 +79,13 @@ import my.free.net.StringVector;
 import my.free.net.FreeNet;
 
 public class CppSvr extends CordovaPlugin {
-    public static final int REQUEST_CODE = 0x0ba7c0de;
+    public static final int REQUEST_QR_SCAN = 0x0ba7c0de;
+    public static final int REQUEST_SYSTEM_ALERT_WINDOW = 0x1979;
     private static final String ENCODE = "encode";
     private static final String CANCELLED = "cancelled";
     private static final String FORMAT = "format";
     private static final String TEXT = "text";
+    public static final int ANDROID_VERSION_MARSHMALLOW = 23;
     public static final String CAMERA = Manifest.permission.CAMERA;
     public static final int CAMERA_REQ_CODE = 0x510719;
     public static final int PERMISSION_DENIED_ERROR = 20;
@@ -127,6 +129,13 @@ public class CppSvr extends CordovaPlugin {
         }
         String str = new String(byteArray);
         return str;
+    }
+    protected void requestDrawOverlays() {
+        if (Build.VERSION.SDK_INT >= ANDROID_VERSION_MARSHMALLOW) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + cordova.getActivity().getPackageName()));
+            // cordova.setActivityResultCallback(this);
+            cordova.startActivityForResult((CordovaPlugin) this, intent, REQUEST_SYSTEM_ALERT_WINDOW);
+        }
     }
     // @Override
     // public void onDestroy()
@@ -366,11 +375,18 @@ public class CppSvr extends CordovaPlugin {
             // Log.i(LOG_TAG, "appId="+appId);
             Uri fileURI = FileProvider.getUriForFile(getActivity(), appId, file);
             intent.setDataAndType(fileURI, mimeType);
+            // intent.setDataAndTypeAndNormalize(fileURI, mimeType);
             // Log.i(LOG_TAG, ">=24, fileURI.toString()="+fileURI.toString());
         }else {
             // Log.i(LOG_TAG, "<24, Uri.fromFile(file).toString()="+Uri.fromFile(file).toString());
-            intent.setDataAndType(Uri.fromFile(file), mimeType);           
+            intent.setDataAndType(Uri.fromFile(file), mimeType);      
+            // intent.setDataAndTypeAndNormalize(Uri.fromFile(file), mimeType);                    
         }
+        // if( isAppInstalled("org.videolan.vlc") 
+        //     && (mimeType.startsWith("video") || mimeType.startsWith("audio")) )
+        // {
+        //     intent.setPackage("org.videolan.vlc");
+        // }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try {
             // Log.i(LOG_TAG, "getActivity().getApplicationContext().startActivity(intent)");
@@ -380,9 +396,28 @@ public class CppSvr extends CordovaPlugin {
 
         }
     }
+    private boolean isAppInstalled(String appId)
+    {
+        PackageManager pm = this.cordova.getActivity().getPackageManager();
+        boolean app_installed = false;
+        try
+        {
+            pm.getPackageInfo(appId, PackageManager.GET_ACTIVITIES);
+            app_installed = true;
+        }
+        catch (PackageManager.NameNotFoundException e)
+        {
+            app_installed = false;
+        }
+        return app_installed ;
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == REQUEST_SYSTEM_ALERT_WINDOW) {
+            String ret = canDrawOverlays() ? "1" : "0";
+            Log.i(LOG_TAG, "onActivityResult, canDrawOverlays="+ret);
+            requestDrawOverlaysCb.success( ret );
+        } else if (requestCode == REQUEST_QR_SCAN) {
             if (resultCode == Activity.RESULT_OK) {
                 JSONObject obj = new JSONObject();
                 try {
@@ -419,7 +454,7 @@ public class CppSvr extends CordovaPlugin {
         Log.i(LOG_TAG, "-----------onActivityResult---------------requestCode="+String.valueOf(requestCode)+"; resultCode=" + String.valueOf(resultCode));
     }
     int permissionHashCode = -1;
-    CallbackContext requestPermissionCb, cb;
+    CallbackContext requestPermissionCb, cb, requestDrawOverlaysCb;
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
     {
         if(requestCode == permissionHashCode){
@@ -490,6 +525,18 @@ public class CppSvr extends CordovaPlugin {
             });
             cppRetThread.start();
             return true;
+            
+        } else if (action.equals("requestDrawOverlays")) {
+            if( canDrawOverlays() ){
+                callbackContext.success("1");
+            } else {
+                requestDrawOverlaysCb = callbackContext;
+                requestDrawOverlays();  
+            }                    
+        } else if (action.equals("mount_webview")) {
+            startService(action, args);
+            callbackContext.sendPluginResult(new PluginResult(Status.OK, 0));
+            // return true;            
         } else if (action.equals("start_socks")) {
             socksPort = args.getInt(0);
             startService(action, args);
@@ -624,12 +671,12 @@ public class CppSvr extends CordovaPlugin {
         } else if (action.equals("start")) {
             listenPort = args.getInt(0);
             this.cppStartCb = callbackContext;            
-            if(cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))
-            {
+            if( cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
+
                 startService(action, args);
-            }
-            else
-            {
+ 
+                
+            }else {
                 last_action = action;
                 last_args = args;
                 // show("需要访问sd卡以存取文件！");
@@ -699,7 +746,13 @@ public class CppSvr extends CordovaPlugin {
         }
         return true;
     }
-
+    protected boolean canDrawOverlays() {
+        if (Build.VERSION.SDK_INT < ANDROID_VERSION_MARSHMALLOW) {
+            return true;
+        } else {
+            return Settings.canDrawOverlays(cordova.getActivity());
+        }
+    }
     private static void copyAssetFolder(String srcFolder, String destPath) throws IOException {
         String[] files = assetManager.list(srcFolder);
         if (files.length == 0) {
@@ -788,7 +841,7 @@ public class CppSvr extends CordovaPlugin {
             public void run() {
                 Context context = cordova.getActivity().getApplicationContext();
                 Intent intent = new Intent(context, Scanner.class);
-                cordova.getActivity().startActivityForResult(intent, REQUEST_CODE);
+                cordova.getActivity().startActivityForResult(intent, REQUEST_QR_SCAN);
                 // cordova.setActivityResultCallback (self);
                 // cordova.startActivityForResult(self, intent, 0);
             }

@@ -8,7 +8,7 @@ import util from "@/common/util";
 import PDealer from "@/common/peer_dealer";
 
 window.peers = new Map();
-// id --> sp --> {info --> {id, ep}, usr }
+// id --> sp --> { usr --> {nickname, avatar, signiture} }
 class WSS extends PDealer {
   constructor(addr) {
     super();
@@ -35,27 +35,29 @@ class WSS extends PDealer {
     }
   }
 
-  create_peer(p, initiator = false) {
+  create_peer(pid, initiator = false) {
     const s_ip = this.svr_ip;
     // console.log(`s_ip=${s_ip}`)
+    const ice_svr = {
+      iceServers: [
+        { urls: `stun:${s_ip}` },
+        {
+          urls: `turn:${s_ip}`,
+          username: 'piaoyun',
+          credential: 'freego'
+        }
+      ]
+    };
     const sp = new Peer({
       initiator,
       trickle: true,
-      config: {
-        iceServers: [
-          { urls: `stun:${s_ip}` },
-          {
-            urls: `turn:${s_ip}`,
-            username: 'piaoyun',
-            credential: 'freego'
-          }
-        ]
-      }
+      config: ice_svr
     });
+    sp.ice_svr = ice_svr;
     sp.passive = !initiator;
     sp.on('signal', (sig_data) => {
       let data = {
-        to: p.id,
+        to: pid,
         sig_data,
         cmd: initiator ? 'send_sig': 'return_sig'
       };
@@ -67,10 +69,10 @@ class WSS extends PDealer {
     });
     sp.on('close', () => {
       console.log('peer channel closed');
-      peers.delete(sp.info.id)
+      peers.delete(sp.pid)
       // not fired, need custom heartbeat?
       vm.$emit('peer_changed', '');
-      vm.$emit('peer_closed', sp.info.id);
+      vm.$emit('peer_closed', sp.pid);
     })
     sp.on('connect', () => {
       console.log('peer channel connect');
@@ -80,9 +82,12 @@ class WSS extends PDealer {
         avatar: ui.avatar,
         signature: ui.signature
       });
+      if(this.my_udp_ep){
+        sp.send_string(CMD.udp_ep, this.my_udp_ep);
+      }
     });
     sp.on('stream', (stream) => {
-      console.log('on peer channel stream');
+      // console.log('on peer channel stream');
     });
     sp.on('data', data => {
       sp.activity = new Date();
@@ -104,6 +109,16 @@ class WSS extends PDealer {
           });
           break;
         }
+        case 'your_udp_ep': {
+          this.my_udp_ep = data.ep;
+          console.log(`your_udp_ep, got ep=${this.my_udp_ep}`)
+          for (let [pid, sp] of peers) {
+            if(sp.usr){
+              sp.send_string(CMD.udp_ep, this.my_udp_ep);
+            }            
+          }
+          break;
+        }
         case 'total': {
           this.total = data.total;
           vm.$emit('online_count', {
@@ -115,11 +130,11 @@ class WSS extends PDealer {
         case 'peers': {          
           let ps = data.peers;
           // filter out blacklist
-          ps = ps.filter( p=>!( peers.has(p.id) || db.blacklist.findOne({id: p.id}) ) );
+          ps = ps.filter( pid=>!( peers.has(pid) || db.blacklist.findOne({id: pid}) ) );
           // ps = _.difference( ps, [...peers.keys()] );
-          _.each(ps, p => {
-            const sp = this.create_peer(p, true)
-            this.postfix_peer(sp, p);
+          _.each(ps, pid => {
+            const sp = this.create_peer(pid, true)
+            this.postfix_peer(sp, pid);
           })
           break;
         }
@@ -127,21 +142,21 @@ class WSS extends PDealer {
           // console.log(`send_sig: ${JSON.stringify(data)}`);
           // to establish connection, this will be called multiple times, so must be sure only create peer instance one time
           let sp;
-          let p = data.from;
-          if(peers.has(p.id) && peers.get(p.id).passive ){
-            sp = peers.get(p.id)
+          let pid = data.from;
+          if(peers.has(pid) && peers.get(pid).passive ){
+            sp = peers.get(pid)
           } else{
-            if( peers.has(p.id) ) peers.get(p.id).destroy();
-            sp = this.create_peer(p)
-            this.postfix_peer(sp, p)
+            if( peers.has(pid) ) peers.get(pid).destroy();
+            sp = this.create_peer(pid)
+            this.postfix_peer(sp, pid)
           }
           sp.signal(data.sig_data);
           break;
         }
         case 'return_sig': {
           console.log(`return_sig: ${JSON.stringify(data)}`);
-          if( peers.has(data.from.id) ){
-            peers.get(data.from.id).signal(data.sig_data)
+          if( peers.has(data.from) ){
+            peers.get(data.from).signal(data.sig_data)
           }
           break;
         }
@@ -160,8 +175,8 @@ class WSS extends PDealer {
       });
     }
   }
-  postfix_peer(sp, p){
-    sp.info = p;
+  postfix_peer(sp, pid){
+    sp.pid = pid;
     sp.send_string = (cmd, s)=> {
       let buf = Buffer.alloc(2);
       buf.writeUInt16BE(cmd);
@@ -184,8 +199,8 @@ class WSS extends PDealer {
       sp.send(buf) ;
     };
     sp.activity = new Date();
-    peers.set(p.id, sp);  //-----------------------------------
-    console.log(`add ${p.id} to Map`)
+    peers.set(pid, sp);  //-----------------------------------
+    console.log(`add ${pid} to Map`)
     function send_ping(id){
       setTimeout(()=>{
         // console.log('keep_alive send ping ...')
@@ -195,7 +210,7 @@ class WSS extends PDealer {
         }
       }, 3000);
     }
-    send_ping(p.id);
+    send_ping(pid);
   }
   on_error(err) {
     console.log(`${this.url} onerror:  ` + JSON.stringify(err))

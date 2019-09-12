@@ -38,7 +38,7 @@
           </li>
           <!-- <li>
             <a class="mb" @click="test">&nbsp;&nbsp;test</a>
-          </li>-->
+          </li> -->
         </ul>
       </div>
     </nav>
@@ -79,7 +79,9 @@ export default {
     this.$root.$off("http_ready", this.http_ready);
     document.removeEventListener("deviceready", this.deviceready, false);
   },
-  mounted() {},
+  mounted() {
+    this.test()
+  },
   data() {
     return {
       title: this.$t("file-mgr"),
@@ -92,7 +94,7 @@ export default {
     }
   },
   methods: {
-    test() {
+    async test() {
       // cpp.showInterstitialAd();
       // cpp.showBanner(()=>{
       //   console.log('show banner success')
@@ -101,14 +103,20 @@ export default {
       // });
       // cpp.restart(57001);
       // cpp.echo('jiang', res=>alert(res) )
-      if (Peer.WEBRTC_SUPPORT) {
-        // webrtc support!
-        alert("webrtc support");
-      } else {
-        // fallback
-        alert("webrtc not support");
-      }
-      this.toggle_menu();
+      // if (Peer.WEBRTC_SUPPORT) {
+      //   // webrtc support!
+      //   alert("webrtc support");
+      // } else {
+      //   // fallback
+      //   alert("webrtc not support");
+      // }
+      
+      const self = this;
+      setTimeout(()=>{
+        console.log("from cordova activity ..................");
+        self.test()
+      }, 2000)
+      // this.toggle_menu();
     },
 
     cpp_noty(data) {
@@ -121,8 +129,15 @@ export default {
         console.log(`hex_str=${hex_str}`);
       }
     },
-    http_ready() {
+    http_ready(data) {
       cpp.start_socks(util.socks_port());
+      cpp.requestDrawOverlays(ret=>{
+        console.log(`cpp.requestDrawOverlays, ret=${ret}`)
+        if(ret == 1){
+          cpp.mount_webview(`http://127.0.0.1:${data.port}/service.html`);
+        }
+      })
+      
     },
     scan_qr() {
       cpp.scan_by_camera(

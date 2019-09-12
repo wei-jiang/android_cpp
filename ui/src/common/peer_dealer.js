@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import moment from "moment";
 import util from "@/common/util";
+import RTStream from "@/common/rt_stream";
 window.CMD = {
     ping: 0,
     pong: 1,
@@ -8,6 +9,11 @@ window.CMD = {
     send_p2p_msg: 3,
     send_file: 4,
     send_file_resp: 5,
+    req_stream_chat: 6,
+    res_stream_chat: 7,
+    stream_initiator_sig: 8,
+    stream_participant_sig: 9,
+    udp_ep: 10,
 };
 
 class PDealer {
@@ -19,6 +25,12 @@ class PDealer {
         this.dealers[CMD.send_p2p_msg] = this.send_p2p_msg.bind(this);
         this.dealers[CMD.send_file] = this.send_file.bind(this);
         this.dealers[CMD.send_file_resp] = this.send_file_resp.bind(this);
+
+        this.dealers[CMD.req_stream_chat] = this.req_stream_chat.bind(this);
+        this.dealers[CMD.res_stream_chat] = this.res_stream_chat.bind(this);
+        this.dealers[CMD.stream_initiator_sig] = this.stream_initiator_sig.bind(this);
+        this.dealers[CMD.stream_participant_sig] = this.stream_participant_sig.bind(this);
+        this.dealers[CMD.udp_ep] = this.udp_ep.bind(this);
     }
 
     handle_msg(sp, data) {
@@ -57,17 +69,18 @@ class PDealer {
         const fn = data.toString('utf8', 0, i);
         let j = data.indexOf(0, i + 1);
         const type = data.toString('utf8', i + 1, j);
-        const file_raw = data.slice(j + 1, data.length - 1);
+        const assort = data[j + 1];
+        const file_raw = data.slice(j + 2, data.length - 1);
         // console.log(`send_file: fn=${fn}; type=${type}; flag=${flag}`)
-        this.write_file(sp, fn, type, flag, file_raw);       
+        this.write_file(sp, fn, type, flag, file_raw, assort);
     }
-    async write_file(sp, fn, type, flag, buff) {
+    async write_file(sp, fn, type, flag, buff, assort) {
         let dir = 'mystore/inout/in/';
-        if (type.includes('image/')) {
+        if (TransAssort.image == assort) {
             dir += 'image'
-        } else if (type.includes('audio/')) {
+        } else if (TransAssort.audio == assort) {
             dir += 'audio'
-        } else if (type.includes('video/')) {
+        } else if (TransAssort.video == assort) {
             dir += 'video'
         } else {
             dir += 'others'
@@ -79,16 +92,16 @@ class PDealer {
             { create: true, exclusive: false },
             fileEntry => {
                 fileEntry.createWriter(fileWriter => {
-                    fileWriter.onwriteend = ()=> {
+                    fileWriter.onwriteend = () => {
                         // console.log(`write ${fn} file successful...`);
                         sp.send_string(CMD.send_file_resp, `${fn}_${flag}`);
                     };
-                    fileWriter.onerror = (e)=> {
-                        console.log(`write ${fn} file failed: ` + JSON.stringify(e) );
+                    fileWriter.onerror = (e) => {
+                        console.log(`write ${fn} file failed: ` + JSON.stringify(e));
                         // todo: if write error, notify resend it
                         sp.send_string(CMD.send_file_resp, `${fn}_${flag}`);
                     };
-                    const dataObj = new Blob([buff], { type });                   
+                    const dataObj = new Blob([buff], { type });
                     if (flag != 0) {
                         try {
                             // console.log("fileWriter=" + JSON.stringify(fileWriter));
@@ -107,7 +120,7 @@ class PDealer {
     send_p2p_msg(sp, data) {
         data = JSON.parse(data);
         const chat_log = {
-            id: sp.info.id,
+            id: sp.pid,
             type: data.type,
             content: data.content,
             span: data.span,
@@ -130,9 +143,65 @@ class PDealer {
             case 'video':
                 util.show_alert_top_tm(`${sp.usr.nickname}: 发送视频`);
                 break;
+            case 'others':
+                util.show_alert_top_tm(`${sp.usr.nickname}: 发送文件`);
+                break;
         }
         vm.$emit('p2p_msg', chat_log);
         // console.log('send_p2p_msg: '+JSON.stringify(data))
+    }
+    async req_stream_chat(sp, type) {
+        type = type.toString();
+        if (window.is_streaming) {
+            return sp.send_json(CMD.res_stream_chat, {
+                allow: false,
+                reason: '通话中'
+            });
+            // todo: 已屏蔽
+        }
+        try {
+            await util.show_confirm_top(`[${sp.usr.nickname}] 请求${type}聊天`, '同意', '拒绝');
+            if (type == 'audio') {
+                if (!window.audio_stream) {
+                    window.audio_stream = await util.get_audio_stream();
+                }
+            } else {
+                if (!window.video_stream) {
+                    window.video_stream = await util.get_video_stream();
+                }
+            }
+            const talk_to = _.clone(sp.usr);
+            talk_to.id = sp.pid;
+            vm.$router.push({ name: 'peer-chat', params: { tp: talk_to }, query: {stream_type: type} } )
+            .catch(err => {});
+            new RTStream(sp.pid, type, false);
+            sp.send_json(CMD.res_stream_chat, { allow: true });
+        } catch (err) {
+            console.log('req_stream_chat, err='+JSON.stringify(err))
+            sp.send_json(CMD.res_stream_chat, {
+                allow: false,
+                reason: '已拒绝'
+            });
+        }
+    }
+    res_stream_chat(sp, data) {
+        data = JSON.parse(data);
+        vm.$emit('res_stream_chat', data);
+    }
+    stream_initiator_sig(sp, data) {
+        data = JSON.parse(data);
+        vm.$emit('stream_initiator_sig', data);
+    }
+    stream_participant_sig(sp, data) {
+        data = JSON.parse(data);
+        vm.$emit('stream_participant_sig', data);
+    }
+    udp_ep(sp, data) {
+        console.log(`in udp_ep, data=${data}`)
+        util.post_local('connect_to_peer', {
+            id: sp.pid,
+            ep: data.toString()
+        });
     }
 }
 

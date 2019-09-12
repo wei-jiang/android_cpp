@@ -7,7 +7,7 @@ import gFace from "./face";
 import Cordova from "./cordova";
 const free_seconds = 10 * 60 * 1000;
 class Util extends Cordova {
-    uuid(){
+    uuid() {
         return uuidv1();
     }
     restart_ads_tm() {
@@ -20,8 +20,32 @@ class Util extends Cordova {
     md5(s) {
         return md5(s);
     }
-    get_ext_of_file(fn){
-        return fn.slice( fn.lastIndexOf(".") );
+    get_stream(constraints) {
+        return new Promise((resolve, reject) => {
+            navigator.getUserMedia(constraints, (stream) => {
+                // console.log(`audio_chat， getUserMedia success:${stream}`)
+                resolve(stream);
+                // stream.getTracks().forEach(track => track.stop())
+            }, () => {
+                reject();
+            })
+        });
+    }
+    // outside need catch exception
+    async get_audio_stream() {
+        if( !this.hasUserMedia() ) throw '设备不支持获取媒体流';
+        await this.requestPermission("android.permission.RECORD_AUDIO");
+        return await this.get_stream({ video: false, audio: true })
+    }
+    async get_video_stream() {
+        if( !this.hasUserMedia() ) throw '设备不支持获取媒体流';
+        await this.requestPermission("android.permission.RECORD_AUDIO");
+        await this.requestPermission("android.permission.CAMERA");
+        // { video: { width: 800, height: 600 }, audio: true }
+        return await this.get_stream({ video: true, audio: true })
+    }
+    get_ext_of_file(fn) {
+        return fn.slice(fn.lastIndexOf("."));
     }
     gen_face() {
         return gFace()//gImg()
@@ -32,11 +56,65 @@ class Util extends Cordova {
     get_dir_from_path(file_path) {
         return file_path.substring(0, file_path.lastIndexOf("/") + 1);
     }
+    requestPermission(permission) {
+        return new Promise((resolve, reject) => {
+            cpp.requestPermission(permission, () => resolve(), () => reject());
+        });
+    }
+    hasUserMedia() {
+        navigator.getUserMedia = navigator.getUserMedia ||
+            navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||
+            navigator.msGetUserMedia;
+        return !!navigator.getUserMedia;
+    }
     get_name_from_path(file_path) {
         return file_path.substring(file_path.lastIndexOf("/") + 1);
     }
     get_order_id() {
         return `${cli_id}-${moment().format("YYYYMMDDHHmmssSSS")}`
+    }
+    show_confirm_top(text, ok_text, no_text, tm = 9) {
+        // tm = seconds
+        return new Promise((resolve, reject) => {
+            // id can not begin with number
+            const btn_id = `b${(new Date()).getTime()}`;
+            const n = new Noty({
+                text: `<h2 style="text-align:center;">${text}</h2>`,
+                layout: 'topCenter',
+                animation: {
+                    open: 'animated bounceIn', // Animate.css class names
+                    close: 'animated bounceOut' // Animate.css class names
+                },
+                buttons: [
+                    Noty.button(ok_text, 'btn btn-success', () => {
+                        resolve();
+                        n.conclusion = true;
+                        n.close();
+                    }),
+
+                    Noty.button(`${no_text}(${tm})`, 'btn btn-error', () => {
+                        reject();
+                        n.conclusion = true;
+                        n.close();
+                    }, { id: btn_id })
+                ]
+            });
+            n.show();
+            function count_down() {
+                if (n.conclusion) return;
+                setTimeout(() => {
+                    // console.log(`count_down, tm=${tm}`)
+                    if (--tm > 0) {
+                        $(`#${btn_id}`).text(`${no_text}(${tm})`);
+                        count_down();
+                    } else {
+                        reject();
+                        n.close();
+                    }
+                }, 1000);
+            }
+            count_down();
+        });
     }
     show_alert_top(text) {
         new Noty({
@@ -95,18 +173,28 @@ class Util extends Cordova {
         });
         return res;
     }
-    async post_local(url, data) {
+    timeout(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    async post_local(path, data, retry = 3) {
+        if(retry <= 0) return;
         const host = location.host || `127.0.0.1:${this.http_port()}`;
-        url = `http://${host}/${url}`;
+        const url = `http://${host}/${path}`;
         // console.log(`post_local url=${url}`)
-        const res = await $.ajax({
-            type: "POST",
-            url,
-            contentType: "application/json; charset=utf-8",
-            data: JSON.stringify(data),
-            dataType: "json"
-        });
-        return res;
+        try {
+            const res = await $.ajax({
+                type: "POST",
+                url,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
+                dataType: "json"
+            });
+            return res;
+        } catch (error) {
+            console.log(`post_local url=${url} failed, retry=${retry}`);
+            await this.timeout(500);
+            return await this.post_local(path, data, retry - 1)
+        }       
     }
     toHHMMSS(s) {
         let sec_num = parseInt(s, 10); // don't forget the second param
@@ -125,12 +213,12 @@ class Util extends Cordova {
     }
     check_addr(addr) {
         const parts = addr.split(":");
-        if(parts.length != 2) return false;
+        if (parts.length != 2) return false;
         const ip = parts[0].split(".");
         const port = parts[1];
         return this.validateNum(port, 1, 65535) &&
             ip.length == 4 &&
-            ip.every( segment=>this.validateNum(segment, 0, 255) );
+            ip.every(segment => this.validateNum(segment, 0, 255));
     }
     path2url(path) {
         return path.replace("/sdcard/mystore", this.store_url());

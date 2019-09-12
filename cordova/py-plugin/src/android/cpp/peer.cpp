@@ -71,7 +71,17 @@ void Peer::connect_to_peer()
         try
         {
             auto data = json::parse(request->content);
-            auto peer_addr = data["peer_addr"].get<string>();
+            auto id = data["id"].get<string>();
+            auto ep = data["ep"].get<string>();
+     
+            LOGI("connect_to_peer : id=%s; ep=%s; ", id.c_str(), ep.c_str() );
+            auto it = peers_.find(id);
+            if( it != peers_.end() )
+            {
+                it->second->before_destroy();
+            }
+            peers_[id] = make_shared<PeerHandler>(udp_, ep);
+                
             res["ret"] = 0;
         }
         catch (const exception &e)

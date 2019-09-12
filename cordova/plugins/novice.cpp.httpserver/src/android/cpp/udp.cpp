@@ -5,6 +5,7 @@
 #include "common.h"
 #include "util.h"
 #include "udp.h"
+#include "evt_sys.h"
 
 using namespace std;
 using boost::asio::ip::address;
@@ -30,6 +31,8 @@ UdpSvr::UdpSvr(short port)
   // can not use std::bind
   routine_timer.async_wait(boost::bind(&UdpSvr::routine, this, boost::asio::placeholders::error, &routine_timer));
   do_receive();
+  std::string s = boost::lexical_cast<std::string>(socket_.local_endpoint() );
+  LOGI("UdpSvr::UdpSvr(), local_endpoint=%s", s.c_str());
 }
 void UdpSvr::routine(const boost::system::error_code & /*e*/, boost::asio::deadline_timer *t)
 {
@@ -60,6 +63,7 @@ void UdpSvr::off_svr(const std::string &svr_addr)
     svrs_.erase(i);
   }  
 }
+// channel_id(2 bytes), cmd_code(2 bytes), serial_no(4 bytes), payload
 void UdpSvr::do_receive()
 {
   socket_.async_receive_from(
@@ -67,8 +71,27 @@ void UdpSvr::do_receive()
       [this](boost::system::error_code ec, std::size_t bytes_recvd) {
         if (!ec && bytes_recvd > 0)
         {
-          do_send(bytes_recvd);
-          cout << "received: " << string(data_, bytes_recvd);
+          LOGI("do_receive, data=%s; from:%s", Util::byte2str(data_, bytes_recvd).c_str(), Util::ep_to_string(sender_endpoint_).c_str() );
+          if(bytes_recvd < 8)
+          {
+            do_send(bytes_recvd);
+          }
+          else 
+          {
+            auto payload_len = bytes_recvd - 8;
+            vector<uint8_t> payload(payload_len), echo;
+            uint16_t cmd = 0, channel_id = 0;
+            uint32_t serial_no = 0;
+            memcpy(&channel_id, &data_[0], 2);
+            memcpy(&cmd, &data_[2], 2);
+            memcpy(&serial_no, &data_[4], 4);
+            memcpy(&payload[0], &data_[8], payload_len);
+            EventSys::instance().dispatch(channel_id, cmd, serial_no, payload);
+            // echo.assign(data_, data_ + 8);
+            // do_send(echo, sender_endpoint_);
+          }
+          
+          // cout << "received: " << string(data_, bytes_recvd);
         }
         do_receive();
       });

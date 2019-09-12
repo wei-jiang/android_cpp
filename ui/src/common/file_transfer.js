@@ -4,12 +4,17 @@ import _ from 'lodash'
 import util from "./util";
 import WSS from "@/wss";
 
-
+window.TransAssort = {
+  image:  0,
+  audio:  1,
+  video:  2,
+  others: 3,
+};
 class FTrans {
-  constructor(target_id, file) {
-    this.send_file_to_peer(peers.get(target_id), file)
+  constructor(target_id, file, assort = TransAssort.others) {
+    this.send_file_to_peer(peers.get(target_id), file, assort)
   }
-  send_file_to_peer(sp, file) {
+  send_file_to_peer(sp, file, assort) {
     let loaded = 0;
     let step = 16 * 1024; //16k size of one chunk
     let total = file.size; // total size of file
@@ -28,6 +33,7 @@ class FTrans {
         Buffer.from([0], "binary"),
         Buffer.from(file.type),
         Buffer.from([0], "binary"),
+        Buffer.from([assort], "binary"),
         Buffer.from(buff, "binary"),
         Buffer.from([flag], "binary")
       ]);
@@ -42,8 +48,10 @@ class FTrans {
             // if file is uploaded completely
             loaded = total; // just changed loaded which could be used to show status.
             vm.$emit(`${file.name}_end`, '');
+            // console.log(`FTrans emit: ${file.name}_end`);
           }
           const progress = `${parseFloat( (loaded / total) * 100 ).toFixed(2)}%`;
+          // console.log(`FTrans emit: ${file.name}_progress, progress=${progress}`);
           vm.$emit(`${file.name}_progress`, progress);
       })
     };

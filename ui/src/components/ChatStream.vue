@@ -1,31 +1,43 @@
 <template>
-  <div class="chat-text">
-    <!-- <p>{{ $t('hello') }}</p> -->
+  <div class="chat-stream">
     <div class="dt">{{log.dt}}</div>
-    <div :class="log.dir == 0 ? 'right': 'left'">
+    <div :class="log.dir == 0 ? 'right': 'left'" :id="log.uuid">
       <img class="small-avatar" :src="log.dir == 0 ? me.avatar: peer.avatar">
-      <div :class="log.dir == 0 ? 'chat-to': 'chat-from'">{{log.content}}</div>
+      <div class="video-icon" :class="log.dir == 0 ? 'chat-to': 'chat-from'">
+        <!-- status: requesting, reject, handshake, streaming, closed -->
+        <div v-if="log.status == 'requesting'">申请通话中</div>
+        <div v-else-if="log.status == 'reject'">{{log.reason}}</div>
+        <div v-else-if="log.status == 'handshake'">建立连接中</div>
+        <div v-else-if="log.status == 'streaming'">
+          <div>{{log.sub_type=='audio'?'语音通话中':'视频通话中'}}</div>
+        </div>
+        <div v-else-if="log.status == 'closed'">通话结束(时长:{{span}})</div>
+      </div>
     </div>
-    
   </div>
 </template>
 
 <script>
-
+import moment from "moment";
+import util from "@/common/util";
 export default {
-  name: 'ChatText',
-  // props: {
-//   title: String,
-//   likes: Number,
-//   isPublished: Boolean,
-//   commentIds: Array,
-//   author: Object,
-//   callback: Function,
-//   contactsPromise: Promise // or any other constructor
-// }
+  name: 'ChatStream',
   props: {
     log: Object,
     peer: Object
+  },
+  watch: { 
+    // should not use an arrow function to define a watcher 
+    log: function(newVal, oldVal) { // watch it
+    
+    },
+
+  },
+  created: async function() {
+    
+  },
+  destroyed() {
+
   },
   mounted() {
     this.me = db.user.findOne({});
@@ -39,14 +51,31 @@ export default {
       }
     };
   },
+  computed: {
+    span() {
+      if(this.log.end && this.log.start){
+        let diff = moment(this.log.end).diff( moment(this.log.start) );
+        return moment.utc(diff).format("HH:mm:ss");
+      }      
+    }
+  },
+  methods: {
+    
+  }
 }
 </script>
 <style scoped>
-.chat-text{
+.chat-stream{
   width: 100%;
   flex-flow: column;
   align-items: center;
   margin-bottom: 1em;
+}
+.video-icon{
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  padding: 0.5em;
 }
 .dt{
   font-size: 0.9rem;
@@ -71,12 +100,15 @@ export default {
 .chat-from {
   word-wrap: break-word;
   margin: 0.5em 0.6em;
+
   max-width: 80%;
 	position: relative;
 	background: #82ebf5;
 	border-radius: .4em;
 }
-
+video{
+  width: 100%;
+}
 .chat-from:after {
 	content: '';
 	position: absolute;
@@ -103,6 +135,7 @@ img{
   border-radius: 1em;
   bottom: 0;
 }
+
 .chat-to:after {
 	content: '';
 	position: absolute;
