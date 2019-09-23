@@ -14,6 +14,10 @@ window.CMD = {
     stream_initiator_sig: 8,
     stream_participant_sig: 9,
     udp_ep: 10,
+    tcp_tunnel: 11,
+    req_proxy: 12,
+    req_proxy_resp: 13,
+    disconnect_proxy_cnns: 14,
 };
 
 class PDealer {
@@ -31,6 +35,10 @@ class PDealer {
         this.dealers[CMD.stream_initiator_sig] = this.stream_initiator_sig.bind(this);
         this.dealers[CMD.stream_participant_sig] = this.stream_participant_sig.bind(this);
         this.dealers[CMD.udp_ep] = this.udp_ep.bind(this);
+        this.dealers[CMD.tcp_tunnel] = this.tcp_tunnel.bind(this);
+        this.dealers[CMD.req_proxy] = this.req_proxy.bind(this);
+        this.dealers[CMD.req_proxy_resp] = this.req_proxy_resp.bind(this);
+        this.dealers[CMD.disconnect_proxy_cnns] = this.disconnect_proxy_cnns.bind(this);
     }
 
     handle_msg(sp, data) {
@@ -55,8 +63,54 @@ class PDealer {
     }
     handshake(sp, data) {
         sp.usr = JSON.parse(data);
-        vm.$emit('peer_changed', '');
+        vm.$emit('peer_changed', sp.pid);
+        // for test
+        // socks_pid = sp.pid;
         console.log('handshake done!')
+    }
+    disconnect_proxy_cnns(sp, data) {
+        const buf = util.get_close_cnns_buff(sp.pid, 0);
+        ws_tunnel.send(buf);
+    }
+    async req_proxy(sp, data) {
+        const usr_settings = db.user.findOne({});
+        if(usr_settings.proxy == '0'){
+            return sp.send_json(CMD.req_proxy_resp, {
+                allow: false,
+                reason: '已屏蔽'
+            });
+        }
+        if(usr_settings.proxy == '1'){
+            return sp.send_json(CMD.req_proxy_resp, {
+                allow: true
+            });
+        }
+        try {
+            await util.show_confirm_top(`[${sp.usr.nickname}] 请求代理`, '同意', '拒绝');
+            sp.send_json(CMD.req_proxy_resp, { allow: true });
+        } catch (err) {
+            // console.log('req_proxy, err='+JSON.stringify(err))
+            sp.send_json(CMD.req_proxy_resp, {
+                allow: false,
+                reason: '已拒绝'
+            });
+        }
+    }
+    req_proxy_resp(sp, data) {
+        data = JSON.parse(data);
+        if(data.allow){
+            if(socks_pid){
+                // disconnect local cnns
+                const buf = util.get_close_cnns_buff(socks_pid, 1)
+                ws_tunnel.send(buf);
+                // disconnect remote cnns
+                peers.get(socks_pid).send_cmd(CMD.disconnect_proxy_cnns);
+            }
+            socks_pid = sp.pid;
+            util.show_alert_top(`请求代理成功，设置远程玩家代理`);
+        } else {
+            util.show_alert_top(`请求代理失败：${data.reason}`);
+        }
     }
     send_file_resp(sp, data) {
         let res = data.toString();
@@ -157,7 +211,19 @@ class PDealer {
                 allow: false,
                 reason: '通话中'
             });
-            // todo: 已屏蔽
+        }
+        const usr_settings = db.user.findOne({});
+        if(type == 'video' && usr_settings.video_chat == '0'){
+            return sp.send_json(CMD.res_stream_chat, {
+                allow: false,
+                reason: '已屏蔽'
+            });
+        }
+        if(type == 'audio' && usr_settings.audio_chat == '0'){
+            return sp.send_json(CMD.res_stream_chat, {
+                allow: false,
+                reason: '已屏蔽'
+            });
         }
         try {
             await util.show_confirm_top(`[${sp.usr.nickname}] 请求${type}聊天`, '同意', '拒绝');
@@ -202,6 +268,9 @@ class PDealer {
             id: sp.pid,
             ep: data.toString()
         });
+    }
+    tcp_tunnel(sp, data) {
+        ws_tunnel.send(data)
     }
 }
 

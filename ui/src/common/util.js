@@ -146,7 +146,13 @@ class Util extends Cordova {
     show_error_top(text) {
         new Noty({ type: 'error', layout: 'top', text }).show();
     }
-
+    get_close_cnns_buff(pid, dir){
+        let buf = Buffer.alloc(50);
+        buf[0] = CPP_CMD.CLOSE_PEER_CNNS;
+        buf[1] = dir;
+        buf.write(pid, 2, 32);
+        return buf;
+    }
     now_str() {
         return moment().format("YYYY-MM-DD HH:mm:ss");
     }

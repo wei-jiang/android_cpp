@@ -60,6 +60,7 @@ set(SOURCE_FILES
     src/main/cpp/peer.cpp
     src/main/cpp/peer_handler.cpp
     src/main/cpp/evt_sys.cpp
+    src/main/cpp/tunnel.cpp
 )
 
 # Include a location to the header files

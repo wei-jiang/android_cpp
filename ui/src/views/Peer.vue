@@ -1,14 +1,19 @@
 <template>
-  <div class="peer">
-    <!-- <nav>
-      <div class="selected" @click.prevent="switch_to('connected', $event)">{{$t('connected')}}</div>
-      <div @click.prevent="switch_to('nearby', $event)">{{$t('nearby')}}</div>
-      <div @click.prevent="switch_to('world', $event)">{{$t('world')}}</div>
-    </nav> -->
+  <div class="player">
+
     <div class="main">
       <keep-alive>
         <router-view/>
       </keep-alive>
+    </div>
+    <div class="player-menu"> 
+      <i class="handle small material-icons">menu</i>
+      <div class="player-dropdown">
+        <div class="connected disabled" @click="switch_to('connected', $event)"><i class="material-icons">face</i>{{$t('connected')}}</div>
+        <div class="nearby" @click="switch_to('nearby', $event)"><i class="material-icons">group</i>{{$t('nearby')}}</div>
+        <div class="world" @click="switch_to('world', $event)"><i class="material-icons">language</i>{{$t('world')}}</div>
+        <div class="proxy" @click="switch_to('proxy', $event)"><i class="material-icons">vpn_key</i>{{$t('proxy')}}</div>       
+      </div>
     </div>
   </div>
 </template>
@@ -17,7 +22,7 @@
 
 import util from "@/common/util";
 export default {
-  name: "Peer",
+  name: "Player",
   props: {
     msg: String
   },
@@ -27,8 +32,26 @@ export default {
   destroyed() {
 
   },
+  watch: {
+    '$route' (to, from) {
+      // console.log(`from=${JSON.stringify(from.name)}`)
+      // console.log(`to=${JSON.stringify(to.name)}`)
+      $(`.player-menu > div > div`).removeClass('disabled')
+      $(`.${to.name}`).addClass('disabled')
+    }
+  },
   mounted() {
-
+    this.draggie = new Draggabilly('.player-menu', {
+      containment: '.player', 
+      handle: '.handle'
+    });
+    this.draggie.on( 'dragStart', ()=>{
+      // $(".player-menu").removeClass("is-open");
+    });
+    this.draggie.on( 'staticClick', ()=>{
+      $(".player-menu").toggleClass("is-open");
+      // console.log('staticClick');
+    });
   },
   data() {
     return {
@@ -42,9 +65,7 @@ export default {
   },
   methods: {
     switch_to(tab, e) {
-      this.$router.replace({name: tab})
-      $("nav > div").removeClass("selected");
-      $(e.target).addClass("selected");
+      this.$router.replace({name: tab});
     },
     
   }
@@ -55,34 +76,66 @@ export default {
 <style scoped>
 .main {
   width: 100%;
-  height: calc(100vh - 6.5rem);
+  height: calc(100vh - 4.5rem);
   overflow-y: auto;
 }
 
-nav {
-  display: flex;
-  flex-wrap: nowrap;
-  margin: 0.5em 0;
-  width: 100%;
-}
-nav > div {
-  background-color: aquamarine;
-  flex: 1;
-  font-size: 1.2em;
-  border: 2px outset;
-}
-.selected {
-  border: 2px inset;
-}
-.peer {
+.player {
   width: 100%;
   display: flex;
   /* justify-content: space-between; */
+  position: relative;
   align-items: center;
   flex-flow: column;
   overflow: hidden;
   font-weight: 700;
 }
-
+.handle{
+  padding: 0.35em;
+}
+.handle.material-icons{
+  vertical-align: sub; 
+  pointer-events: initial;
+}
+.player-menu{
+  position: absolute;
+  /* must use left/top, or it will stretch */
+  left: 55%;
+  top: 40%;
+  border-radius: 2em;
+  background-color: rgb(230, 227, 227);
+}
+.player-dropdown{
+  background-color: lightgray;
+  display: none;
+  white-space: nowrap;
+  position: absolute;
+  left: 40%;
+  top: 80%;
+  margin: 0;
+}
+.player-dropdown > div + div{
+  border-top: 1px outset;
+}
+.player-dropdown > div {
+  /* width: 100%; */
+  text-align: center;
+  padding: 0.8em 1em;
+  font-weight: normal;
+}
+.player-menu.is-open > div {
+  display: block;
+}
+button:disabled {
+  /* background-color: #ccc; */
+  color: grey;
+}
+div.disabled
+{
+  pointer-events: none;
+  /* for "disabled" effect */
+  opacity: 0.5;
+  background: #CCC;
+}
 
 </style>

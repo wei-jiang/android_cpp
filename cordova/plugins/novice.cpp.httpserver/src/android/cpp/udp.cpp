@@ -41,7 +41,7 @@ void UdpSvr::routine(const boost::system::error_code & /*e*/, boost::asio::deadl
   for (auto&& s : svrs_)
   {
     do_send(s->ping_data, s->ep);
-    LOGI("thread[%s] in udp routine, ping %s", tid.c_str(), s->addr.c_str());
+    // LOGI("thread[%s] in udp routine, ping %s", tid.c_str(), s->addr.c_str());
   }
   t->expires_at(t->expires_at() + boost::posix_time::seconds(20));
   t->async_wait(boost::bind(&UdpSvr::routine, this,

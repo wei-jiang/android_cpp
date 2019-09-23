@@ -67,6 +67,7 @@ void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadl
 }
 void HttpSvr::emplace_ws()
 {
+    // https://gitlab.com/eidheim/desktop-stream/blob/master/main.cpp
     auto &ws_server = ws_svr_.get_ws_svr();
     server_->on_upgrade = [&ws_server](unique_ptr<SimpleWeb::HTTP> &socket, shared_ptr<HttpServer::Request> request) {
         auto connection = std::make_shared<WsServer::Connection>(std::move(socket));
@@ -74,7 +75,6 @@ void HttpSvr::emplace_ws()
         connection->path = std::move(request->path);
         connection->http_version = std::move(request->http_version);
         connection->header = std::move(request->header);
-        connection->remote_endpoint = std::move(*request->remote_endpoint);
         ws_server.upgrade(connection);
     };
 }
@@ -172,7 +172,7 @@ void HttpSvr::client_info()
 {
     server_->resource["^/info$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
     stringstream stream;
-    stream << "<h1>Request from " << request->remote_endpoint_address() << ":" << request->remote_endpoint_port() << "</h1>";
+    stream << "<h1>Request from " << request->remote_endpoint().address().to_string() << ":" << request->remote_endpoint().port() << "</h1>";
 
     stream << request->method << " " << request->path << " HTTP/" << request->http_version;
 

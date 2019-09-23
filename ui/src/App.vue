@@ -64,6 +64,7 @@ import Peer from "simple-peer";
 import util from "@/common/util";
 import busi from "@/common/busi";
 import WS from "@/ws";
+import WsTunnel from "@/ws_tunnel";
 
 export default {
   name: "App",
@@ -80,7 +81,7 @@ export default {
     document.removeEventListener("deviceready", this.deviceready, false);
   },
   mounted() {
-    this.test()
+
   },
   data() {
     return {
@@ -131,12 +132,15 @@ export default {
     },
     http_ready(data) {
       cpp.start_socks(util.socks_port());
-      cpp.requestDrawOverlays(ret=>{
-        console.log(`cpp.requestDrawOverlays, ret=${ret}`)
-        if(ret == 1){
-          cpp.mount_webview(`http://127.0.0.1:${data.port}/service.html`);
-        }
-      })
+      window.ws = new WS();
+      ws.init();
+      window.ws_tunnel = new WsTunnel();      
+      // cpp.requestDrawOverlays(ret=>{
+      //   console.log(`cpp.requestDrawOverlays, ret=${ret}`)
+      //   if(ret == 1){
+      //     cpp.mount_webview(`http://127.0.0.1:${data.port}/service.html`);
+      //   }
+      // })
       
     },
     scan_qr() {
@@ -209,13 +213,11 @@ export default {
       } catch (err) {
         console.log(err);
       }
-
-      window.ws = new WS();
       busi.init();
       cpp.start(
         util.http_port(),
         () => {
-          ws.init();
+          
         },
         err => {}
       );

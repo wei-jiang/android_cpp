@@ -88,5 +88,6 @@
   "connected": "peer",
   "nearby": "neaby channel",
   "world": "world channel",
-  "peer-closed": "peer closed"
+  "peer-closed": "peer closed",
+  "proxy": "proxy info"
 }

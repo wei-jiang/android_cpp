@@ -103,6 +103,10 @@
               <div v-if="!video_streaming">视频聊天</div>
               <div v-else class="btn-error">挂断</div>
             </div>
+            <div @click.prevent="request_proxy()">
+              <div class="small material-icons">vpn_key</div>
+              <div>请求代理</div>
+            </div>
           </div>
         </div>
       </div>
@@ -200,6 +204,10 @@ export default {
     aaa() {}
   },
   methods: {
+    request_proxy(){
+      const sp = peers.get(this.tp.id);
+      sp.send_cmd(CMD.req_proxy);
+    },
     stream_start(data){
       const av = $(`#rt_${data.type}`)[0];
       if ('srcObject' in av) {

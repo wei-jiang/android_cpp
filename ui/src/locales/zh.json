@@ -88,5 +88,6 @@
   "connected": "附近玩家",
   "nearby": "附近频道",
   "world": "世界频道",
-  "peer-closed": "对方已离线"
+  "peer-closed": "对方已离线",
+  "proxy": "代理信息"
 }

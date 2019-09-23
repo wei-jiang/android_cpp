@@ -1,9 +1,5 @@
 #pragma once
 #include "common.h"
-#include "server_ws.hpp"
-
-
-typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
 
 class WsSvr
 {
@@ -20,6 +16,7 @@ public:
     void to_all(const std::string& json);
 private:
     void ep_for_cpp();
+    void ep_for_tunnel();
     void return_json(std::shared_ptr<WsServer::Connection> cnn, pt::ptree&);
 
 };

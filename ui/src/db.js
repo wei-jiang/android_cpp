@@ -32,6 +32,7 @@ function populate_default() {
             signature: i18n.t('def_signature'),
             video_chat: '1',
             audio_chat: '1',
+            proxy: '1',
         });
         // const t = db.user.findOne({})
         // console.log('-----------------' + JSON.stringify(t) + '------------------------')

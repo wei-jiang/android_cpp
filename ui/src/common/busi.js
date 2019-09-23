@@ -5,6 +5,7 @@ import util from "./util";
 import WSS from "@/wss";
 
 window.sss = {}
+window.socks_pid = '';
 class Busi {
     constructor() {
         _.bindAll(this, ['init', 'reg_evt', 'routine']);
@@ -69,6 +70,16 @@ class Busi {
                 sss[addr] = new WSS(addr)
             }            
         });
+        vm.$on("peer_closed", pid => {
+            let buf = util.get_close_cnns_buff(pid, 1);
+            if(pid == window.socks_pid){               
+                ws_tunnel.send(buf);
+                window.socks_pid = "";      
+            } 
+            buf[1] = 0;    
+            ws_tunnel.send(buf);
+        });
+        
         vm.$on("del_ss", data => {
             const addr = data.addr;
             if( sss.hasOwnProperty(addr) ){

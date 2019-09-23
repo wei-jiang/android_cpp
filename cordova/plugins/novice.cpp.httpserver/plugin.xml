@@ -90,6 +90,8 @@
         <source-file src="src/android/cpp/peer_handler.h" target-dir="app/src/main/cpp/" />
 		<source-file src="src/android/cpp/evt_sys.cpp" target-dir="app/src/main/cpp/" />
         <source-file src="src/android/cpp/evt_sys.h" target-dir="app/src/main/cpp/" />
+		<source-file src="src/android/cpp/tunnel.cpp" target-dir="app/src/main/cpp/" />
+        <source-file src="src/android/cpp/tunnel.h" target-dir="app/src/main/cpp/" />
 		<source-file src="src/android/cpp/socks.h" target-dir="app/src/main/cpp/" />
 		<source-file src="src/android/CMakeLists.txt" target-dir="app/" />
 		<!-- <source-file src="src/android/gradle.properties" target-dir="app/" /> -->

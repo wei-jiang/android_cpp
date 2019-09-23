@@ -1,5 +1,5 @@
 <template>
-  <div class="connected">
+  <div class="peer">
     <div class="player" v-for="p in peer_list">
       <div class="title">
         <img class="small-avatar" :src="p.avatar" />
@@ -12,7 +12,7 @@
 
         <div v-if="p.show_type == 0" @click.stop="p.show_type = 1">
           <i class="small material-icons">info_outline</i>
-          &nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;
         </div>
         <div v-if="p.show_type == 0" @click.stop="chat_with(p)">
           <i class="small material-icons">chat</i>
@@ -33,7 +33,7 @@
 import util from "@/common/util";
 
 export default {
-  name: "connected",
+  name: "peer",
   props: {
     msg: String
   },
@@ -124,7 +124,7 @@ export default {
   /* overflow-y: auto; */
 }
 
-.connected {
+.peer {
   width: 100%;
   display: flex;
   /* justify-content: space-between; */

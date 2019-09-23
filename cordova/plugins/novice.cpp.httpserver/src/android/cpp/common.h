@@ -129,7 +129,6 @@ public:
         static T instance;
         return instance;
     }
-
     Singleton(const Singleton&) = delete;
     Singleton& operator= (const Singleton) = delete;
 
@@ -137,9 +136,11 @@ protected:
     Singleton() {}
 };
 
-
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+
+#include "server_ws.hpp"
+typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
 
 extern TSQueue<std::string> cpp2java_que;
 extern std::shared_ptr<boost::asio::io_context> g_io, g_socks_io;

@@ -43,8 +43,8 @@ class WSS extends PDealer {
         { urls: `stun:${s_ip}` },
         {
           urls: `turn:${s_ip}`,
-          username: 'piaoyun',
-          credential: 'freego'
+          username: TURN_USER,
+          credential: TURN_PASS
         }
       ]
     };
@@ -82,9 +82,9 @@ class WSS extends PDealer {
         avatar: ui.avatar,
         signature: ui.signature
       });
-      if(this.my_udp_ep){
-        sp.send_string(CMD.udp_ep, this.my_udp_ep);
-      }
+      // if(this.my_udp_ep){
+      //   sp.send_string(CMD.udp_ep, this.my_udp_ep);
+      // }
     });
     sp.on('stream', (stream) => {
       // console.log('on peer channel stream');
@@ -107,16 +107,19 @@ class WSS extends PDealer {
             id: cli_id,
             token: data.token
           });
+          window.TURN_USER = data.TURN_USER;
+          window.TURN_PASS = data.TURN_PASS;
+          console.log(`TURN_USER=${TURN_USER} & TURN_PASS=${TURN_PASS}`);
           break;
         }
         case 'your_udp_ep': {
           this.my_udp_ep = data.ep;
-          console.log(`your_udp_ep, got ep=${this.my_udp_ep}`)
-          for (let [pid, sp] of peers) {
-            if(sp.usr){
-              sp.send_string(CMD.udp_ep, this.my_udp_ep);
-            }            
-          }
+          // console.log(`your_udp_ep, got ep=${this.my_udp_ep}`)
+          // for (let [pid, sp] of peers) {
+          //   if(sp.usr){
+          //     sp.send_string(CMD.udp_ep, this.my_udp_ep);
+          //   }            
+          // }
           break;
         }
         case 'total': {

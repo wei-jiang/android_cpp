@@ -1,5 +1,6 @@
 #include "ws_svr.h"
 #include "util.h"
+#include "tunnel.h"
 using namespace std;
 WsSvr::WsSvr()
 {
@@ -36,6 +37,7 @@ void WsSvr::init()
         cnn->send( Util::get_files_json(path) );
     };
     ep_for_cpp();
+    ep_for_tunnel();
 }
 void WsSvr::to_all(const std::string &json)
 {
@@ -102,6 +104,11 @@ void WsSvr::return_json(std::shared_ptr<WsServer::Connection> cnn, pt::ptree& js
                 "Error: " << ec << ", error message: " << ec.message() << endl;
         }
     });
+}
+void WsSvr::ep_for_tunnel()
+{
+    auto &tep = ws_server_.endpoint["^/rtc_tunnel/?$"];
+    Tunnel::instance().bind_handlers(&tep);
 }
 // void return_nok(std::shared_ptr<WsServer::Connection> cnn, const std::string &msg)
 // {
