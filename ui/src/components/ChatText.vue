@@ -3,7 +3,12 @@
     <!-- <p>{{ $t('hello') }}</p> -->
     <div class="dt">{{log.dt}}</div>
     <div :class="log.dir == 0 ? 'right': 'left'">
-      <img class="small-avatar" :src="log.dir == 0 ? me.avatar: peer.avatar">
+      <img v-if="log.dir==0 || peer" class="small-avatar" 
+        :src="log.dir == 0 ? me.avatar: peer.avatar"
+        @click.stop="head_cb && head_cb($event, log)">
+      <div v-else class="small material-icons" 
+        @click.stop="head_cb && head_cb($event, log)">face</div>
+
       <div :class="log.dir == 0 ? 'chat-to': 'chat-from'">{{log.content}}</div>
     </div>
     
@@ -25,7 +30,8 @@ export default {
 // }
   props: {
     log: Object,
-    peer: Object
+    peer: Object,
+    head_cb: Function
   },
   mounted() {
     this.me = db.user.findOne({});

@@ -18,6 +18,7 @@ window.CMD = {
     req_proxy: 12,
     req_proxy_resp: 13,
     disconnect_proxy_cnns: 14,
+    send_neighbor_msg: 15,
 };
 
 class PDealer {
@@ -39,6 +40,7 @@ class PDealer {
         this.dealers[CMD.req_proxy] = this.req_proxy.bind(this);
         this.dealers[CMD.req_proxy_resp] = this.req_proxy_resp.bind(this);
         this.dealers[CMD.disconnect_proxy_cnns] = this.disconnect_proxy_cnns.bind(this);
+        this.dealers[CMD.send_neighbor_msg] = this.send_neighbor_msg.bind(this);
     }
 
     handle_msg(sp, data) {
@@ -67,6 +69,21 @@ class PDealer {
         // for test
         // socks_pid = sp.pid;
         console.log('handshake done!')
+    }
+    send_neighbor_msg(sp, data) {
+        data = JSON.parse(data);
+        const chat_log = {
+            id: sp.pid,
+            type: data.type,
+            content: data.content,
+            span: data.span,
+            size: data.size,
+            dt: util.now_str(),
+            dir: 1,
+            nickname: sp.usr.nickname
+        };
+        db.nearby_chat_log.insert(chat_log);
+        vm.$emit('neighbor_msg', chat_log);
     }
     disconnect_proxy_cnns(sp, data) {
         const buf = util.get_close_cnns_buff(sp.pid, 0);

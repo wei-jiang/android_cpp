@@ -2,14 +2,20 @@
   <div class="chat-audio">
     <!-- <p>{{ $t('hello') }}</p> -->
     <div class="dt">{{log.dt}}</div>
-    <div :class="log.dir == 0 ? 'right': 'left'">
-      <img class="small-avatar" :src="log.dir == 0 ? me.avatar: peer.avatar">
-      <div class="audio-icon" @click="$emit('play_this', get_url(log))" :class="log.dir == 0 ? 'chat-to': 'chat-from'">
+    <div v-if="log.received">已接收: {{log.received}}</div>
+    <div :class="log.dir == 0 ? 'right': 'left'">      
+      <img v-if="log.dir==0 || peer" class="small-avatar" 
+        :src="log.dir == 0 ? me.avatar: peer.avatar"
+         @click.stop="head_cb && head_cb($event, log)">
+      <div v-else class="small material-icons"
+       @click.stop="head_cb && head_cb($event, log)">face</div>
+
+      <div class="audio-icon" @click.stop="$emit('play_this', get_url(log))" :class="log.dir == 0 ? 'chat-to': 'chat-from'">       
         <div>{{log.span}}″</div>
         <div class="small material-icons">settings_remote</div>
       </div>
     </div>
-    <div v-if="progress != '0%'" class="progressbar">
+    <div v-if="progress != '0%' && log.received == null" class="progressbar">
       <div v-bind:style="{width: progress}"></div>
       <div class="cap">{{`${progress}`}}</div>
     </div>
@@ -33,6 +39,7 @@ export default {
   props: {
     log: Object,
     peer: Object,
+    head_cb: Function
   },
   watch: { 
     // should not use an arrow function to define a watcher 
@@ -87,7 +94,7 @@ export default {
       if(progress == '100.00%'){
         setTimeout(()=>{
           this.progress = '0%';
-        }, 1000);
+        }, 500);
       }
     },
     on_trans_end(){
@@ -121,18 +128,20 @@ export default {
   align-items: center;
   padding: 0.5em;
 }
+
 .dt{
   font-size: 0.9rem;
   color: gray;
 }
 .left{
   display: flex;
+  flex-flow: wrap;
   align-items: center;
 }
 .right{
   /* border: 1px solid red; */
   display: flex;
-  /* fifo */
+  flex-flow: wrap;
   /* justify-content: flex-end; */
   flex-flow: row-reverse;
   align-items: center;

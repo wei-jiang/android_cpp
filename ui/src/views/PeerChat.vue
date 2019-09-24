@@ -601,42 +601,12 @@ export default {
       // console.log('in auto_height; el.style.height=' + el.style.height)
     },
     add_friend() {
-      const p = this.tp;
-      navigator.notification.confirm(
-        `[${p.nickname}]？`, // message
-        i => {
-          // the index uses one-based indexing, so the value is 1, 2, 3, etc.
-          if (i == 1) {
-            const it = db.friends.findOne({ id: p.id });
-            if (!it) {
-              db.friends.insert(p);
-              this.$root.$emit("add_friend", "");
-              util.show_alert_top_tm(this.$t("success"));
-            }
-          }
-        },
-        this.$t("add-friend"), // title
-        [this.$t("ok"), this.$t("cancel")] // buttonLabels
-      );
+      if(!this.tp) return;
+      this.$root.$emit("add_friend", this.tp);
     },
     block_it() {
-      const p = this.tp;
-      navigator.notification.confirm(
-        `[${p.nickname}]？`, // message
-        i => {
-          // the index uses one-based indexing, so the value is 1, 2, 3, etc.
-          if (i == 1) {
-            const it = db.blacklist.findOne({ id: p.id });
-            if (!it) {
-              db.blacklist.insert(p);
-              this.$root.$emit("add_friend", "");
-              util.show_alert_top_tm(this.$t("success"));
-            }
-          }
-        },
-        this.$t("block-it"), // title
-        [this.$t("ok"), this.$t("cancel")] // buttonLabels
-      );
+      if(!this.tp) return;
+      this.$root.$emit("block_it", this.tp);
     },
     update_chat_log() {
       this.chat_logs = db.peer_chat_log.find({ id: this.tp.id }).reverse();

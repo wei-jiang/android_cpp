@@ -11,7 +11,8 @@ window.TransAssort = {
   others: 3,
 };
 class FTrans {
-  constructor(target_id, file, assort = TransAssort.others) {
+  constructor(target_id, file, assort = TransAssort.others, cb) {
+    this.cb = cb;
     this.send_file_to_peer(peers.get(target_id), file, assort)
   }
   send_file_to_peer(sp, file, assort) {
@@ -49,6 +50,7 @@ class FTrans {
             loaded = total; // just changed loaded which could be used to show status.
             vm.$emit(`${file.name}_end`, '');
             // console.log(`FTrans emit: ${file.name}_end`);
+            if(this.cb) this.cb();
           }
           const progress = `${parseFloat( (loaded / total) * 100 ).toFixed(2)}%`;
           // console.log(`FTrans emit: ${file.name}_progress, progress=${progress}`);

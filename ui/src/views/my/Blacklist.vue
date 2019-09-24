@@ -4,9 +4,9 @@
       <div>
         <i class="small material-icons">block</i>
       </div>
-      <div class="peer-info" @click="show_detail(b)">
+      <div class="peer-info" @click="show_detail">
         <div>{{b.nickname}}<i class=" material-icons">info_outline</i></div>       
-        <div v-if="b.show_type">
+        <div class="b-info">
           <img :src="b.avatar">
           <div>{{b.signature}}</div>
         </div>
@@ -25,10 +25,10 @@ import util from "@/common/util";
 export default {
   name: "blacklist",
   created: function() {
-    this.$root.$on("block_it", this.refresh);
+    this.$root.$on("refresh_block_list", this.refresh);
   },
   destroyed() {
-    this.$root.$off("block_it", this.refresh);
+    this.$root.$off("refresh_block_list", this.refresh);
   },
   mounted() {
     this.refresh();
@@ -43,14 +43,10 @@ export default {
   },
   methods: {
     refresh(){
-      this.block_list = db.blacklist.find({}).map(b=>{
-        b.show_type = false;
-        return b;
-      });
+      this.block_list = db.blacklist.find({});
     },
-    show_detail(b){
-      b.show_type = !b.show_type
-   
+    show_detail(e){
+      $(e.currentTarget).find(`.b-info`).toggle();
     },
     remove(b){
       navigator.notification.confirm(
@@ -80,7 +76,9 @@ export default {
 .red {
   color: red;
 }
-
+.b-info{
+  display: none;
+}
 .blocked {
   display: flex;
   /* align-items: center; */

@@ -1,17 +1,17 @@
 <template>
   <div class="friends">
-    <div class="favorite" v-for="b in friend_list">
+    <div class="favorite" v-for="f in friend_list">
       <div>
         <i class="small material-icons">favorite_border</i>
       </div>
-      <div class="peer-info" @click="show_detail(b)">
-        <div>{{b.nickname}}<i class=" material-icons">info_outline</i></div>       
-        <div v-if="b.show_type">
-          <img :src="b.avatar">
-          <div>{{b.signature}}</div>
+      <div class="peer-info" @click.stop="show_detail">
+        <div>{{f.nickname}}<i class=" material-icons">info_outline</i></div>       
+        <div class="f-info">
+          <img :src="f.avatar">
+          <div>{{f.signature}}</div>
         </div>
       </div>
-      <div @click.stop="remove(b)">
+      <div @click.stop="remove(f)">
         <i class="red small material-icons">remove_circle</i>
       </div>
     </div>
@@ -25,10 +25,10 @@ import util from "@/common/util";
 export default {
   name: "friends",
   created: function() {
-    this.$root.$on("add_friend", this.refresh);
+    this.$root.$on("refresh_friend_list", this.refresh);
   },
   destroyed() {
-    this.$root.$off("add_friend", this.refresh);
+    this.$root.$off("refresh_friend_list", this.refresh);
   },
   mounted() {
     this.refresh();
@@ -43,21 +43,18 @@ export default {
   },
   methods: {
     refresh(){
-      this.friend_list = db.friends.find({}).map(b=>{
-        b.show_type = false;
-        return b;
-      });
+      this.friend_list = db.friends.find({});
     },
-    show_detail(b){
-      b.show_type = !b.show_type
+    show_detail(e){
+      $(e.currentTarget).find(`.f-info`).toggle();
     },
-    remove(b){
+    remove(f){
       navigator.notification.confirm(
-          `[${b.nickname}]？`, // message
+          `[${f.nickname}]？`, // message
           i=>{
             // the index uses one-based indexing, so the value is 1, 2, 3, etc.
             if(i == 1){
-              db.friends.remove(b);
+              db.friends.remove(f);
               this.refresh();
             }
           },            
@@ -79,7 +76,9 @@ export default {
 .red {
   color: red;
 }
-
+.f-info{
+  display: none;
+}
 .favorite {
   display: flex;
   /* align-items: center; */

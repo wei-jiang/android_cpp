@@ -203,6 +203,7 @@ class WSS extends PDealer {
     };
     sp.activity = new Date();
     peers.set(pid, sp);  //-----------------------------------
+    vm.$emit('peer_changed', '');
     console.log(`add ${pid} to Map`)
     function send_ping(id){
       setTimeout(()=>{

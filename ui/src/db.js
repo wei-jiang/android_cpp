@@ -79,6 +79,7 @@ export default new Promise((resolve, reject) => {
                     ss: mgrDB.getCollection("ss") ? mgrDB.getCollection("ss") : mgrDB.addCollection("ss"),
                     // id, nickname, content, type, [img, text], dt, dir[0, 1]. where id is chat target id
                     peer_chat_log: mgrDB.getCollection("peer_chat_log") ? mgrDB.getCollection("peer_chat_log") : mgrDB.addCollection("peer_chat_log"),
+                    // id is always refer to source
                     nearby_chat_log: mgrDB.getCollection("nearby_chat_log") ? mgrDB.getCollection("nearby_chat_log") : mgrDB.addCollection("nearby_chat_log"),
                     world_chat_log: mgrDB.getCollection("world_chat_log") ? mgrDB.getCollection("world_chat_log") : mgrDB.addCollection("world_chat_log"),
                 }
