@@ -11,8 +11,8 @@
       <div class="player-dropdown">
         <div class="connected disabled" @click="switch_to('connected', $event)"><i class="material-icons">face</i>{{$t('connected')}}</div>
         <div class="nearby" @click="switch_to('nearby', $event)"><i class="material-icons">group</i>{{$t('nearby')}}</div>
-        <div class="world" @click="switch_to('world', $event)"><i class="material-icons">language</i>{{$t('world')}}</div>
-        <div class="proxy" @click="switch_to('proxy', $event)"><i class="material-icons">vpn_key</i>{{$t('proxy')}}</div>       
+        <div class="sss" @click="switch_to('sss', $event)"><i class="material-icons">language</i>{{$t('world')}}</div>
+        <div class="socks" @click="switch_to('socks', $event)"><i class="material-icons">vpn_key</i>{{$t('proxy')}}</div>       
       </div>
     </div>
   </div>

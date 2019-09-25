@@ -69,6 +69,7 @@ class Busi {
             const addr = data.addr;
             if (!sss.hasOwnProperty(addr)) {
                 sss[addr] = new WSS(addr)
+                vm.$emit('ss_changed', {cmd: 'add_ss', addr});
             }
         });
         vm.$on("peer_closed", pid => {
@@ -86,6 +87,7 @@ class Busi {
             if (sss.hasOwnProperty(addr)) {
                 sss[addr].destroy();
                 delete sss[addr];
+                vm.$emit('ss_changed', {cmd: 'del_ss', addr});
             }
         });
         vm.$on("send_p2p_msg", data => {

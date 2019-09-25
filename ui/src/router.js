@@ -16,8 +16,9 @@ import Blacklist from '@/views/my/Blacklist.vue';
 
 import Connected from '@/views/peer/Connected.vue';
 import Nearby from '@/views/peer/Nearby.vue';
+import Sss from '@/views/peer/Sss.vue';
 import World from '@/views/peer/World.vue';
-
+import Socks from '@/views/peer/Socks.vue';
 Vue.use(Router);
 
 export default new Router({
@@ -63,7 +64,9 @@ export default new Router({
       children: [
         { path: '', name: 'connected', component: Connected },
         { path: 'nearby', name: 'nearby', component: Nearby },
+        { path: 'sss', name: 'sss', component: Sss },
         { path: 'world', name: 'world', component: World },
+        { path: 'socks', name: 'socks', component: Socks },        
       ]
     },
     {

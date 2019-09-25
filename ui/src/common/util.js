@@ -282,6 +282,9 @@ class Util extends Cordova {
             i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
     }
+    truncate(str, len = 7){
+        return _.truncate(str, {'length': len});
+    }
     reset_cd(name) {
         db.cooldown.findAndUpdate({}, c => {
             c[name].current = c[name].caption;

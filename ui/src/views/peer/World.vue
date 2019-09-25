@@ -2,14 +2,17 @@
   <div class="world-chat" @click="hide_menu">
     <div class="player">
       <div class="title">
-        世界人数：{{peer_size}}
+        <div @click="$router.go(-1)" class="small material-icons">keyboard_backspace</div>
+        <div class="online-count">服务器人数：{{online_count}} </div>
+        <div class="small material-icons transparent">keyboard_backspace</div>
       </div>
       <div class="chat">
         <div class="chat-log">          
           <!-- include variable components -->
           <div v-for="l in chat_logs">
-            <ChatText v-if="l.type == 'text'" :log="l" :peer="get_usr_info_by_id(l)" :head_cb="head_cb"></ChatText>
+            <ChatWorld v-if="l.type == 'text'" :log="l" :head_cb="head_cb"></ChatWorld>
             <div v-else>不支持的聊天类型</div>
+          
           </div>
         </div>
         <div class="chat-input">
@@ -40,34 +43,41 @@
 </template>
 
 <script>
-import ChatText from "@/components/ChatText.vue";
+import ChatWorld from "@/components/ChatWorld.vue";
 
 import util from "@/common/util";
-import FTrans from "@/common/file_transfer";
 
-// const chat_record = "chat_record.amr";
-const chat_record = "chat_record.mp3";
 export default {
   name: "world-chat",
   components: {
-    ChatText,
+    ChatWorld,
   },
   created: async function() {
-    this.$root.$on("peer_changed", this.peer_changed);
-    this.$root.$on("world_msg", this.world_msg);
+    this.$root.$on("wss_destroyed", this.wss_destroyed);
+    this.$root.$on("online_count", this.refresh_online_count);
+    this.$root.$on("refresh_world_chat", this.update_chat_log);
   },
   destroyed() {
-    this.$root.$off("peer_changed", this.peer_changed);
-    this.$root.$off("world_msg", this.world_msg);
+    this.$root.$off("wss_destroyed", this.wss_destroyed);
+    this.$root.$off("online_count", this.refresh_online_count);
+    this.$root.$off("refresh_world_chat", this.update_chat_log);
 
   },
+  watch: {
+    '$route.query.addr': function(newVal, oldVal) {
+      console.log(`watch $route.query.addr`)
+        this.get_online_count();
+    }
+  },
   mounted() {
+    this.get_online_count();
     this.update_chat_log();
-    this.peer_size = peers.size;
   },
   data() {
     return {
-      peer_size: 0,
+      cd: null,
+      addr: null,
+      online_count: 0,
       chat_logs: [],
       chat_content: "",
       target: null,
@@ -77,9 +87,19 @@ export default {
     aaa() {}
   },
   methods: {
-    chat_with() {
-      this.$router.push({ name: 'peer-chat', params: { tp: this.target } } );
-      this.hide_menu();
+    stringify(data){
+      return JSON.stringify(data)
+    },
+    get_online_count(){
+      console.log(`before get_online_count(): ${this.addr}`)
+      this.addr = this.$route.query.addr;
+      this.online_count = sss[this.addr].total;
+      console.log(`after get_online_count(): ${this.addr}`)
+    },
+    wss_destroyed(addr){
+      if(addr == this.addr){
+        this.$router.go(-1)
+      }
     },
     hide_menu(){
       $(`.pm`).hide()
@@ -116,12 +136,10 @@ export default {
       event.stopPropagation();
       this.target = this.get_usr_info_by_id(log);
     },
-    peer_changed() {
-      this.peer_size = peers.size;
-    },
-
-    world_msg(data) {
-        this.update_chat_log();
+    refresh_online_count(data) {
+      if(this.addr == data.addr){
+        this.online_count = data.total;
+      }     
     },
 
     get_usr_info_by_id(log){
@@ -129,22 +147,26 @@ export default {
       if(u && u.usr) return {...u.usr, id: log.id};
     },
     send_text_msg() {
-      this.$root.$emit("send_world_msg", {
-        id: cli_id,
-        type: "text",
-        content: this.chat_content
-      });
-      db.nearby_chat_log.insert({
+      if(this.cd) return util.show_warn_top('发言太快，请稍后再试！')
+      this.cd = true;
+      const wss = sss[this.addr];
+      if(wss) {
+        console.log(`send world msg to: ${this.addr}`)
+        wss.send_world_msg(this.chat_content);
+      }
+      db.world_chat_log.insert({
         id: cli_id,
         type: "text",
         content: this.chat_content,
         dt: util.now_str(),
-        dir: 0,
-        nickname: db.user.findOne({}).nickname
+        dir: 0
       });
       this.update_chat_log();
       this.chat_content = "";
       $("textarea").css("height", "2.0rem");
+      setTimeout(()=>{
+        this.cd = null;
+      }, 130 * 1000);
     },
     auto_height(e) {
       const el = e.target;
@@ -163,8 +185,11 @@ export default {
       if(!this.target) return;
       this.$root.$emit("block_it", this.target);     
     },
-    update_chat_log() {
-      this.chat_logs = db.nearby_chat_log.find({}).reverse();
+    update_chat_log(addr) {
+      if(typeof addr === 'undefined' || addr === this.addr){
+        this.chat_logs = db.world_chat_log.find({}).reverse();
+        // console.log(`this.chat_logs=${JSON.stringify(this.chat_logs)}`)
+      }    
     }
   }
 };
@@ -172,19 +197,19 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
+.transparent{
+  opacity: 0;
+}
 .small-avatar {
   width: 2rem;
   height: 2rem;
 }
-.push-speak {
-  flex: 1;
-  user-select: none;
-  background-color: rgb(228, 224, 224);
-  border: 3px outset rgb(90, 90, 90);
-}
-.green {
-  background-color: rgb(138, 211, 138);
+
+.title {
+  width: 100%;
+  display: flex;
+  /* justify-content: center; */
+  align-items: center; /* center items vertically, in this case */
 }
 .player {
   width: 100%;
@@ -197,6 +222,7 @@ export default {
   border: 2px inset black;
 }
 textarea.ci {
+  height: 2rem;
   flex: 1;
   width: 100%;
   overflow: auto;
@@ -209,7 +235,7 @@ textarea.ci {
   /* align-items: center; */
   flex-flow: column;
   width: 100%;
-  height: calc(100vh - 6.5rem);
+  height: calc(100vh - 7.5rem);
   overflow-y: auto;
   background-color: rgb(221, 247, 247);
 }
@@ -227,7 +253,9 @@ textarea.ci {
   display: flex;
   align-items: flex-end;
 }
-
+.online-count{
+  flex: 1;
+}
 .world-chat {
   width: 100%;
   display: flex;

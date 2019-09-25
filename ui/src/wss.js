@@ -12,6 +12,7 @@ window.peers = new Map();
 class WSS extends PDealer {
   constructor(addr) {
     super();
+    this.total = 0;
     this.addr = addr;
     this.svr_ip = addr.substring(0, addr.indexOf(':'))
     this.url = `wss://${addr}/`;
@@ -61,7 +62,7 @@ class WSS extends PDealer {
         sig_data,
         cmd: initiator ? 'send_sig': 'return_sig'
       };
-      console.log(`sp.on('signal'), initiator=${initiator}`);
+      // console.log(`sp.on('signal'), initiator=${initiator}`);
       this.send(data);
     });
     sp.on('error', (e) => {
@@ -95,6 +96,12 @@ class WSS extends PDealer {
     })
     return sp;
   }
+  send_world_msg(msg){
+    this.send({
+      cmd: 'to_all',
+      content: msg
+    })
+  }
   on_message(evt) {
     try {
       const data = JSON.parse(evt.data)
@@ -122,12 +129,29 @@ class WSS extends PDealer {
           // }
           break;
         }
+        case 'too_quick': {
+          util.show_alert_top_tm('消息发送太快……');
+          break;
+        }
         case 'total': {
           this.total = data.total;
           vm.$emit('online_count', {
             addr: this.addr,
             total: data.total
           })
+          break;
+        }
+        case 'to_all': {
+          // world chat msg: from, content
+          console.log(`收到世界频道消息：${JSON.stringify(data)}`);
+          db.world_chat_log.insert({
+            id: data.from,
+            type: "text",
+            content: data.content,
+            dt: util.now_str(),
+            dir: 1
+          });
+          vm.$emit('refresh_world_chat', this.addr);
           break;
         }
         case 'peers': {          
@@ -157,7 +181,7 @@ class WSS extends PDealer {
           break;
         }
         case 'return_sig': {
-          console.log(`return_sig: ${JSON.stringify(data)}`);
+          // console.log(`return_sig: ${JSON.stringify(data)}`);
           if( peers.has(data.from) ){
             peers.get(data.from).signal(data.sig_data)
           }
@@ -257,6 +281,7 @@ class WSS extends PDealer {
       svr_addr: this.addr
     });
     t.close();
+    vm.$emit('wss_destroyed', this.addr);
   }
 }
 export default WSS;

@@ -2,7 +2,7 @@
   <div class="outer">
     <div v-for="s in sss" class="server">
       <div class="bubble">{{s.count}}</div>
-      <input v-model="s.addr" />
+      <input v-model="s.addr" readonly="true" />
       <div @click="enable_svr_or_not(s)">
         <i v-if="s.enabled" class="small material-icons">check_box</i>
         <i v-else class="small material-icons">check_box_outline_blank</i>

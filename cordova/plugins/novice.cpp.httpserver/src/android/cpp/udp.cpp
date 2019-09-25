@@ -18,11 +18,10 @@ UdpSvr::SsEp::SsEp(const std::string &a, const std::string& i, uint32_t t)
   {
     ep = udp::endpoint(address::from_string(v[0]), stoi(v[1]));
   }
-  ping_data.resize(37);
-  ping_data[0] = 0x18;
+  ping_data.resize(36);
   t = htonl(token);
-  memcpy(&ping_data[1], i.c_str(), 32);
-  memcpy(&ping_data[33], &t, 4);
+  memcpy(&ping_data[0], i.c_str(), 32);
+  memcpy(&ping_data[32], &t, 4);
 }
 UdpSvr::UdpSvr(short port)
     : socket_(*g_io, udp::endpoint(udp::v4(), port))
