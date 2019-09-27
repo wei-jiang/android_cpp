@@ -516,7 +516,7 @@ public class CppSvr extends CordovaPlugin {
                 public void run() {
                     while(true){
                         String n = ForegroundService.mCpp.get_noty();
-                        Log.i(LOG_TAG, "noty from cpp "+n);
+                        // Log.i(LOG_TAG, "noty from cpp "+n);
                         PluginResult result = new PluginResult(PluginResult.Status.OK, n);
                         result.setKeepCallback(true);
                         cppCb.sendPluginResult(result);

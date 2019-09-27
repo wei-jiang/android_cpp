@@ -12,6 +12,7 @@ import Pub from '@/Pub.vue'
 import router_pub from '@/router_pub'
 import adb from "@/db";
 Vue.config.productionTip = false
+Vue.prototype.window = window;
 window.i18n = i18n;
 window.isCordovaApp = !!window.cordova;
 

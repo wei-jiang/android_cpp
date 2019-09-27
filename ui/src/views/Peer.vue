@@ -1,12 +1,12 @@
 <template>
-  <div class="player">
+  <div class="player" @click.stop="hide_menu">
 
     <div class="main">
       <keep-alive>
         <router-view/>
       </keep-alive>
     </div>
-    <div class="player-menu"> 
+    <div class="player-menu" onclick="event.cancelBubble = true;"> 
       <i class="handle small material-icons">menu</i>
       <div class="player-dropdown">
         <div class="connected disabled" @click="switch_to('connected', $event)"><i class="material-icons">face</i>{{$t('connected')}}</div>
@@ -51,6 +51,7 @@ export default {
     this.draggie.on( 'staticClick', ()=>{
       $(".player-menu").toggleClass("is-open");
       // console.log('staticClick');
+
     });
   },
   data() {
@@ -64,6 +65,10 @@ export default {
     }
   },
   methods: {
+    hide_menu(){
+      $(".player-menu").removeClass("is-open");
+      $(".tooltiptext").hide();
+    },
     switch_to(tab, e) {
       this.$router.replace({name: tab});
     },

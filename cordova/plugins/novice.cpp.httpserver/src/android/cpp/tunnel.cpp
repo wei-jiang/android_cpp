@@ -7,7 +7,7 @@ using namespace std;
 std::map< std::vector<uint8_t>, std::shared_ptr<RtcCnn> > RtcCnn::s_uuid2cnn;
 std::map< std::string, UUID2CNN> SocksClient::s_peer2cnn;
 SocksClient::SocksClient(Tunnel* t)
-:sock_(*g_socks_io), tunnel_(t)
+:sock_(*g_io), tunnel_(t)
 {
 
 }
@@ -91,6 +91,10 @@ bool SocksClient::send_cmd2peer(uint8_t cmd)
 }
 void SocksClient::remove_self(bool noty_flag)
 {
+    if(SocksClient::s_peer2cnn.find(pid_) == SocksClient::s_peer2cnn.end())
+    {
+        return;
+    }
     if(noty_flag) send_cmd2peer(CLOSE_CONNECTION);
     SocksClient::s_peer2cnn[pid_].erase(uuid_);
 }
@@ -185,7 +189,7 @@ void Tunnel::start(int port)
 {
     LOGI("Tunnel::start, port=%d", port);
     port_ = port;
-    acceptor_ = make_shared<tcp::acceptor>(*g_socks_io, tcp::endpoint(tcp::v4(), port));
+    acceptor_ = make_shared<tcp::acceptor>(*g_io, tcp::endpoint(tcp::v4(), port));
     do_accept();
 }
 bool Tunnel::send(const std::vector<uint8_t>& data)
@@ -257,6 +261,7 @@ void Tunnel::on_message(std::shared_ptr<WsServer::Connection> connection, shared
             break;
         case CLOSE_PEER_CNNS:
             {
+                // LOGI( "Tunnel::on_message, CLOSE_PEER_CNNS, pid=%s", pid.c_str() );
                 auto it = SocksClient::s_peer2cnn.find(pid);
                 if(it != SocksClient::s_peer2cnn.end() )
                 {

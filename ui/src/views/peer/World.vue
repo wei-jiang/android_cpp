@@ -148,6 +148,7 @@ export default {
     },
     send_text_msg() {
       if(this.cd) return util.show_warn_top('发言太快，请稍后再试！')
+      if(this.chat_content.length >= 30) return util.show_warn_top('消息内容太长！')
       this.cd = true;
       const wss = sss[this.addr];
       if(wss) {

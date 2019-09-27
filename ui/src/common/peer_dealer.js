@@ -125,6 +125,7 @@ class PDealer {
             }
             socks_pid = sp.pid;
             util.show_alert_top(`请求代理成功，设置远程玩家代理`);
+            vm.$emit('remote_proxy_changed', socks_pid);
         } else {
             util.show_alert_top(`请求代理失败：${data.reason}`);
         }

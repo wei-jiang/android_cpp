@@ -3,6 +3,7 @@
 #include "util.h"
 #include "udp.h"
 #include "peer.h"
+#include "tunnel.h"
 using namespace std;
 using namespace boost::property_tree;
 
@@ -61,6 +62,14 @@ void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadl
     auto tid = Util::get_tid();
     // LOGI("thread[%s] in routine...", tid.c_str()); 
     // ws_svr_.to_all("cpp ws server alive");
+    json noty_proxy_info;    
+    for( auto const& [k, v] : SocksClient::s_peer2cnn )
+    {
+        noty_proxy_info[k] = v.size();
+    }   
+    noty_proxy_info["cmd"] = "noty_proxy_info";
+    cpp2java_que.push(noty_proxy_info.dump());
+    
     t->expires_at(t->expires_at() + boost::posix_time::seconds(2));
     t->async_wait(boost::bind(&HttpSvr::routine, this,
                               boost::asio::placeholders::error, t));

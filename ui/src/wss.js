@@ -116,7 +116,7 @@ class WSS extends PDealer {
           });
           window.TURN_USER = data.TURN_USER;
           window.TURN_PASS = data.TURN_PASS;
-          console.log(`TURN_USER=${TURN_USER} & TURN_PASS=${TURN_PASS}`);
+          // console.log(`TURN_USER=${TURN_USER} & TURN_PASS=${TURN_PASS}`);
           break;
         }
         case 'your_udp_ep': {

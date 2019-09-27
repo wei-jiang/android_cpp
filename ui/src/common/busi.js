@@ -65,6 +65,11 @@ class Busi {
         }
     }
     reg_evt() {
+        vm.$on("start_socks_server_succeed", data => {
+            window.remote_proxy_port = parseInt(data.port)+100;
+            console.log(`window.remote_proxy_port=${window.remote_proxy_port}`);
+        });
+        // {"6dca4b03f180588b468036b1eff907a4":11,"cmd":"noty_proxy_info"}
         vm.$on("add_ss", data => {
             const addr = data.addr;
             if (!sss.hasOwnProperty(addr)) {
@@ -77,6 +82,7 @@ class Busi {
             if (pid == window.socks_pid) {
                 ws_tunnel.send(buf);
                 window.socks_pid = "";
+                vm.$emit('remote_proxy_changed', socks_pid);
             }
             buf[1] = 0;
             ws_tunnel.send(buf);

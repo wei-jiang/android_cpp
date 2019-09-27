@@ -242,23 +242,54 @@ class Util extends Cordova {
     }
     // must be called after deviceready
     write_socks_pac(ip, port) {
-        window.resolveLocalFileSystemURL(cordova.file.dataDirectory + "www/proxy.pac", fileEntry => {
-            // console.log('file system open: ' + JSON.stringify(fileEntry) );
-            fileEntry.createWriter(fileWriter => {
-                fileWriter.onwriteend = function () {
-                    console.log("write pac file successful...");
-                };
-                fileWriter.onerror = function (e) {
-                    console.log("write pac file failed: " + e.toString());
-                };
-                const pac =
-                    `function FindProxyForURL(url, host){
+        return new Promise((resolve, reject) => {
+            // this file must already exist
+            window.resolveLocalFileSystemURL(cordova.file.dataDirectory + "www/proxy.pac", fileEntry => {
+                // console.log('file system open: ' + JSON.stringify(fileEntry) );
+                fileEntry.createWriter(fileWriter => {
+                    fileWriter.onwriteend = function () {
+                        console.log("write pac file successful...");
+                        resolve();
+                    };
+                    fileWriter.onerror = function (e) {
+                        console.log("write pac file failed: " + e.toString());
+                        reject();
+                    };
+                    const pac =
+`function FindProxyForURL(url, host){
     return "SOCKS5 ${ip}:${port}; DIRECT";
 }`;
-                const dataObj = new Blob([pac], { type: 'text/plain' });
-                fileWriter.write(dataObj);
-            });
-        }, () => { });
+                    const dataObj = new Blob([pac], { type: 'text/plain' });
+                    fileWriter.write(dataObj);
+                    
+                });
+            }, () => { reject(); });
+        });
+        
+    }
+    write_remote_socks_pac(ip, port) {
+        // console.log(`write_remote_socks_pac, ip=${ip}, port=${port}` );
+        window.resolveLocalFileSystemURL(cordova.file.dataDirectory + "www", dir => {
+            dir.getFile('remote.pac', {create:true}, fileEntry=> {
+                // console.log('file system open: ' + JSON.stringify(fileEntry) );          
+                fileEntry.createWriter(fileWriter => {
+                    fileWriter.onwriteend = ()=> {
+                        console.log("write remote pac file successful...");
+                    };
+                    fileWriter.onerror = (e)=> {
+                        console.log("write remote pac file failed: " + e.toString());
+                    };
+                    const pac =
+`function FindProxyForURL(url, host){
+    return "SOCKS5 ${ip}:${port}; ";
+}`;
+                    const dataObj = new Blob([pac], { type: 'text/plain' });
+                    fileWriter.write(dataObj);
+                });
+            });     
+        }, (err) => { 
+            console.log("write_remote_socks_pac resolveLocalFileSystemURL failed: " + JSON.stringify(err));
+        });
     }
     store_url() {
         let loc = window.location,

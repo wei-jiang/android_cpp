@@ -50,9 +50,19 @@ void FreeNet::start_socks(int port)
             }
             else
             {
-                LOGI("thread[%s] add new socks proxy server", tid.c_str());
-                servers.push_back( make_shared<Socks>(port) );
-                g_socks_port = port;
+                try
+                {
+                    LOGI("thread[%s] add new socks proxy server", tid.c_str());
+                    servers.push_back( make_shared<Socks>(port) );
+                } 
+                catch(...)
+                {
+                    json = Util::to_json({
+                        {"cmd", "chg_socks_port_back"},
+                        {"ret", "-1"},
+                        {"port", std::to_string(port)}
+                    });
+                }
             }
             cpp2java_que.push(json);
         });
@@ -69,11 +79,15 @@ void FreeNet::start_socks(int port)
                 Tunnel::instance().start(port + 100);
                 for(auto&& s: servers) LOGI("thread[%s] port=%d;type=%d", tid.c_str(), s->get_port(), s->get_type());
                 g_socks_port = port;
+                cpp2java_que.push(Util::to_json({
+                    {"cmd", "start_socks_server_succeed"},
+                    {"port", std::to_string(port)}
+                }));
                 g_socks_io->run();          
             }
             catch(const std::exception& e)
             {
-                LOGE( "start services failed: %s", e.what() );
+                LOGE( "start socks services failed: %s", e.what() );
             }  
             LOGI("thread[%s] exit ------------------------------", tid.c_str());      
         });
@@ -111,12 +125,24 @@ int FreeNet::start_http(int port, const string& path)
             }
             else
             {
-                LOGI("thread[%s] add new http server", tid.c_str());
-                // g_io->stop();
-                servers.push_back( make_shared<HttpSvr>(port, path) );                
-                // g_io->restart();
-                // g_io->run();  
-                // LOGI("after io_service run");    
+                try
+                {
+                    LOGI("thread[%s] add new http server", tid.c_str());
+                    // g_io->stop();
+                    servers.push_back( make_shared<HttpSvr>(port, path) );                
+                    // g_io->restart();
+                    // g_io->run();  
+                    // LOGI("after io_service run"); 
+                }
+                catch(const std::exception& e)
+                {
+                    LOGI("change http server port failed, %s", e.what());
+                    json = Util::to_json({
+                        {"cmd", "chg_http_port_back"},
+                        {"ret", "-1"},
+                        {"port", std::to_string(port)}
+                    });
+                }       
             }
             cpp2java_que.push(json);
         });

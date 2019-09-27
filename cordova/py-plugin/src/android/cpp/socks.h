@@ -21,7 +21,6 @@ public:
 	}
 
 private:
-
 	void read_socks5_handshake()
 	{
 		auto self(shared_from_this());

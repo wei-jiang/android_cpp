@@ -121,7 +121,7 @@ export default {
     },
 
     cpp_noty(data) {
-      console.log("from C++++++++++++++ " + data + " +++++++++++++++C");
+      // console.log("from C++++++++++++++ " + data + " +++++++++++++++C");
       try {
         data = JSON.parse(data);
         this.$root.$emit(data.cmd, data);
@@ -134,7 +134,17 @@ export default {
       cpp.start_socks(util.socks_port());
       window.ws = new WS();
       ws.init();
-      window.ws_tunnel = new WsTunnel();      
+      window.ws_tunnel = new WsTunnel();     
+      networkinterface.getWiFiIPAddress(
+        async info => {
+          const socks_port = parseInt( util.socks_port() );
+          await util.write_socks_pac(info.ip, socks_port);
+          util.write_remote_socks_pac(info.ip, socks_port+100);
+          window.remote_socks_addr = `${info.ip}:${socks_port+100}`;
+          window.http_addr = `http://${info.ip}:${util.http_port()}/`;
+        },
+        err => {}
+      ); 
       // cpp.requestDrawOverlays(ret=>{
       //   console.log(`cpp.requestDrawOverlays, ret=${ret}`)
       //   if(ret == 1){
@@ -222,12 +232,7 @@ export default {
         err => {}
       );
       cpp.reg_cpp_cb(this.cpp_noty.bind(this));
-      networkinterface.getWiFiIPAddress(
-        info => {
-          util.write_socks_pac(info.ip, util.socks_port());
-        },
-        err => {}
-      );
+      
     }
   }
 };
