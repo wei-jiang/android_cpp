@@ -1,26 +1,26 @@
 #include "tunnel.h"
 #include "util.h"
 
-// | cmd 2bytes | direction 1byte | cli_id(md5 string) 32bytes | uuid 16bytes |
+// | cmd 1bytes | direction 1byte | cli_id(md5 string) 32bytes | serial_no 4bytes |
 // buffer length 2bytes | raw buffer n bytes|
 using namespace std;
-std::map< std::vector<uint8_t>, std::shared_ptr<RtcCnn> > RtcCnn::s_uuid2cnn;
-std::map< std::string, UUID2CNN> SocksClient::s_peer2cnn;
+std::map< uint32_t, std::shared_ptr<RtcCnn> > RtcCnn::s_id2cnn;
+std::map< std::string, ID2CNN> SocksClient::s_peer2cnn;
 SocksClient::SocksClient(Tunnel* t)
 :sock_(*g_io), tunnel_(t)
 {
 
 }
 SocksClient::~SocksClient() {
-    LOGI("SocksClient::~SocksClient()");
+    // LOGI("SocksClient::~SocksClient()");
     sock_.close();
 }
-void SocksClient::start(const std::string& pid, const std::vector<uint8_t>& uuid)
+void SocksClient::start(const std::string& pid, uint32_t s_no)
 {
     auto self(shared_from_this());
     pid_ = pid;
-    uuid_ = uuid;
-    SocksClient::s_peer2cnn[pid_][uuid_] = self;
+    s_no_ = s_no;
+    SocksClient::s_peer2cnn[pid_][s_no_] = self;
     tcp::endpoint ep( boost::asio::ip::address::from_string("127.0.0.1"), g_socks_port);
     sock_.async_connect(ep, 
         [this](boost::system::error_code ec)
@@ -40,54 +40,55 @@ void SocksClient::do_write(const std::vector<uint8_t>& data)
 {
     write_buff_ = data;
     // LOGI("SocksClient::do_write, data=%s", Util::byte2str(write_buff_).c_str());
-    boost::asio::async_write(sock_, boost::asio::buffer(write_buff_),
-        [this](boost::system::error_code ec, std::size_t /*length*/)
+    boost::asio::async_write(sock_, boost::asio::buffer(write_buff_), MEM_FN2(on_write, _1, _2));
+}
+void SocksClient::on_write(boost::system::error_code ec, std::size_t length)
+{
+    if (!ec)
+    {
+        send_cmd2peer(WRITE_BUFFER);
+    }
+    else
+    {
+        remove_self();
+    }  
+}
+void SocksClient::on_read(boost::system::error_code ec, std::size_t length)
+{
+    if (!ec)
+    {
+        std::vector<uint8_t> buff(38+2+length);
+        uint16_t len = length;
+        buff[0] = CLI_WRITE_BUFFER;
+        buff[1] = 1;
+        memcpy(&buff[2], &pid_[0], 32);
+        memcpy(&buff[34], &s_no_, 4);
+        memcpy(&buff[38], &len, 2);
+        memcpy(&buff[40], &read_buff_[0], len);
+        // LOGI("SocksClient::do_read, data=%s", Util::byte2str(read_buff_, len).c_str());
+        if( !send_by_ws(buff) )
         {
-          if (!ec)
-          {
-            send_cmd2peer(WRITE_BUFFER);
-          }
-          else
-          {
             remove_self();
-          }         
-        });
+        }
+    }
+    else
+    {
+        remove_self();
+    }     
 }
 void SocksClient::do_read()
 {
-    sock_.async_receive(boost::asio::buffer(read_buff_, max_length),
-                            [this](boost::system::error_code ec, std::size_t length) {
-                                if (!ec)
-                                {
-                                    std::vector<uint8_t> buff(50+2+length);
-                                    uint16_t len = length;
-                                    buff[0] = CLI_WRITE_BUFFER;
-                                    buff[1] = 1;
-                                    memcpy(&buff[2], &pid_[0], 32);
-                                    memcpy(&buff[34], &uuid_[0], 16);
-                                    memcpy(&buff[50], &len, 2);
-                                    memcpy(&buff[52], &read_buff_[0], len);
-                                    // LOGI("SocksClient::do_read, data=%s", Util::byte2str(read_buff_, len).c_str());
-                                    if( !tunnel_->send(buff) )
-                                    {
-                                        remove_self();
-                                    }
-                                }
-                                else
-                                {
-                                    remove_self();
-                                }                                
-                            });
+    sock_.async_receive(boost::asio::buffer(read_buff_, max_length), MEM_FN2(on_read, _1, _2));
 }
 bool SocksClient::send_cmd2peer(uint8_t cmd)
 {
-    // 1+1+32+16 = 50
-    std::vector<uint8_t> buff(50);
+    // 1+1+32+4 = 38
+    std::vector<uint8_t> buff(38);
     buff[0] = cmd;
     buff[1] = 1;
     memcpy(&buff[2], &pid_[0], 32);
-    memcpy(&buff[34], &uuid_[0], 16);
-    return tunnel_->send(buff);
+    memcpy(&buff[34], &s_no_, 4);
+    return send_by_ws(buff);
 }
 void SocksClient::remove_self(bool noty_flag)
 {
@@ -96,21 +97,30 @@ void SocksClient::remove_self(bool noty_flag)
         return;
     }
     if(noty_flag) send_cmd2peer(CLOSE_CONNECTION);
-    SocksClient::s_peer2cnn[pid_].erase(uuid_);
+    auto i = SocksClient::s_peer2cnn.find(pid_);
+    if(SocksClient::s_peer2cnn.end() != i)
+    {
+        i->second.erase(s_no_);
+    }
+    
 }
-
+bool SocksClient::send_by_ws(const std::vector<uint8_t>& data)
+{
+    reset();
+    return tunnel_->send(data);
+}
 RtcCnn::RtcCnn(tcp::socket socket, Tunnel* t)
-:tunnel_(t), socket_( std::move(socket) ), uuid_( Util::uuid() )
+:tunnel_(t), socket_( std::move(socket) ), s_no_( Util::serial_no() )
 {}
 RtcCnn::~RtcCnn()
 {
-    LOGI("RtcCnn::~RtcCnn()");
+    // LOGI("RtcCnn::~RtcCnn()");
     socket_.close();
 }
 void RtcCnn::start()
 {
     auto self(shared_from_this());
-    RtcCnn::s_uuid2cnn[uuid_] = self;
+    RtcCnn::s_id2cnn[s_no_] = self;
 
     // via ws -> webrtc -> peer's ws -> tunnel.cpp
     if( !send_cmd2peer(NEW_CONNECTION) )
@@ -118,63 +128,67 @@ void RtcCnn::start()
         remove_self();
     }
 }
+bool RtcCnn::send_by_ws(const std::vector<uint8_t>& data)
+{
+    reset();
+    return tunnel_->send(data);
+}
 bool RtcCnn::send_cmd2peer(uint8_t cmd)
 {
-    // 1+1+32+16 = 50
-    std::vector<uint8_t> buff(50);
+    // 1+1+32+4 = 38
+    std::vector<uint8_t> buff(38);
     buff[0] = cmd;
     buff[1] = 0;
-    memcpy(&buff[34], &uuid_[0], 16);
-    return tunnel_->send(buff);
+    memcpy(&buff[34], &s_no_, 4);
+    return send_by_ws(buff);
 }
 void RtcCnn::remove_self(bool noty)
 {
     if(noty) send_cmd2peer(CLOSE_CONNECTION);
-    RtcCnn::s_uuid2cnn.erase(uuid_);
+    RtcCnn::s_id2cnn.erase(s_no_);
+}
+void RtcCnn::on_read(boost::system::error_code ec, std::size_t length)
+{
+    if (!ec)
+    {
+        std::vector<uint8_t> buff(38+2+length);
+        uint16_t len = length;
+        buff[0] = WRITE_BUFFER;
+        buff[1] = 0;
+        memcpy(&buff[34], &s_no_, 4);
+        memcpy(&buff[38], &len, 2);
+        memcpy(&buff[40], &in_buf_[0], len);
+        // LOGI("RtcCnn::do_read, data=%s", Util::byte2str(in_buf_, len).c_str());
+        if( !send_by_ws(buff) )
+        {
+            remove_self();
+        }
+    }
+    else
+    {
+        remove_self();
+    }
 }
 void RtcCnn::do_read()
 {
-    socket_.async_read_some(boost::asio::buffer(in_buf_, max_length),
-                            [this](boost::system::error_code ec, std::size_t length) {
-                                if (!ec)
-                                {
-                                    std::vector<uint8_t> buff(50+2+length);
-                                    uint16_t len = length;
-                                    buff[0] = WRITE_BUFFER;
-                                    buff[1] = 0;
-                                    memcpy(&buff[34], &uuid_[0], 16);
-                                    memcpy(&buff[50], &len, 2);
-                                    memcpy(&buff[52], &in_buf_[0], len);
-                                    // LOGI("RtcCnn::do_read, data=%s", Util::byte2str(in_buf_, len).c_str());
-                                    if( !tunnel_->send(buff) )
-                                    {
-                                        remove_self();
-                                    }
-                                }
-                                else
-                                {
-                                    remove_self();
-                                }
-                                
-                            });
+    socket_.async_read_some(boost::asio::buffer(in_buf_, max_length), MEM_FN2(on_read, _1, _2));
+}
+void RtcCnn::on_write(boost::system::error_code ec, std::size_t length)
+{
+    if (!ec)
+    {
+        send_cmd2peer(CLI_WRITE_BUFFER);
+    }
+    else
+    {
+        remove_self();
+    }
 }
 void RtcCnn::do_write(const std::vector<uint8_t> &data)
 {
     out_buf_ = data;
     // LOGI("RtcCnn::do_write, data=%s", Util::byte2str(out_buf_).c_str());
-    boost::asio::async_write(socket_, boost::asio::buffer(out_buf_),
-        [this](boost::system::error_code ec, std::size_t /*length*/)
-        {
-          if (!ec)
-          {
-            send_cmd2peer(CLI_WRITE_BUFFER);
-          }
-          else
-          {
-              remove_self();
-          }
-          
-        });
+    boost::asio::async_write(socket_, boost::asio::buffer(out_buf_), MEM_FN2(on_write, _1, _2));
 }
 void Tunnel::bind_handlers(WsServer::Endpoint *ws_ep)
 {
@@ -224,39 +238,86 @@ void Tunnel::on_message(std::shared_ptr<WsServer::Connection> connection, shared
     uint8_t cmd = buff[0];
     uint8_t dir = buff[1];
     string pid(buff.begin()+2, buff.begin()+34);
-    vector<uint8_t> uuid(buff.begin()+34, buff.begin()+50);
+    uint32_t s_no;
+    memcpy(&s_no, &buff[34], 4);
     if(dir == 0)
     {
         switch (cmd)
         {
         case NEW_CONNECTION:
-            std::make_shared<SocksClient>(this)->start(pid, uuid);
+            std::make_shared<SocksClient>(this)->start(pid, s_no);
             break;
         case CLI_WRITE_BUFFER:
             {
-                auto psc = SocksClient::s_peer2cnn[pid][uuid];
-                if(psc) psc->do_read(); 
+                auto i = SocksClient::s_peer2cnn.find(pid);
+                if(i != SocksClient::s_peer2cnn.end() )
+                {
+                    auto &id_map = i->second;
+                    auto ii = id_map.find(s_no);
+                    if(ii != id_map.end())
+                    {
+                        auto psc = ii->second;
+                        psc->do_read(); 
+                    }
+                    else 
+                    {
+                        LOGI( "CLI_WRITE_BUFFER,dir==0, pid=%s, s_no=%u no found", pid.c_str(), s_no );
+                    }
+                }
+                else 
+                {
+                    LOGI( "CLI_WRITE_BUFFER,dir==0, pid=%s no found", pid.c_str() );
+                }
             }             
             break;
         case WRITE_BUFFER:
             {
-                auto psc = SocksClient::s_peer2cnn[pid][uuid];
-                if(psc)
+                auto i = SocksClient::s_peer2cnn.find(pid);
+                if(SocksClient::s_peer2cnn.end() != i)
                 {
-                    uint16_t len = 0;
-                    memcpy(&len, &buff[50], 2);
-                    auto it = buff.begin() + 52;
-                    psc->do_write( vector<uint8_t>(it, it + len) );
+                    auto &id_map = i->second;
+                    auto ii = id_map.find(s_no);
+                    if(ii != id_map.end())
+                    {
+                        auto psc = ii->second;
+                        uint16_t len = 0;
+                        memcpy(&len, &buff[38], 2);
+                        auto it = buff.begin() + 40;
+                        psc->do_write( vector<uint8_t>(it, it + len) );
+                    }
+                    else 
+                    {
+                        LOGI( "WRITE_BUFFER, dir==0, pid=%s, s_no=%u no found", pid.c_str(), s_no );
+                    }
                 }
+                else
+                {
+                    LOGI( "WRITE_BUFFER, dir==0, pid=%s no found", pid.c_str() );
+                }
+ 
             }           
             break;
         case CLOSE_CONNECTION:
             {
-                auto psc = SocksClient::s_peer2cnn[pid][uuid];
-                if(psc)
+                auto i = SocksClient::s_peer2cnn.find(pid);
+                if(i != SocksClient::s_peer2cnn.end() )
                 {
-                    psc->remove_self( false );
-                } 
+                    auto &id_map = i->second;
+                    auto ii = id_map.find(s_no);
+                    if(ii != id_map.end())
+                    {
+                        auto psc = ii->second;
+                        psc->remove_self( false ); 
+                    }
+                    else 
+                    {
+                        LOGI( "CLOSE_CONNECTION, dir==0, pid=%s, s_no=%u no found", pid.c_str(), s_no );
+                    }
+                }
+                else 
+                {
+                    LOGI( "CLOSE_CONNECTION, dir==0, pid=%s no found", pid.c_str() );
+                }
             }                     
             break;
         case CLOSE_PEER_CNNS:
@@ -265,7 +326,7 @@ void Tunnel::on_message(std::shared_ptr<WsServer::Connection> connection, shared
                 auto it = SocksClient::s_peer2cnn.find(pid);
                 if(it != SocksClient::s_peer2cnn.end() )
                 {
-                    auto &peer_cnns = SocksClient::s_peer2cnn[pid];
+                    auto &peer_cnns = it->second;
                     peer_cnns.clear();
                     // for( auto const& [k, v] : symbolTable )
                     // {
@@ -290,34 +351,52 @@ void Tunnel::on_message(std::shared_ptr<WsServer::Connection> connection, shared
         case NEW_CONNECTION:
         case WRITE_BUFFER:
             {
-                auto pcnn = RtcCnn::s_uuid2cnn[uuid];
-                if(pcnn) pcnn->do_read();
+                auto i = RtcCnn::s_id2cnn.find(s_no);
+                if(i != RtcCnn::s_id2cnn.end() )
+                {
+                    auto &pcnn = i->second;
+                    pcnn->do_read();
+                }
+                else 
+                {
+                    LOGI( "WRITE_BUFFER/NEW_CONNECTION, dir==1, s_no=%u no found", s_no );
+                }
             }             
             break;
         case CLI_WRITE_BUFFER:
             {
-                auto pcnn = RtcCnn::s_uuid2cnn[uuid];
-                if(pcnn) 
+                auto i = RtcCnn::s_id2cnn.find(s_no);
+                if(i != RtcCnn::s_id2cnn.end() )
                 {
+                    auto &pcnn = i->second;
                     uint16_t len = 0;
-                    memcpy(&len, &buff[50], 2);
-                    auto it = buff.begin() + 52;
+                    memcpy(&len, &buff[38], 2);
+                    auto it = buff.begin() + 40;
                     pcnn->do_write( vector<uint8_t>(it, it + len) );
-                } 
+                }
+                else 
+                {
+                    LOGI( "CLI_WRITE_BUFFER, dir==1, s_no=%u no found", s_no );
+                }
             }           
             break;
         case CLOSE_CONNECTION:
             {
-                auto pcnn = RtcCnn::s_uuid2cnn[uuid];
-                if(pcnn)
+                auto i = RtcCnn::s_id2cnn.find(s_no);
+                if(i != RtcCnn::s_id2cnn.end() )
                 {
+                    auto &pcnn = i->second;
                     pcnn->remove_self( false );
-                } 
+                }
+                else 
+                {
+                    LOGI( "CLOSE_CONNECTION, dir==1, s_no=%u no found", s_no );
+                }
             }                     
             break;
         case CLOSE_PEER_CNNS:
             {
-                RtcCnn::s_uuid2cnn.clear();   
+                RtcCnn::s_id2cnn.clear();   
             }    
             break;
         default:

@@ -21,7 +21,7 @@ function populate_default() {
     }
     if (!db.ss.findOne({})) {
         db.ss.insert({
-            addr: '139.224.228.83:57000',
+            addr: '139.155.50.166:57000',
             enabled: true
         });
     }
@@ -61,6 +61,24 @@ function populate_default() {
     //     db.blacklist.insert(ly);
     // }
 }
+function clean_logs(){
+    // console.log(`db.peer_chat_log.count()=${db.peer_chat_log.count()}`)
+    if(db.peer_chat_log.count() > 2000){
+        const n_del = db.peer_chat_log.count() - 2000;
+        db.peer_chat_log.chain().find({}).limit(n_del).remove();
+    }
+    // console.log(`db.nearby_chat_log.count()=${db.nearby_chat_log.count()}`)
+    if(db.nearby_chat_log.count() > 1000){
+        const n_del = db.nearby_chat_log.count() - 1000;
+        // console.log(`db.nearby_chat_log remove ${n_del} rows`)
+        db.nearby_chat_log.chain().find({}).limit(n_del).remove();
+    }
+    // console.log(`db.world_chat_log.count()=${db.world_chat_log.count()}`)
+    if(db.world_chat_log.count() > 1000){
+        const n_del = db.world_chat_log.count() - 1000;
+        db.world_chat_log.chain().find({}).limit(n_del).remove();
+    }
+}
 //export promise?
 export default new Promise((resolve, reject) => {
     if (db) {
@@ -84,6 +102,7 @@ export default new Promise((resolve, reject) => {
                     world_chat_log: mgrDB.getCollection("world_chat_log") ? mgrDB.getCollection("world_chat_log") : mgrDB.addCollection("world_chat_log"),
                 }
                 populate_default();
+                clean_logs();
                 resolve(db);
             },
             autosave: true,

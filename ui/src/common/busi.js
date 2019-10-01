@@ -25,7 +25,7 @@ class Busi {
                 // remove peer in blacklist
                 const to_be_removed = db.blacklist.findOne({ id })
                 if (span > 6 || to_be_removed) {
-                    console.log('remove inactive peer: ' + id)
+                    console.log('remove inactive or blocked peer: ' + id)
                     sp.destroy();
                     peers.delete(id);
                     vm.$emit('peer_changed', '');
@@ -128,7 +128,7 @@ class Busi {
         });
         vm.$on("add_friend", data => {
             navigator.notification.confirm(
-                `[${data.nickname}]？`, // message
+                `[${data.nickname || util.truncate(data.id)}]？`, // message
                 i => {
                     // the index uses one-based indexing, so the value is 1, 2, 3, etc.
                     if (i == 1) {
@@ -147,7 +147,7 @@ class Busi {
         });
         vm.$on("block_it", data => {
             navigator.notification.confirm(
-                `[${data.nickname}]？`, // message
+                `[${data.nickname || util.truncate(data.id)}]？`, // message
                 i => {
                     // the index uses one-based indexing, so the value is 1, 2, 3, etc.
                     if (i == 1) {

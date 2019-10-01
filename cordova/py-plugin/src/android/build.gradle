@@ -11,6 +11,10 @@ android {
         disable 'ExtraTranslation'
         checkReleaseBuilds false
     }
+    // packagingOptions {
+    //     // specify the path to your object binaries, or generally:
+    //     doNotStrip '**.so'
+    // }
     defaultConfig {
         // above android5
         minSdkVersion 21

@@ -144,6 +144,7 @@ class WSS extends PDealer {
         case 'to_all': {
           // world chat msg: from, content
           console.log(`收到世界频道消息：${JSON.stringify(data)}`);
+          if( db.blacklist.findOne({id: data.from}) ) return;
           db.world_chat_log.insert({
             id: data.from,
             type: "text",
@@ -173,6 +174,7 @@ class WSS extends PDealer {
           if(peers.has(pid) && peers.get(pid).passive ){
             sp = peers.get(pid)
           } else{
+            if( db.blacklist.findOne({id: pid}) ) return;
             if( peers.has(pid) ) peers.get(pid).destroy();
             sp = this.create_peer(pid)
             this.postfix_peer(sp, pid)

@@ -135,7 +135,23 @@ public:
 protected:
     Singleton() {}
 };
-
+class LYTimer
+{   
+public:
+    LYTimer()
+    :t_(std::chrono::steady_clock::now())
+    {}
+    void reset()
+    {
+        t_ = std::chrono::steady_clock::now();
+    }
+    int64_t elapsed_in_seconds()
+    {
+        return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - t_).count();
+    }
+private:
+    std::chrono::steady_clock::time_point t_;
+};
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 

@@ -72,16 +72,17 @@ export default {
     window.vm = this.$root;
     this.$root.$on("sub_title_chg", this.sub_title_chg);
     this.$root.$on("http_ready", this.http_ready);
-    document.addEventListener("deviceready", this.deviceready, false);
+
   },
   beforeDestroy() {},
   destroyed() {
     this.$root.$off("sub_title_chg", this.sub_title_chg);
     this.$root.$off("http_ready", this.http_ready);
-    document.removeEventListener("deviceready", this.deviceready, false);
-  },
-  mounted() {
 
+  },
+  async mounted() {
+    await util.wait_deviceready();
+    this.init_native();
   },
   data() {
     return {
@@ -130,21 +131,21 @@ export default {
         console.log(`hex_str=${hex_str}`);
       }
     },
-    http_ready(data) {
+    async http_ready(data) {
       cpp.start_socks(util.socks_port());
       window.ws = new WS();
       ws.init();
       window.ws_tunnel = new WsTunnel();     
-      networkinterface.getWiFiIPAddress(
-        async info => {
-          const socks_port = parseInt( util.socks_port() );
-          await util.write_socks_pac(info.ip, socks_port);
-          util.write_remote_socks_pac(info.ip, socks_port+100);
-          window.remote_socks_addr = `${info.ip}:${socks_port+100}`;
-          window.http_addr = `http://${info.ip}:${util.http_port()}/`;
-        },
-        err => {}
-      ); 
+      try {
+        const local_ip = await util.get_ip();
+        const socks_port = parseInt( util.socks_port() );
+        await util.write_socks_pac(local_ip, socks_port);
+        util.write_remote_socks_pac(local_ip, socks_port+100);
+        window.remote_socks_addr = `${local_ip}:${socks_port+100}`;
+        window.http_addr = `http://${local_ip}:${util.http_port()}/`;
+      } catch (error) {
+        console.log(`no wifi ip, so skip writing pac files`);
+      }      
       // cpp.requestDrawOverlays(ret=>{
       //   console.log(`cpp.requestDrawOverlays, ret=${ret}`)
       //   if(ret == 1){
@@ -213,7 +214,7 @@ export default {
       this.sub = "";
       $("#main-menu").removeClass("is-open");
     },
-    deviceready() {
+    init_native() {
       //disable ads for now
       // util.restart_ads_tm();
       window.cli_id = `${device.platform}-${device.manufacturer}-${device.model}-${device.uuid}`;

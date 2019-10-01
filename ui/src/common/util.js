@@ -147,7 +147,7 @@ class Util extends Cordova {
         new Noty({ type: 'error', layout: 'top', text }).show();
     }
     get_close_cnns_buff(pid, dir){
-        let buf = Buffer.alloc(50);
+        let buf = Buffer.alloc(38);
         buf[0] = CPP_CMD.CLOSE_PEER_CNNS;
         buf[1] = dir;
         buf.write(pid, 2, 32);
@@ -216,6 +216,33 @@ class Util extends Cordova {
     validateNum(input, min, max) {
         let num = +input;
         return num >= min && num <= max && input === num.toString();
+    }
+    wait_deviceready(){
+        return new Promise((resolve, reject) => {
+            document.addEventListener("deviceready", ()=>{
+                resolve()
+            }, false);            
+        });
+    }
+    get_ip(){
+        return new Promise((resolve, reject) => {
+            if(window.local_ip){
+                resolve(window.local_ip)
+            } else {
+                document.addEventListener("deviceready", ()=>{
+                    networkinterface.getWiFiIPAddress(
+                        info => {
+                            window.local_ip = info.ip;
+                            resolve(window.local_ip)
+                        },
+                        err => {
+                            console.log(`get wifi ip failed.`)
+                            reject()
+                        }
+                      ); 
+                }, false);
+            }
+        });
     }
     check_addr(addr) {
         const parts = addr.split(":");
@@ -362,13 +389,12 @@ class Util extends Cordova {
         return new File([uInt8Array], 'img.jpg', { type: contentType });
     }
     // to toDataURL
-    resize_img_file(img_file) {
+    resize_img_file(img_file, max_size = 200) {
         return new Promise((resolve, reject) => {
             const image = new Image();
             image.onload = (img_event) => {
                 // Resize the image
                 let canvas = document.createElement('canvas'),
-                    max_size = 1024, // restrain it below 1m
                     width = image.width,
                     height = image.height;
                 if (width > height) {

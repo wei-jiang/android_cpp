@@ -19,6 +19,9 @@ window.CMD = {
     req_proxy_resp: 13,
     disconnect_proxy_cnns: 14,
     send_neighbor_msg: 15,
+    noty_nickname: 16,
+    noty_signature: 17,
+    noty_avatar: 18,
 };
 
 class PDealer {
@@ -41,6 +44,10 @@ class PDealer {
         this.dealers[CMD.req_proxy_resp] = this.req_proxy_resp.bind(this);
         this.dealers[CMD.disconnect_proxy_cnns] = this.disconnect_proxy_cnns.bind(this);
         this.dealers[CMD.send_neighbor_msg] = this.send_neighbor_msg.bind(this);
+
+        this.dealers[CMD.noty_nickname] = this.noty_nickname.bind(this);
+        this.dealers[CMD.noty_signature] = this.noty_signature.bind(this);
+        this.dealers[CMD.noty_avatar] = this.noty_avatar.bind(this);
     }
 
     handle_msg(sp, data) {
@@ -70,7 +77,17 @@ class PDealer {
         // socks_pid = sp.pid;
         console.log('handshake done!')
     }
+    noty_nickname(sp, data) {
+        sp.usr.nickname = data.toString();
+    }
+    noty_signature(sp, data) {
+        sp.usr.signature = data.toString();
+    }
+    noty_avatar(sp, data) {
+        sp.usr.avatar = data.toString();
+    }
     send_neighbor_msg(sp, data) {
+        if( db.blacklist.findOne({id: sp.pid}) ) return;
         data = JSON.parse(data);
         const chat_log = {
             id: sp.pid,

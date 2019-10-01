@@ -153,14 +153,13 @@ export default {
         value: this.address
       });
     },
-    gen_qr_address() {
-      networkinterface.getWiFiIPAddress(
-        info => {
-          this.wifi_ip = info.ip;
-          this.refresh_qr();
-        },
-        err => {}
-      );
+    async gen_qr_address() {
+      try {
+        this.wifi_ip = await util.get_ip();
+        this.refresh_qr();
+      } catch (error) {
+        
+      }
     }
   }
 };

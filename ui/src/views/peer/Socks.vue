@@ -11,13 +11,15 @@
             <div class="peer-name">{{remote_proxy_user.nickname}}</div>
             <div>{{short_it(remote_proxy_user.signature)}}</div>
           </div>
-          <div class="local-addr">
+          <div class="local-addr" v-if="window.remote_socks_addr">
             <div>远程socks5地址：</div>
             <div class="green">{{window.remote_socks_addr}}</div>
             <div>pac地址：</div>
             <div class="green">{{`${window.http_addr}remote.pac`}}</div>
+
+            <div>当前本地远程代理连接数：{{lscc}}</div>
           </div>
-          
+          <div v-else>未连入局域网</div>         
         </div>
         <div v-else>
           <div>当前未设置远程代理用户。</div>
@@ -68,7 +70,8 @@ export default {
   data() {
     return {
       remote_proxy_id: '',
-      users: []
+      users: [],
+      lscc: 0
     };
   },
   computed: {
@@ -99,7 +102,9 @@ export default {
     },
     refresh(data) {
       // {"6dca4b03f180588b468036b1eff907a4":11,"cmd":"noty_proxy_info"}
+      this.lscc = data.local_socks_cnn_count;
       delete data.cmd;
+      delete data.local_socks_cnn_count;
       this.users = [];
       for (let [k, v] of Object.entries(data)) {
         let u = peers.get(k).usr;

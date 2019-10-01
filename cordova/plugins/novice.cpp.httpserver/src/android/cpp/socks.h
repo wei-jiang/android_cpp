@@ -21,7 +21,6 @@ public:
 	}
 
 private:
-
 	void read_socks5_handshake()
 	{
 		auto self(shared_from_this());
@@ -143,7 +142,7 @@ appropriate for the request type.
 					case 0x01: // IP V4 addres
 						if (length != 10) { 
 							//LOGD( "SOCKS5 request length is invalid. Closing session."); return; 
-						}
+						}		
 						remote_host_ = boost::asio::ip::address_v4(ntohl(*((uint32_t*)&in_buf_[4]))).to_string();
 						remote_port_ = std::to_string(ntohs(*((uint16_t*)&in_buf_[8])));
 						break;
@@ -171,43 +170,43 @@ appropriate for the request type.
 
 	void do_resolve()
 	{
-		auto self(shared_from_this());
-
+		auto self(shared_from_this());		
 		resolver.async_resolve(remote_host_, remote_port_,
 			[this, self](const boost::system::error_code& ec, tcp::resolver::iterator it)
 			{
 				if (!ec)
 				{
-					do_connect(it);
+					do_connect(it);	
 				}
 				else
 				{
 					std::ostringstream what; what << "failed to resolve " << remote_host_ << ":" << remote_port_;
-					//LOGD( "%s, %s", what.str().c_str(), ec.message().c_str());
+					LOGD( "%s, %s", what.str().c_str(), ec.message().c_str());
 				}
 			});
+		
 	}
 
 	void do_connect(tcp::resolver::iterator& it)
 	{
-		auto self(shared_from_this());
+		auto self(shared_from_this());		
 		out_socket_.async_connect(*it, 
 			[this, self](const boost::system::error_code& ec)
-			{
+			{				
 				if (!ec)
 				{
-					std::ostringstream what; what << "connected to " << remote_host_ << ":" << remote_port_;
-					//LOGD( "%s", what.str().c_str() );
+					// std::ostringstream what; what << "connected to " << remote_host_ << ":" << remote_port_;
+					// LOGD( "%s", what.str().c_str() );
 					write_socks5_response();
 				}
 				else
 				{
 					std::ostringstream what; what << "failed to connect " << remote_host_ << ":" << remote_port_;
-					//LOGD( "%s, %s", what.str().c_str(), ec.message().c_str());
+					LOGI( "%s, %s", what.str().c_str(), ec.message().c_str());
 
-				}
+				}				
 			});
-
+		
 	}
 
 	void write_socks5_response()
@@ -250,25 +249,34 @@ o  BND.PORT       server bound port_ in network octet order
 
 Fields marked RESERVED (RSV) must be set to X'00'.
 */
-		in_buf_[0] = 0x05; in_buf_[1] = 0x00; in_buf_[2] = 0x00; in_buf_[3] = 0x01;
-		uint32_t realRemoteIP = out_socket_.remote_endpoint().address().to_v4().to_ulong();
-		uint16_t realRemoteport = htons(out_socket_.remote_endpoint().port());
+		try
+		{
+			in_buf_[0] = 0x05; in_buf_[1] = 0x00; in_buf_[2] = 0x00; in_buf_[3] = 0x01;
+			// this line may throw?
+			uint32_t realRemoteIP = out_socket_.remote_endpoint().address().to_v4().to_ulong();
+			uint16_t realRemoteport = htons(out_socket_.remote_endpoint().port());
 
-		std::memcpy(&in_buf_[4], &realRemoteIP, 4);
-		std::memcpy(&in_buf_[8], &realRemoteport, 2);
+			std::memcpy(&in_buf_[4], &realRemoteIP, 4);
+			std::memcpy(&in_buf_[8], &realRemoteport, 2);
 
-		boost::asio::async_write(in_socket_, boost::asio::buffer(in_buf_, 10), // Always 10-byte according to RFC1928
-			[this, self](boost::system::error_code ec, std::size_t length)
-			{
-				if (!ec)
+			boost::asio::async_write(in_socket_, boost::asio::buffer(in_buf_, 10), // Always 10-byte according to RFC1928
+				[this, self](boost::system::error_code ec, std::size_t length)
 				{
-					do_read(3); // Read both sockets
-				}
-				else
-				{
-					//LOGD( "SOCKS5 response write: %s", ec.message().c_str());
-				}					
-			});
+					if (!ec)
+					{
+						do_read(3); // Read both sockets
+					}
+					else
+					{
+						//LOGD( "SOCKS5 response write: %s", ec.message().c_str());
+					}					
+				});
+		}
+		catch(const std::exception& e)
+		{
+			LOGI( "write_socks5_response thrown: %s. ", e.what() );
+			in_socket_.close(ec_close_); out_socket_.close(ec_close_);
+		}
 	}
 
 
@@ -291,7 +299,7 @@ Fields marked RESERVED (RSV) must be set to X'00'.
 					{
 						//LOGD( "closing session. Client socket read error: %s", ec.message().c_str());
 						// Most probably client closed socket. Let's close both sockets and exit session.
-						in_socket_.close(); out_socket_.close();
+						in_socket_.close(ec_close_); out_socket_.close(ec_close_);
 					}
 
 				});
@@ -311,7 +319,7 @@ Fields marked RESERVED (RSV) must be set to X'00'.
 					{
 						//LOGD( "closing session. Remote socket read error: %s", ec.message().c_str());
 						// Most probably remote server closed socket. Let's close both sockets and exit session.
-						in_socket_.close(); out_socket_.close();
+						in_socket_.close(ec_close_); out_socket_.close(ec_close_);
 					}
 				});
 	}
@@ -332,7 +340,7 @@ Fields marked RESERVED (RSV) must be set to X'00'.
 					{
 						//LOGD( "closing session. Client socket write error: %s", ec.message().c_str());
 						// Most probably client closed socket. Let's close both sockets and exit session.
-						in_socket_.close(); out_socket_.close();
+						in_socket_.close(ec_close_); out_socket_.close(ec_close_);
 					}
 				});
 			break;
@@ -346,7 +354,7 @@ Fields marked RESERVED (RSV) must be set to X'00'.
 					{
 						//LOGD( "closing session. Remote socket write error: %s", ec.message().c_str());
 						// Most probably remote server closed socket. Let's close both sockets and exit session.
-						in_socket_.close(); out_socket_.close();
+						in_socket_.close(ec_close_); out_socket_.close(ec_close_);
 					}
 				});
 			break;
@@ -361,6 +369,7 @@ Fields marked RESERVED (RSV) must be set to X'00'.
 	std::string remote_port_;
 	std::vector<char> in_buf_;
 	std::vector<char> out_buf_;
+	boost::system::error_code ec_close_;
 };
 
 class Socks: public Service
@@ -369,7 +378,7 @@ public:
 	Socks(int port)
 		: port_(port), acceptor_(*g_socks_io, tcp::endpoint(tcp::v4(), port)), 
 		in_socket_(*g_socks_io), buffer_size_(65536)
-	{
+	{	
 		do_accept();
 	}
 	int get_port(){return port_;}

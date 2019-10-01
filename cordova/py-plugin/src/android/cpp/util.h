@@ -6,8 +6,8 @@ namespace Util
     std::vector<uint8_t> uuid();
     std::vector<std::string> split(const std::string &s, std::string delim = ",");
     std::string join(const std::vector<std::string> &ss, std::string delim = ",");
-    std::string byte2str(uint8_t *bytes, int size);
-    std::string byte2str(std::vector<uint8_t>& v);
+    std::string byte2str(const uint8_t *bytes, int size);
+    std::string byte2str(const std::vector<uint8_t>& v);
     std::string hexStr(const std::string& buff);
     std::string string_to_hex(const std::string& input);
     std::string random_string( size_t length );
@@ -23,4 +23,5 @@ namespace Util
     std::string mime_type(const std::string &path);
     bool is_pac(const std::string &path);
     std::string to_json(std::map <std::string, std::string> data);
+    uint32_t serial_no();
 };

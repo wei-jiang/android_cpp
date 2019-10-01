@@ -2,13 +2,13 @@
   <div class="settings" @change="save_settings">
     <div class="p-info">
       <div>{{$t('nickname')}}</div>
-      <input maxlength="20"  type="text" :placeholder="$t('nickname')" v-model="user.nickname" />
+      <input maxlength="20"  type="text" :placeholder="$t('nickname')" v-model="user.nickname" @change="noty_nickname"/>
       <div>{{$t('avatar')}}</div>
       <img :src="user.avatar" />
       <input id="avatar-img" type="file" @change="process_file($event)">
       <button :disabled="requesting" @click="open_img('avatar-img')">{{$t('chg-img')}}</button>
       <div>{{$t('signature')}}</div>
-      <textarea :placeholder="$t('signature')" maxlength="70" rows="3" v-model="user.signature"></textarea>
+      <textarea :placeholder="$t('signature')" maxlength="70" rows="3" v-model="user.signature" @change="noty_signature"></textarea>
     </div>
     <div class="option">
       <fieldset>
@@ -73,6 +73,21 @@ export default {
     }
   },
   methods: {
+    noty_nickname(){
+      for (const [k, v] of peers.entries()) {
+          v.send_string(CMD.noty_nickname, this.user.nickname)
+      }
+    },
+    noty_signature(){
+      for (const [k, v] of peers.entries()) {
+          v.send_string(CMD.noty_signature, this.user.signature)
+      }
+    },
+    noty_avatar(){
+      for (const [k, v] of peers.entries()) {
+          v.send_string(CMD.noty_avatar, this.user.avatar)
+      }
+    },
     save_settings() {
       db.user.update(this.user);
     },
@@ -90,7 +105,7 @@ export default {
       reader.onload = async e => {
         // resize dataUrl below 1M
         this.user.avatar = await util.resize_img_file(e.target.result);
-   
+        this.noty_avatar();
       };
       reader.readAsDataURL(img_file);
     }

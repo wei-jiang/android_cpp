@@ -60,16 +60,41 @@ void HttpSvr::init()
 void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadline_timer* t)
 {
     auto tid = Util::get_tid();
+    vector<shared_ptr<CNNBase>> for_del;
     // LOGI("thread[%s] in routine...", tid.c_str()); 
     // ws_svr_.to_all("cpp ws server alive");
     json noty_proxy_info;    
     for( auto const& [k, v] : SocksClient::s_peer2cnn )
     {
         noty_proxy_info[k] = v.size();
+        // for(auto const& [k, n] : v) 
+        // {
+        //     if(n && n->elapsed_in_seconds() > 7)
+        //     {
+        //         for_del.push_back(n);
+        //     }  
+        // }
     }   
+    // for(auto const& [k, n] : RtcCnn::s_id2cnn) 
+    // {
+    //     if(n)
+    //     {
+    //         LOGI("%u elapsed_in_seconds: %ld", k, n->elapsed_in_seconds()); 
+    //         if(n->elapsed_in_seconds() > 7)
+    //         {
+    //             for_del.push_back(n);
+    //         }          
+    //     }  
+    // }
+    noty_proxy_info["local_socks_cnn_count"] = RtcCnn::s_id2cnn.size();
     noty_proxy_info["cmd"] = "noty_proxy_info";
     cpp2java_que.push(noty_proxy_info.dump());
-    
+    for(auto& n : for_del) {
+        if(n)
+        {
+            n->remove_self();
+        }        
+    }
     t->expires_at(t->expires_at() + boost::posix_time::seconds(2));
     t->async_wait(boost::bind(&HttpSvr::routine, this,
                               boost::asio::placeholders::error, t));

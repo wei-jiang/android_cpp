@@ -5,11 +5,15 @@
         <i class="small material-icons">favorite_border</i>
       </div>
       <div class="peer-info" @click.stop="show_detail">
-        <div>{{f.nickname}}<i class=" material-icons">info_outline</i></div>       
+        <div>{{title(f)}}<i class=" material-icons">info_outline</i></div>       
         <div class="f-info">
-          <img :src="f.avatar">
-          <div>{{f.signature}}</div>
+          <img v-if="f.avatar" :src="f.avatar">
+          <div v-if="f.signature">{{f.signature}}</div>
         </div>
+      </div>
+      <div v-if="f.online" @click.stop="chat_with(f)">
+        <i class="small material-icons">chat</i>
+        &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
       <div @click.stop="remove(f)">
         <i class="red small material-icons">remove_circle</i>
@@ -26,15 +30,18 @@ export default {
   name: "friends",
   created: function() {
     this.$root.$on("refresh_friend_list", this.refresh);
+    this.t = setInterval(this.check_online.bind(this), 1000)
   },
   destroyed() {
     this.$root.$off("refresh_friend_list", this.refresh);
+    clearInterval(this.t);
   },
   mounted() {
     this.refresh();
   },
   data() {
     return {
+      t: null,
       friend_list: []
     };
   },
@@ -42,8 +49,33 @@ export default {
 
   },
   methods: {
+    chat_with(p) {
+      if(peers.has(p.id)){
+        this.$router.push({ name: 'peer-chat', params: { tp: p } } );
+      } else {
+        util.show_alert_top_tm('对方已离线。')
+      }
+    },
+    check_online(){
+      this.friend_list.forEach(f=>{
+        if(peers.has(f.id)){
+          let sp = peers.get(f.id);
+          if(sp.usr){
+            Object.assign(f, sp.usr)
+            f.online = true;
+          }         
+        } else {
+          f.online = false;
+        }
+      })
+    },
+    title(p){
+      return p.nickname || util.truncate(p.id, 16)
+    },
     refresh(){
-      this.friend_list = db.friends.find({});
+      this.friend_list = db.friends.find({}).map(f=>{
+        return {...f, online: false};
+      });
     },
     show_detail(e){
       $(e.currentTarget).find(`.f-info`).toggle();

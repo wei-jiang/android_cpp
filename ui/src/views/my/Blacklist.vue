@@ -5,10 +5,10 @@
         <i class="small material-icons">block</i>
       </div>
       <div class="peer-info" @click="show_detail">
-        <div>{{b.nickname}}<i class=" material-icons">info_outline</i></div>       
+        <div>{{title(b)}}<i class=" material-icons">info_outline</i></div>       
         <div class="b-info">
-          <img :src="b.avatar">
-          <div>{{b.signature}}</div>
+          <img v-if="b.avatar" :src="b.avatar">
+          <div v-if="b.signature">{{b.signature}}</div>
         </div>
       </div>
       <div @click.stop="remove(b)">
@@ -42,6 +42,9 @@ export default {
 
   },
   methods: {
+    title(p){
+      return p.nickname || util.truncate(p.id, 16)
+    },
     refresh(){
       this.block_list = db.blacklist.find({});
     },

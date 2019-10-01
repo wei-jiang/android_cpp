@@ -93,16 +93,14 @@ export default {
         this.files.splice(i, 1, f)
       }
     },
-    update_file_list(files) {
+    async update_file_list(files) {
       // maybe in client browser, networkinterface does not exist
       if(!this.wifi_ip && isCordovaApp){   
-        networkinterface.getWiFiIPAddress(
-          info => {
-            this.wifi_ip = info.ip;
-          },
-          err => {}
-        );
-
+        try {
+          this.wifi_ip = await util.get_ip();
+        } catch (error) {
+          
+        }      
       }     
       this.files = files;
     },

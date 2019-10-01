@@ -2,7 +2,6 @@
 #include "common.h"
 
 using namespace std;
-
 std::atomic<uint16_t> g_channel_id = 0;
 std::shared_ptr<boost::asio::io_context> g_io, g_socks_io;
 TSQueue<std::string> cpp2java_que;

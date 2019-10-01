@@ -2,7 +2,6 @@ import _ from 'lodash'
 import moment from "moment";
 
 import Noty from "noty";
-
 import util from "./common/util";
 class WS {
   constructor() {

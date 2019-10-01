@@ -6,6 +6,11 @@ using namespace std;
 
 namespace Util
 {
+uint32_t serial_no()
+{
+	static atomic<uint32_t> s_serial_no(0);
+	return s_serial_no++;
+}
 std::string ep_to_string(boost::asio::ip::udp::endpoint ep)
 {
 	string s_ep = ep.address().to_string();
@@ -33,7 +38,7 @@ std::string join(const std::vector<std::string> &ss, std::string delim)
 	std::string joined = boost::algorithm::join(ss, delim);
 	return joined;
 }
-std::string byte2str(uint8_t *bytes, int size)
+std::string byte2str(const uint8_t *bytes, int size)
 {
 	static char const hex[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 	std::string str;
@@ -45,7 +50,7 @@ std::string byte2str(uint8_t *bytes, int size)
 	}
 	return str;
 }
-std::string byte2str(std::vector<uint8_t>& v)
+std::string byte2str(const std::vector<uint8_t>& v)
 {
 	return byte2str( &v[0], v.size() );
 }

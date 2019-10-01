@@ -90,11 +90,11 @@ export default {
     stringify(data){
       return JSON.stringify(data)
     },
-    get_online_count(){
-      console.log(`before get_online_count(): ${this.addr}`)
+    get_online_count(){     
       this.addr = this.$route.query.addr;
-      this.online_count = sss[this.addr].total;
-      console.log(`after get_online_count(): ${this.addr}`)
+      // console.log(`before get_online_count(): ${this.addr}`)
+      this.online_count = sss[this.addr] ? sss[this.addr].total : 0;
+      // console.log(`after get_online_count(): ${this.addr}`)
     },
     wss_destroyed(addr){
       if(addr == this.addr){
