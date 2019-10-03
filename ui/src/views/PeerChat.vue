@@ -23,7 +23,7 @@
         <div class="chat-log">
           <audio id="rt_audio" autoplay/>
           <video id="rt_video" controls autoplay/>
-          <video id="rt_video_local" muted/>
+          <video id="rt_video_local"/>
           <!-- include variable components -->
           <div v-for="l in chat_logs">
             <ChatText v-if="l.type == 'text'" :log="l" :peer="tp"></ChatText>
@@ -39,6 +39,7 @@
           <div
             v-if="!record_voice"
             class="small material-icons"
+            :class="{gray: audio_busy}"
             @click="show_record_btn()"
           >record_voice_over</div>
           <div
@@ -93,15 +94,13 @@
             </div>
           </div>
           <div class="realtime">
-            <div @click="audio_chat()">
-              <div class="small material-icons">phone</div>
-              <div v-if="!audio_streaming">语音聊天</div>
-              <div v-else class="btn-error">挂断</div>
+            <div @click="audio_chat()" :class="{'btn-error':audio_streaming}">
+              <div class="small material-icons" >phone</div>
+              <div>{{!audio_streaming ? '语音聊天' : '挂断'}}</div>
             </div>
-            <div @click="video_chat()">
+            <div @click="video_chat()" :class="{'btn-error':video_streaming}">
               <div class="small material-icons">videocam</div>
-              <div v-if="!video_streaming">视频聊天</div>
-              <div v-else class="btn-error">挂断</div>
+              <div>{{!video_streaming ? '视频聊天' : '挂断'}}</div>
             </div>
             <div @click.prevent="request_proxy()">
               <div class="small material-icons">vpn_key</div>
@@ -147,29 +146,35 @@ export default {
       // console.log('Prop changed: ', newVal, ' | was: ', oldVal)
       // alert(`watch tp changed to: ${newVal}`)
     },
-    "$route.query.stream_type": function(newVal, oldVal) {
-      console.log(`this.$route.query=${JSON.stringify(this.$route.query)}`)
-      if (newVal == "audio") {
-        this.audio_streaming = true;
-      } else if (newVal == "video") {
-        this.video_streaming = true;
-      }
-    }
+    audio_busy: function(newVal, oldVal) {
+      if(newVal){
+        this.record_voice = false;
+      }   
+    },
   },
   created: async function() {
     this.$root.$on("peer_closed", this.peer_closed);
     this.$root.$on("p2p_msg", this.p2p_msg);
     this.$root.$on("stream_peer_closed", this.stream_peer_closed);
     this.$root.$on('stream_start', this.stream_start);
-
+    this.$root.$on('participate_in_rt_chat', type=>{
+      // or use beforeRouteUpdate?
+      console.log(`--------------on participate_in_rt_chat, type=${type}-----------------`)
+      if (type == "audio") {
+        this.audio_streaming = true;
+      } else if (type == "video") {
+        this.video_streaming = true;
+      }
+    });
   },
   destroyed() {
     this.$root.$off("peer_closed", this.peer_closed);
     this.$root.$off("p2p_msg", this.p2p_msg);
     this.$root.$off("stream_peer_closed", this.stream_peer_closed);
     this.$root.$off('stream_start', this.stream_start);
-
+    this.$root.$off('participate_in_rt_chat');
   },
+  
   mounted() {
     this.update_chat_log();
     console.log(`this.$route.query=${JSON.stringify(this.$route.query)}`)
@@ -201,7 +206,9 @@ export default {
     };
   },
   computed: {
-    aaa() {}
+    audio_busy() {
+      return this.audio_streaming || this.video_streaming;
+    }
   },
   methods: {
     request_proxy(){
@@ -215,8 +222,11 @@ export default {
       } else {
         av.src = window.URL.createObjectURL(data.stream)
       }
+      av.play();
       if(data.type == 'video'){
         const lv = $(`#rt_video_local`)[0];
+        lv.muted = 0;
+        lv.volume = 0;
         if ('srcObject' in lv) {
           lv.srcObject = window.video_stream
         } else {
@@ -345,6 +355,7 @@ export default {
           this.$t("back"), // title
           this.$t("ok") // buttonName
         );
+        this.audio_streaming = this.video_streaming = false;
         this.tp = null;
       }
     },
@@ -356,6 +367,7 @@ export default {
       audio.play();
     },
     show_record_btn() {
+      if(this.audio_busy) return;
       cpp.requestPermission(
         "android.permission.RECORD_AUDIO",
         () => (this.record_voice = !this.record_voice),
@@ -724,4 +736,5 @@ audio, video {
   bottom: 0;
   right: 0;
 }
+
 </style>

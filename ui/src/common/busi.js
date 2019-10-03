@@ -16,6 +16,9 @@ class Busi {
         this.reg_evt();
         this.go_pub();
         this.routine();
+        // if(navigator.mediaDevices && navigator.mediaDevices.getSupportedConstraints){
+        //     console.log( `navigator.mediaDevices.getSupportedConstraints()=${JSON.stringify(navigator.mediaDevices.getSupportedConstraints())}` );
+        // }      
     }
     routine() {
         let span;
@@ -127,18 +130,28 @@ class Busi {
             }
         });
         vm.$on("add_friend", data => {
+            const it = db.friends.findOne({ id: data.id });
+            if (it) {
+                // console.log(`add friend: ${JSON.stringify(data)}`);
+                util.show_alert_top('已加为好友');
+                return;
+            }
             navigator.notification.confirm(
                 `[${data.nickname || util.truncate(data.id)}]？`, // message
                 i => {
                     // the index uses one-based indexing, so the value is 1, 2, 3, etc.
                     if (i == 1) {
-                        const it = db.friends.findOne({ id: data.id });
-                        if (!it) {
-                            // console.log(`add friend: ${JSON.stringify(data)}`);
-                            db.friends.insert(data);
-                            vm.$emit("refresh_friend_list", "");
-                            util.show_alert_top_tm(i18n.t("success"));
-                        }
+                        if( peers.has(data.id) ){
+                            peers.get(data.id).send_cmd(CMD.req_friend)
+                        } else{
+                            const me = db.user.findOne({});
+                            data.ws.send({
+                                cmd: 'req_friend',
+                                nickname: me.nickname,
+                                signature: me.signature,
+                                to: data.id
+                            });
+                        }   
                     }
                 },
                 i18n.t("add-friend"), // title
@@ -151,11 +164,16 @@ class Busi {
                 i => {
                     // the index uses one-based indexing, so the value is 1, 2, 3, etc.
                     if (i == 1) {
-                        const it = db.blacklist.findOne({ id: data.id });
+                        let it = db.blacklist.findOne({ id: data.id });
                         if (!it) {
                             db.blacklist.insert(data);
-                            this.$root.$emit("refresh_block_list", "");
+                            vm.$emit("refresh_block_list", "");
                             util.show_alert_top_tm(i18n.t("success"));
+                        }
+                        it = db.friends.findOne({ id: data.id });
+                        if(it){
+                            db.friends.remove(it);
+                            vm.$emit("refresh_friend_list", "");
                         }
                     }
                 },

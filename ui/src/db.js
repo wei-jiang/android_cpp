@@ -33,6 +33,7 @@ function populate_default() {
             video_chat: '1',
             audio_chat: '1',
             proxy: '1',
+            friend: '2',
         });
         // const t = db.user.findOne({})
         // console.log('-----------------' + JSON.stringify(t) + '------------------------')

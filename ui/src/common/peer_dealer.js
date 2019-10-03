@@ -22,6 +22,8 @@ window.CMD = {
     noty_nickname: 16,
     noty_signature: 17,
     noty_avatar: 18,
+    req_friend: 19,
+    res_friend: 20,
 };
 
 class PDealer {
@@ -48,6 +50,8 @@ class PDealer {
         this.dealers[CMD.noty_nickname] = this.noty_nickname.bind(this);
         this.dealers[CMD.noty_signature] = this.noty_signature.bind(this);
         this.dealers[CMD.noty_avatar] = this.noty_avatar.bind(this);
+        this.dealers[CMD.req_friend] = this.req_friend.bind(this);
+        this.dealers[CMD.res_friend] = this.res_friend.bind(this);
     }
 
     handle_msg(sp, data) {
@@ -76,6 +80,49 @@ class PDealer {
         // for test
         // socks_pid = sp.pid;
         console.log('handshake done!')
+    }
+    async req_friend(sp, data) {
+        const usr_settings = db.user.findOne({});
+        if(usr_settings.friend == '0'){
+            return sp.send_json(CMD.res_friend, {
+                allow: false,
+                reason: '已屏蔽'
+            });
+        }
+        if(usr_settings.friend == '1'){
+            if( !db.friends.findOne({id: sp.pid}) ){
+                db.friends.insert({...sp.usr, id: sp.pid});
+                vm.$emit("refresh_friend_list", "");
+            }
+            return sp.send_json(CMD.res_friend, {
+                allow: true
+            });
+        }
+        try {
+            await util.show_confirm_top(`[${sp.usr.nickname}] 请求加为好友<br>个性签名：${sp.usr.signature}`, '同意', '拒绝');
+            if( !db.friends.findOne({id: sp.pid}) ){
+                db.friends.insert({...sp.usr, id: sp.pid});
+                vm.$emit("refresh_friend_list", "");
+            }
+            sp.send_json(CMD.res_friend, { allow: true });
+        } catch (err) {
+            // console.log('req_proxy, err='+JSON.stringify(err))
+            sp.send_json(CMD.res_friend, {
+                allow: false,
+                reason: '已拒绝'
+            });
+        }
+        
+    }
+    res_friend(sp, data) {
+        data = JSON.parse(data);
+        if(data.allow){
+            db.friends.insert({...sp.usr, id: sp.pid});
+            vm.$emit("refresh_friend_list", "");
+            util.show_alert_top('添加好友成功');
+        } else {
+            util.show_alert_top(`请求好友失败：${data.reason}`);
+        }
     }
     noty_nickname(sp, data) {
         sp.usr.nickname = data.toString();
@@ -261,7 +308,7 @@ class PDealer {
             });
         }
         try {
-            await util.show_confirm_top(`[${sp.usr.nickname}] 请求${type}聊天`, '同意', '拒绝');
+            await util.show_confirm_top(`[${sp.usr.nickname}] 请求${type=='video'?'视频':'语音'}聊天`, '同意', '拒绝');
             if (type == 'audio') {
                 if (!window.audio_stream) {
                     window.audio_stream = await util.get_audio_stream();
@@ -273,9 +320,21 @@ class PDealer {
             }
             const talk_to = _.clone(sp.usr);
             talk_to.id = sp.pid;
-            vm.$router.push({ name: 'peer-chat', params: { tp: talk_to }, query: {stream_type: type} } )
-            .catch(err => {});
+            // if(vm.$router.currentRoute.name != 'peer-chat'){}
+            // push or replace
+            vm.$router.replace(
+                { name: 'peer-chat', params: { tp: talk_to }, query: {stream_type: type} },
+                ()=>{
+                    console.log(`vm.$router.replace(peer-chat), succeed`)
+                    vm.$emit('participate_in_rt_chat', type );
+                },
+                err => {
+                    console.log(`vm.$router.replace(peer-chat), error`)
+                    vm.$emit('participate_in_rt_chat', type );
+                }
+            );
             new RTStream(sp.pid, type, false);
+            
             sp.send_json(CMD.res_stream_chat, { allow: true });
         } catch (err) {
             console.log('req_stream_chat, err='+JSON.stringify(err))

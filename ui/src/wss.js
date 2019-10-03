@@ -27,8 +27,8 @@ class WSS extends PDealer {
     this.ws.onerror = this.on_error;
     this.ws.onopen = this.on_open;
   }
-  check_friends(ids){
-    if(this.connected){
+  check_friends(ids) {
+    if (this.connected) {
       this.send({
         cmd: 'check_fiends',
         friends: ids
@@ -60,7 +60,7 @@ class WSS extends PDealer {
       let data = {
         to: pid,
         sig_data,
-        cmd: initiator ? 'send_sig': 'return_sig'
+        cmd: initiator ? 'send_sig' : 'return_sig'
       };
       // console.log(`sp.on('signal'), initiator=${initiator}`);
       this.send(data);
@@ -96,13 +96,13 @@ class WSS extends PDealer {
     })
     return sp;
   }
-  send_world_msg(msg){
+  send_world_msg(msg) {
     this.send({
       cmd: 'to_all',
       content: msg
     })
   }
-  on_message(evt) {
+  async on_message(evt) {
     try {
       const data = JSON.parse(evt.data)
       switch (data.cmd) {
@@ -129,6 +129,58 @@ class WSS extends PDealer {
           // }
           break;
         }
+        case 'res_friend': {
+          if(data.allow){
+              db.friends.insert({id: data.from });
+              vm.$emit("refresh_friend_list", "");
+              util.show_alert_top('添加好友成功');
+          } else {
+              util.show_alert_top(`请求好友失败：${data.reason}`);
+          }
+          break;
+        }
+        case 'req_friend': {
+          const usr_settings = db.user.findOne({});
+          if (usr_settings.friend == '0') {
+            return this.send({
+              cmd: 'res_friend',
+              to: data.from,
+              allow: false,
+              reason: '已屏蔽'
+            });
+          }
+          if (usr_settings.friend == '1') {
+            if (!db.friends.findOne({ id: data.from })) {
+              db.friends.insert({ id: data.from, nickname: data.nickname, signature: data.signature });
+              vm.$emit("refresh_friend_list", "");
+            }
+            return this.send({
+              cmd: 'res_friend',
+              to: data.from,
+              allow: true
+            });
+          }
+          try {
+            await util.show_confirm_top(`[${data.nickname}] 请求加为好友<br>个性签名：${data.signature}`, '同意', '拒绝');
+            if (!db.friends.findOne({ id: data.from })) {
+              db.friends.insert({ id: data.from, nickname: data.nickname, signature: data.signature });
+              vm.$emit("refresh_friend_list", "");
+            }
+            this.send({
+              cmd: 'res_friend',
+              to: data.from,
+              allow: true
+            });
+          } catch (err) {
+            this.send({
+              cmd: 'res_friend',
+              to: data.from,
+              allow: false,
+              reason: '已拒绝'
+            });
+          }
+          break;
+        }
         case 'too_quick': {
           util.show_alert_top_tm('消息发送太快……');
           break;
@@ -144,8 +196,9 @@ class WSS extends PDealer {
         case 'to_all': {
           // world chat msg: from, content
           console.log(`收到世界频道消息：${JSON.stringify(data)}`);
-          if( db.blacklist.findOne({id: data.from}) ) return;
+          if (db.blacklist.findOne({ id: data.from })) return;
           db.world_chat_log.insert({
+            addr: this.addr,
             id: data.from,
             type: "text",
             content: data.content,
@@ -155,10 +208,10 @@ class WSS extends PDealer {
           vm.$emit('refresh_world_chat', this.addr);
           break;
         }
-        case 'peers': {          
+        case 'peers': {
           let ps = data.peers;
           // filter out blacklist
-          ps = ps.filter( pid=>!( peers.has(pid) || db.blacklist.findOne({id: pid}) ) );
+          ps = ps.filter(pid => !(peers.has(pid) || db.blacklist.findOne({ id: pid })));
           // ps = _.difference( ps, [...peers.keys()] );
           _.each(ps, pid => {
             const sp = this.create_peer(pid, true)
@@ -171,11 +224,11 @@ class WSS extends PDealer {
           // to establish connection, this will be called multiple times, so must be sure only create peer instance one time
           let sp;
           let pid = data.from;
-          if(peers.has(pid) && peers.get(pid).passive ){
+          if (peers.has(pid) && peers.get(pid).passive) {
             sp = peers.get(pid)
-          } else{
-            if( db.blacklist.findOne({id: pid}) ) return;
-            if( peers.has(pid) ) peers.get(pid).destroy();
+          } else {
+            if (db.blacklist.findOne({ id: pid })) return;
+            if (peers.has(pid)) peers.get(pid).destroy();
             sp = this.create_peer(pid)
             this.postfix_peer(sp, pid)
           }
@@ -184,7 +237,7 @@ class WSS extends PDealer {
         }
         case 'return_sig': {
           // console.log(`return_sig: ${JSON.stringify(data)}`);
-          if( peers.has(data.from) ){
+          if (peers.has(data.from)) {
             peers.get(data.from).signal(data.sig_data)
           }
           break;
@@ -192,53 +245,53 @@ class WSS extends PDealer {
       }
       // vm.$emit(data.cmd, data);
     } catch (err) {
-      console.log(`parse ws message error: `+evt.data)
+      console.log(`parse ws message error: ` + evt.data)
     }
   }
-  replenish(){
+  replenish() {
     const aim = Math.min(this.total, 100);
-    if(peers.size < aim){
+    if (peers.size < aim) {
       this.send({
         cmd: 'need_peers',
         amount: aim - peers.size
       });
     }
   }
-  postfix_peer(sp, pid){
+  postfix_peer(sp, pid) {
     sp.pid = pid;
-    sp.send_string = (cmd, s)=> {
+    sp.send_string = (cmd, s) => {
       let buf = Buffer.alloc(2);
       buf.writeUInt16BE(cmd);
       buf = Buffer.concat([buf, Buffer.from(s)]);
-      sp.send(buf) ;
+      sp.send(buf);
     };
-    sp.send_json = (cmd, j)=> {
+    sp.send_json = (cmd, j) => {
       const payload = JSON.stringify(j);
       sp.send_string(cmd, payload);
     };
-    sp.send_cmd = (cmd)=> {
+    sp.send_cmd = (cmd) => {
       let buf = Buffer.alloc(2);
       buf.writeUInt16BE(cmd);
-      sp.send(buf) ;
+      sp.send(buf);
     };
-    sp.send_buff = (cmd, buff)=> {
+    sp.send_buff = (cmd, buff) => {
       let buf = Buffer.alloc(2);
       buf.writeUInt16BE(cmd);
       buf = Buffer.concat([buf, buff]);
-      sp.send(buf) ;
+      sp.send(buf);
     };
     sp.activity = new Date();
     peers.set(pid, sp);  //-----------------------------------
     vm.$emit('peer_changed', '');
     console.log(`add ${pid} to Map`)
-    function send_ping(id){
-      setTimeout(()=>{
+    function send_ping(id) {
+      setTimeout(() => {
         // console.log('keep_alive send ping ...')
-        if( peers.has(id) && !peers.get(id).passive ){
+        if (peers.has(id) && !peers.get(id).passive) {
           peers.get(id).send_cmd(CMD.ping);
           send_ping(id);
         }
-      }, 3000);
+      }, 2000);
     }
     send_ping(pid);
   }
@@ -247,13 +300,13 @@ class WSS extends PDealer {
   }
   on_close() {
     this.connected = false;
-    if(this.ws){
+    if (this.ws) {
       // 5 seconds, reconnect
       setTimeout(this.init, 1 * 1000);
       console.log(`${this.url} onclose`)
     } else {
       console.log(`${this.url} onclose, and not try to reconnect`)
-    }    
+    }
   }
   on_open() {
     this.connected = true;
@@ -271,9 +324,9 @@ class WSS extends PDealer {
     try {
       this.ws.send(JSON.stringify(data));
     } catch (error) {
-      
+
     }
-    
+
   }
   destroy() {
     const t = this.ws;

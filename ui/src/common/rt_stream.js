@@ -15,11 +15,7 @@ class RTStream {
     this.uuid = util.uuid();
     this.type = type;
     window.is_streaming = true;
-    vm.$once(`peer_closed`, id=>{
-      if(this.target_id == id){
-        this.destroy_self();
-      }
-    });
+    vm.$once(`peer_closed`, this.on_peer_closed);
     if(initiator){
       this.req_rt_chat();
       this.put_chat_log_status('requesting');
@@ -27,6 +23,11 @@ class RTStream {
       this.participate_rt_chat();
       this.put_chat_log_status('handshake');
     }    
+  }
+  on_peer_closed(id){
+    if(this.target_id == id){
+      this.destroy_self();
+    }
   }
   put_chat_log_status(status, reason){
     let l = db.peer_chat_log.findOne({uuid: this.uuid});
@@ -49,6 +50,13 @@ class RTStream {
     vm.$emit('p2p_msg', {id: this.target_id}); 
   }
   participate_rt_chat(){
+    this.tm = setTimeout(()=>{
+      vm.$emit('stream_peer_closed', {
+        id: this.target_id,
+        type: this.type
+      });
+      this.destroy_self()
+    }, 5 * 1000);
     this.reg_participant_evt();
     this.create_stream_channel();
   }
@@ -85,6 +93,7 @@ class RTStream {
     });
     sp.on('stream', (stream) => {
       console.log('@@@@@@@@@@@@@@@@@@@@@ stream_sp on stream @@@@@@@@@@@@@@@@@@@@@');
+      clearTimeout(this.tm);
       let l = db.peer_chat_log.findOne({uuid: this.uuid});
       l.start = util.now_str();
       this.put_chat_log_status('streaming');
@@ -114,6 +123,13 @@ class RTStream {
     if (data.allow) {
       this.put_chat_log_status('handshake');
       console.log(`对方已同意，握手中`)
+      this.tm = setTimeout(()=>{
+        vm.$emit('stream_peer_closed', {
+          id: this.target_id,
+          type: this.type
+        });
+        this.destroy_self()
+      }, 5 * 1000);
       this.create_stream_channel();
     } else{
       util.show_alert_top(data.reason);
@@ -122,6 +138,7 @@ class RTStream {
         id: this.target_id,
         type: this.type
       });
+      this.destroy_self()
     }
   }
   reg_participant_evt(){
@@ -136,8 +153,20 @@ class RTStream {
     vm.$off(`res_stream_chat`);
     vm.$off(`stream_initiator_sig`);
     vm.$off(`stream_participant_sig`);
-    vm.$off(`peer_closed`);    
+    vm.$off(`peer_closed`, this.on_peer_closed);    
     window.is_streaming = false;
+    if(this.type == 'audio'){
+      window.audio_stream.getTracks().forEach( track => {
+        track.stop();
+      });
+      window.audio_stream = null;
+    } else {
+      window.video_stream.getTracks().forEach( track => {
+        track.stop();
+      });
+      window.video_stream = null;
+    }
+    
     if(this.sp.stream_sp){
       this.sp.stream_sp.destroy();
       this.sp.stream_sp = null;

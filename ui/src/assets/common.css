@@ -26,3 +26,8 @@
 .btn-success{
     background-color: rgb(88, 247, 154);
 }
+.gray{
+    pointer-events: none;
+    opacity: 0.5;
+    background: #CCC;
+}

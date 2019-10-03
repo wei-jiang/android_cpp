@@ -29,6 +29,18 @@
       </fieldset>
       <hr>
       <fieldset class="proxy">
+        <legend>加好友设置</legend>
+        <input type="radio" id="f-allow" value="1" v-model="user.friend" />
+        <label for="f-allow">{{$t('allow')}}</label>
+ 
+        <input type="radio" id="f-prompt" value="2" v-model="user.friend" />
+        <label for="f-prompt">提示</label>
+
+        <input type="radio" id="f-disallow" value="0" v-model="user.friend" />
+        <label for="f-disallow">{{$t('disallow')}}</label>
+      </fieldset>
+      <hr>
+      <fieldset class="proxy">
         <legend>代理设置</legend>
         <input type="radio" id="p-allow" value="1" v-model="user.proxy" />
         <label for="p-allow">{{$t('allow')}}</label>

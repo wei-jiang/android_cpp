@@ -156,6 +156,7 @@ export default {
         wss.send_world_msg(this.chat_content);
       }
       db.world_chat_log.insert({
+        addr: this.addr,
         id: cli_id,
         type: "text",
         content: this.chat_content,
@@ -178,8 +179,12 @@ export default {
     add_friend() {
       this.hide_menu();
       if(!this.target) return;
-      this.$root.$emit("add_friend", this.target);
-      
+      const ws = sss[this.addr];
+      if(ws){
+        this.$root.$emit("add_friend", {...this.target, ws});
+      } else {
+        util.show_alert_top('添加好友失败');
+      } 
     },
     block_it() {
       this.hide_menu();
@@ -188,7 +193,7 @@ export default {
     },
     update_chat_log(addr) {
       if(typeof addr === 'undefined' || addr === this.addr){
-        this.chat_logs = db.world_chat_log.find({}).reverse();
+        this.chat_logs = db.world_chat_log.find({addr: this.addr}).reverse();
         // console.log(`this.chat_logs=${JSON.stringify(this.chat_logs)}`)
       }    
     }

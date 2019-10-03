@@ -11,7 +11,7 @@
         <div v-else-if="log.status == 'streaming'">
           <div>{{log.sub_type=='audio'?'语音通话中':'视频通话中'}}</div>
         </div>
-        <div v-else-if="log.status == 'closed'">通话结束(时长:{{span}})</div>
+        <div v-else-if="log.status == 'closed'">通话结束{{span}}</div>
       </div>
     </div>
   </div>
@@ -55,8 +55,10 @@ export default {
     span() {
       if(this.log.end && this.log.start){
         let diff = moment(this.log.end).diff( moment(this.log.start) );
-        return moment.utc(diff).format("HH:mm:ss");
-      }      
+        return `(时长:${moment.utc(diff).format("HH:mm:ss")})`;
+      } else {
+        return `(建立连接失败)`
+      }     
     }
   },
   methods: {
