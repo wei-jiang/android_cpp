@@ -35,14 +35,14 @@ class Util extends Cordova {
     async get_audio_stream() {
         if( !this.hasUserMedia() ) throw '设备不支持获取媒体流';
         await this.requestPermission("android.permission.RECORD_AUDIO");
-        return await this.get_stream({ video: false, audio: { echoCancellation: true } })
+        return await this.get_stream({ video: false, audio: true })
     }
     async get_video_stream() {
         if( !this.hasUserMedia() ) throw '设备不支持获取媒体流';
         await this.requestPermission("android.permission.RECORD_AUDIO");
         await this.requestPermission("android.permission.CAMERA");
         // { video: { width: 800, height: 600 }, audio: true }
-        return await this.get_stream({ video: true, audio: { echoCancellation: true } })
+        return await this.get_stream({ video: true, audio: true })
     }
     get_ext_of_file(fn) {
         return fn.slice(fn.lastIndexOf("."));

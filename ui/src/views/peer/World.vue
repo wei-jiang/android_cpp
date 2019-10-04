@@ -67,6 +67,7 @@ export default {
     '$route.query.addr': function(newVal, oldVal) {
       console.log(`watch $route.query.addr`)
         this.get_online_count();
+        this.update_chat_log();
     }
   },
   mounted() {

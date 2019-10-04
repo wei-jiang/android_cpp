@@ -105,6 +105,9 @@ export default {
     });
     const ui_set = db.ui.findOne({})
     this.set_sort_criteria(ui_set.sort_type, ui_set.sort_asc, false);
+    this.tm = setTimeout(()=>{
+      this.on_refresh();
+    }, 2500);
   },
   data() {
     return {
@@ -303,6 +306,7 @@ export default {
     },
     // ws onopen emit
     on_files_chg(data) {
+      clearTimeout(this.tm);
       // console.log('on_files_chg: '+JSON.stringify(data) )
       this.update_file_list(data.files);
     },

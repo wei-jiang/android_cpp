@@ -4,7 +4,7 @@
     <div v-if="tp === null">{{$t('peer-closed')}}</div>
     <div v-else class="player">
       <div class="title">
-        <div @click="$router.go(-1)" class="small material-icons">keyboard_backspace</div>
+        <div @click="$router.replace({name: 'connected'})" class="small material-icons">keyboard_backspace</div>
         <div class="peer-name">
           <img class="small-avatar" :src="tp.avatar" />
           <div>{{tp.nickname}}</div>
