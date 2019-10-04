@@ -1,9 +1,9 @@
 <template>
   <div class="my">
     <nav>
-      <div class="selected" @click.prevent="switch_to('settings', $event)">{{$t('settings')}}</div>
-      <div @click.prevent="switch_to('friends', $event)">{{$t('friends')}}</div>
-      <div @click.prevent="switch_to('blacklist', $event)">{{$t('blacklist')}}</div>
+      <div class="settings selected" @click.prevent="switch_to('settings', $event)">{{$t('settings')}}</div>
+      <div class="friends" @click.prevent="switch_to('friends', $event)">{{$t('friends')}}</div>
+      <div class="blacklist" @click.prevent="switch_to('blacklist', $event)">{{$t('blacklist')}}</div>
     </nav>
     <div class="main">
       <keep-alive>
@@ -27,6 +27,12 @@ export default {
   destroyed() {
 
   },
+  watch: {
+    '$route' (to, from) {
+      $(`.my > nav > div`).removeClass('selected')
+      $(`.my > nav > .${to.name}`).addClass('selected')
+    }
+  },
   mounted() {
   
   },
@@ -44,8 +50,6 @@ export default {
   methods: {
     switch_to(tab, e) {
       this.$router.replace({name: tab})
-      $("nav > div").removeClass("selected");
-      $(e.target).addClass("selected");
     },
 
   }
@@ -71,6 +75,7 @@ nav > div {
   flex: 1;
   font-size: 1.2em;
   border: 2px outset;
+  border-radius: 0.7em;
 }
 .selected {
   border: 2px inset;

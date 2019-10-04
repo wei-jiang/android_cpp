@@ -37,7 +37,7 @@ export default {
       // console.log(`from=${JSON.stringify(from.name)}`)
       // console.log(`to=${JSON.stringify(to.name)}`)
       $(`.player-menu > div > div`).removeClass('disabled')
-      $(`.${to.name}`).addClass('disabled')
+      $(`.player-dropdown > .${to.name}`).addClass('disabled')
     }
   },
   mounted() {

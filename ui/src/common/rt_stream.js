@@ -155,12 +155,12 @@ class RTStream {
     vm.$off(`stream_participant_sig`);
     vm.$off(`peer_closed`, this.on_peer_closed);    
     window.is_streaming = false;
-    if(this.type == 'audio'){
+    if(this.type == 'audio' && window.audio_stream){
       window.audio_stream.getTracks().forEach( track => {
         track.stop();
       });
       window.audio_stream = null;
-    } else {
+    } else if(this.type == 'video' && window.video_stream) {
       window.video_stream.getTracks().forEach( track => {
         track.stop();
       });

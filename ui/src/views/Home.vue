@@ -88,7 +88,7 @@ export default {
       // console.log(`from=${JSON.stringify(from.name)}`)
       // console.log(`to=${JSON.stringify(to.name)}`)
       $(`.fs-menu > div > div`).removeClass('disabled')
-      $(`.${to.name}`).addClass('disabled')
+      $(`.fs-dropdown > .${to.name}`).addClass('disabled')
     }
   },
   mounted() {
