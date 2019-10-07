@@ -137,6 +137,8 @@ public class CppSvr extends CordovaPlugin {
             cordova.startActivityForResult((CordovaPlugin) this, intent, REQUEST_SYSTEM_ALERT_WINDOW);
         }
     }
+    // for refer problem: at org.chromium.android_webview.AwContents.isDestroyed(AwContents.java:351)
+    // https://stackoverflow.com/questions/50059977/application-attempted-to-call-on-a-destroyed-webview-cordova-android
     // @Override
     // public void onDestroy()
     // {
