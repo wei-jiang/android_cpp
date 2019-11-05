@@ -108,3 +108,4 @@ admob/
 ssl-keys/
 *.local
 aab.sh
+wrk/

@@ -61,6 +61,8 @@ set(SOURCE_FILES
     src/main/cpp/peer_handler.cpp
     src/main/cpp/evt_sys.cpp
     src/main/cpp/tunnel.cpp
+    src/main/cpp/db.cpp
+    src/main/cpp/http_home.cpp
 )
 
 # Include a location to the header files
@@ -132,6 +134,7 @@ target_link_libraries(${CXXLIB} ${Boost_LIBRARIES})
 set(HEADER_DIR 
     "/data/cpp_libs/android_libs/${ANDROID_ABI}/libmagic/include"
     "/data/cpp_libs/android_libs/${ANDROID_ABI}/openssl/include"
+    "/data/cpp_libs/android_libs/${ANDROID_ABI}/sqlite"
     "/data/cpp_libs/Simple-Web-Server"
     "/data/cpp_libs/Simple-WebSocket-Server"   
     "/data/cpp_libs"
@@ -140,6 +143,7 @@ set(HEADER_DIR
 target_include_directories(${CXXLIB} PRIVATE ${HEADER_DIR})
 # set(udt "/data/cpp_libs/android_libs/${ANDROID_ABI}/udt/libudt.a")
 set(libmagic "/data/cpp_libs/android_libs/${ANDROID_ABI}/libmagic/lib/libmagic.a")
+set(libsqlite "/data/cpp_libs/android_libs/${ANDROID_ABI}/sqlite/libsqlite3.a")
 set(OPENSSL_LIBRARYDIR "/data/cpp_libs/android_libs/${ANDROID_ABI}/openssl/lib")
 FOREACH(LIB 
     libssl.a
@@ -149,4 +153,4 @@ FOREACH(LIB
 ENDFOREACH(LIB)
 
 include_directories(${IncludeDir})
-target_link_libraries(${CXXLIB} ${Boost_LIBRARIES} ${OpenSSL_LIBRARIES} ${libmagic})
+target_link_libraries(${CXXLIB} ${Boost_LIBRARIES} ${OpenSSL_LIBRARIES} ${libmagic} ${libsqlite})

@@ -36,6 +36,9 @@ namespace ph = std::placeholders;
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
 // #include <boost/signals2/signal.hpp>
 
 #include <android/log.h>
@@ -112,7 +115,8 @@ public:
 enum 
 {
     SVR_HTTP    = 1,
-    SVR_SOCKS   = 2
+    SVR_SOCKS,
+    SVR_HOME,
 };
 class Service
 {
@@ -159,7 +163,7 @@ using json = nlohmann::json;
 typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
 
 extern TSQueue<std::string> cpp2java_que;
-extern std::shared_ptr<boost::asio::io_context> g_io, g_socks_io;
+extern std::shared_ptr<boost::asio::io_context> g_io, g_socks_io, g_io_home;
 extern std::string g_ms;
 extern std::atomic<uint16_t> g_channel_id;
 // extern boost::signals2::signal<void (uint16_t, const std::vector<uint8_t>& )> g_sig;

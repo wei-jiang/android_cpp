@@ -17,6 +17,25 @@ std::string ep_to_string(boost::asio::ip::udp::endpoint ep)
 	s_ep += ":" + to_string(ep.port());
 	return s_ep;
 }
+bool Base64Encode(const string& input, string& output) {
+    typedef boost::archive::iterators::base64_from_binary<boost::archive::iterators::transform_width<string::const_iterator, 6, 8> > Base64EncodeIterator;
+    stringstream result;
+    copy(Base64EncodeIterator(input.begin()) , Base64EncodeIterator(input.end()), ostream_iterator<char>(result));
+    output = result.str();
+    return output.empty() == false;
+}
+
+bool Base64Decode(const string& input, string& output) {
+    typedef boost::archive::iterators::transform_width<boost::archive::iterators::binary_from_base64<string::const_iterator>, 8, 6> Base64DecodeIterator;
+    stringstream result;
+    try {
+        copy(Base64DecodeIterator(input.begin()) , Base64DecodeIterator(input.end()), ostream_iterator<char>(result));
+    } catch(...) {
+        return false;
+    }
+    output = result.str();
+    return output.empty() == false;
+}
 std::vector<uint8_t> uuid()
 {
 	static auto rg = boost::uuids::random_generator();

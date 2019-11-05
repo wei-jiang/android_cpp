@@ -4,6 +4,7 @@
 
 #include "util.h"
 #include "http_svr.h"
+#include "http_home.h"
 #include "socks.h"
 #include "tunnel.h"
 using namespace std;
@@ -162,7 +163,15 @@ int FreeNet::start_http(int port, const string& path)
             cpp2java_que.push(Util::to_json({
                 {"cmd", "http_ready"},
                 {"port", std::to_string(port)}
-            }));
+            }));           
+            LOGE( "cpu core=%u", std::thread::hardware_concurrency() );
+            g_io_home = make_shared<boost::asio::io_context>();
+            servers.push_back( make_shared<HttpHome>(port+1, path) );
+            for(int i = 0; i < std::thread::hardware_concurrency(); ++i)
+            {
+                std::thread t( []{ g_io_home->run(); } );
+                t.detach();
+            }
             g_io->run();          
         }
         catch(const std::exception& e)

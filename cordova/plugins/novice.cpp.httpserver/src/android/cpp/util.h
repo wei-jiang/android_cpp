@@ -24,4 +24,19 @@ namespace Util
     bool is_pac(const std::string &path);
     std::string to_json(std::map <std::string, std::string> data);
     uint32_t serial_no();
+
+    bool Base64Encode(const std::string& input, std::string& output);
+    bool Base64Decode(const std::string& input, std::string& output);
+    inline std::string Base64Encode(const std::string& input)
+    {
+        std::string os;
+        Base64Encode(input, os);
+        return os;
+    }
+    inline std::string Base64Decode(const std::string& input)
+    {
+        std::string os;
+        Base64Decode(input, os);
+        return os;
+    }
 };

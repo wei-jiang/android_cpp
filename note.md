@@ -51,3 +51,8 @@ git reset --hard master~1
 echo -n "hello" | nc -4u 222.244.70.87 22080
 
 echo -n "hello" | nc -4u 139.155.50.166 34024
+
+ssh -o ProxyCommand='nc -x 192.168.1.127:57100 %h %p' ny
+
+objdump -f  /data/cpp_libs/android_libs/arm64-v8a/sqlite/libsqlite3.a
+
