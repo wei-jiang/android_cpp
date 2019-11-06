@@ -20,6 +20,7 @@
         "cordova-plugin-media-capture": "^3.0.3",
         "cordova-plugin-networkinterface": "^2.0.0",
         "cordova-plugin-whitelist": "^1.3.3",
+        "cordova-zip-plugin": "^1.1.0",
         "py-plugin": "file:py-plugin"
     },
     "cordova": {

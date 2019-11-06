@@ -2,9 +2,9 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 // import Browse from '@/public/views/Browse.vue'
-import Home from '@/views/Home.vue';
+import Store from '@/views/Store.vue';
 import Upload from '@/public/views/Upload.vue'
-
+import UpHome from '@/public/views/UpHome.vue'
 import All from '@/views/fs/All.vue';
 import Folder from '@/views/fs/Folder.vue';
 import Image from '@/views/fs/Image.vue';
@@ -16,8 +16,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Home,
+      name: 'store',
+      component: Store,
       children: [
         { path: '', name: 'all', component: All },
         { path: 'folder', name: 'folder', component: Folder },
@@ -32,6 +32,10 @@ export default new Router({
       name: 'upload',
       component: Upload
     },
-    
+    {
+      path: '/uphome',
+      name: 'uphome',
+      component: UpHome
+    },
   ]
 })

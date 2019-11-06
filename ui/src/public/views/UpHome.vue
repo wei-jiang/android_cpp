@@ -1,20 +1,19 @@
 <template>
-  <div class="upload">
-    <div class="progressbar" v-for="(v, k) in uploading">
-      <div v-bind:style="{width: v.progress}"></div>
-      <div class="cap">{{`${progress_cap(v)}(${v.progress})`}}</div>
+  <div class="up-home">
+    <div v-if="uploading" class="progressbar">
+      <div v-bind:style="{width: uploading.progress}"></div>
+      <div class="cap">{{`${progress_cap(uploading)}(${uploading.progress})`}}</div>
     </div>
-    <input type="file" multiple @change="processFile($event)">
-    <button class="upload_btn" @click.prevent="open_file()" v-if="up_count==0">{{$t('upload-file')}}</button>
+    <input type="file" @change="processFile($event)">
+    <button class="upload_btn" @click.prevent="open_file()" v-if="!uploading">{{$t('upload-home')}}</button>
   </div>
 </template>
 
 <script>
-
 import _ from 'lodash'
 import util from "@/common/util";
 export default {
-  name: "Upload",
+  name: "UpHome",
   props: {
     msg: String
   },
@@ -25,8 +24,7 @@ export default {
   },
   data() {
     return {
-      uploading: {},
-      up_count: 0
+      uploading: null,
     };
   },
   computed: {
@@ -63,7 +61,7 @@ export default {
         ]);
         $.ajax({
           type: "POST",
-          url: "/upload",
+          url: "/upload_home",
           // timeout: 3000,
           dataType: "text",
           contentType: "application/octet-stream",
@@ -79,14 +77,13 @@ export default {
             } else {
               // if file is uploaded completely
               loaded = total; // just changed loaded which could be used to show status.
-              if (--this.up_count == 0) {
-                this.uploading = {};
-              }
+              this.uploading = null;
             }
-            if (this.up_count > 0)
-              this.uploading[file.name].progress = `${parseFloat(
+            if(this.uploading){
+              this.uploading.progress = `${parseFloat(
                 (loaded / total) * 100
               ).toFixed(2)}%`;
+            }
           })
           .fail(err => {
             console.log("failed: ", err);
@@ -94,14 +91,15 @@ export default {
       };
     },
     processFile(event) {
+      const file_type = /zip.*/;
       if (event.target.files.length == 0) return;
-      this.up_count = event.target.files.length;
-      const ups = {};
-      _.each(event.target.files, f => {
-        ups[f.name] = { progress: "0%", size: f.size, name: f.name };
-        this.upload_file(f);
-      });
-      this.uploading = ups;
+      let f = event.target.files[0];
+      console.log(`f.type=${f.type}`);
+      if (!f.type.match(file_type)) {
+        return util.show_alert_top_tm('请选择zip文件');
+      }
+      this.uploading = { progress: "0%", size: f.size, name: f.name };
+      this.upload_file(f);
       $('input[type="file"]').val("");
     }
   }
@@ -128,7 +126,7 @@ input[type="file"] {
   transform: translateX(-50%) translateY(-50%);
   background-color: initial;
   width: 100%;
-  color: green;
+  color: rgb(107, 0, 128);
   font-weight: bold;
 }
 .progressbar + .progressbar {
@@ -136,7 +134,7 @@ input[type="file"] {
 }
 .progressbar > div {
   text-align: center;
-  background-color: orange;
+  background-color: rgb(166, 255, 0);
   height: 1.5em;
   line-height: 1.5em;
   border-radius: 0.7em;

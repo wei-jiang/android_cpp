@@ -25,11 +25,13 @@ if(navigator.language === 'zh-CN'){
 adb.then( db=>{
   window.db = db;
   if (window.isCordovaApp) { 
-    new Vue({
-      router,
-      i18n,
-      render: h => h(App)
-    }).$mount('#app');    
+    document.addEventListener("deviceready", ()=>{
+      new Vue({
+        router,
+        i18n,
+        render: h => h(App)
+      }).$mount('#app');  
+    }, false);        
   } else {  
     new Vue({
       router: router_pub,

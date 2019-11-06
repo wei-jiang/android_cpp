@@ -6,7 +6,7 @@
   "please-cnn": "请连入",
   "same-innet": "同一内网",
   "browse": "，用浏览器上传/查看文件",
-  "upload-prompt": "提示：手机接上充电器后可当服务器用；否则过一段时间会自动休眠，导致文件服务器不可访问。",
+  "upload-prompt": "提示：手机接上充电器后可当服务器用；否则过一段时间可能会自动休眠，导致文件服务器不可访问。",
   "upload-try": "或尝试把应用加入电源管理白名单",
   "whitelist": "加入白名单",
   "wifi-disconnected": "wifi未连接，请连入内网后重试！",
@@ -89,5 +89,7 @@
   "nearby": "附近频道",
   "world": "世界频道",
   "peer-closed": "对方已离线",
-  "proxy": "代理信息"
+  "proxy": "代理信息",
+  "home-addr": "个人网站",
+  "upload-home": "上传网站"
 }

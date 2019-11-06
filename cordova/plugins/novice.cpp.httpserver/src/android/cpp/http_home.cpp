@@ -31,7 +31,9 @@ void HttpHome::init()
         }
     }
     handle_sql();
+    handle_cors();
     static_dir();
+    check_pass();
     server_->start();
 }
 
@@ -97,25 +99,88 @@ void HttpHome::static_dir()
 
 void HttpHome::handle_sql()
 {
-    server_->resource["^/sql$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
-        SimpleWeb::CaseInsensitiveMultimap header;
-        header.emplace("Content-Type", "application/json;charset=utf-8");
-        header.emplace("Connection", "keep-alive");
-        // throw exception hurt performance, so try to not use: try...catch...throw
-        auto data = json::parse(request->content);
-        auto pass = data["pass"].get<string>();
-        auto sql = data["sql"].get<string>();           
-        // LOGI("handle_sql : pass=%s; sql=%s", pass.c_str(), sql.c_str());
-        if(db_->get_pass() == pass) 
+    server_->resource["^/sql$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) 
+    {        
+        try
         {
-            response->write(db_->exec_sql(sql), header);
+            SimpleWeb::CaseInsensitiveMultimap header;
+            header.emplace("Content-Type", "application/json;charset=utf-8");
+            header.emplace("Connection", "keep-alive");
+            // throw exception hurt performance, so try to not use: try...catch...throw
+            auto data = json::parse(request->content);
+            auto pass = data["pass"].get<string>();
+            auto sql = data["sql"].get<string>();           
+            // LOGI("handle_sql : pass=%s; sql=%s", pass.c_str(), sql.c_str());
+            if(db_->get_pass() == pass) 
+            {
+                response->write(db_->exec_sql(sql), header);
+            }
+            else 
+            {
+                json res;
+                res["ret"] = -1;
+                res["msg"] = "invalid pass";
+                response->write(res.dump(), header);
+            }
         }
-        else 
+        catch (const exception &e)
         {
             json res;
             res["ret"] = -1;
-            res["msg"] = "invalid pass";
-            response->write(res.dump(), header);
+            res["msg"] = e.what();
+            res_json(response, res);
+        }   
+    };
+}
+void HttpHome::res_json(std::shared_ptr<HttpServer::Response> response, json &data)
+{
+    SimpleWeb::CaseInsensitiveMultimap header;
+    header.emplace("Content-Type", "application/json;charset=utf-8");
+    header.emplace("Connection", "keep-alive");
+    response->write(data.dump(), header);
+}
+void HttpHome::handle_cors()
+{
+    // Deals with CORS requests
+    server_->default_resource["OPTIONS"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+        try {
+            // Set header fields
+            SimpleWeb::CaseInsensitiveMultimap header;
+            header.emplace("Content-Type", "text/plain");
+            header.emplace("Access-Control-Allow-Origin", "*");
+            header.emplace("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+            header.emplace("Access-Control-Max-Age", "1728000");
+            header.emplace("Access-Control-Allow-Headers", "authorization,content-type");
+
+            response->write(SimpleWeb::StatusCode::success_ok, "", header);
         }
+        catch(const exception &e) {
+            response->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
+        }
+    };
+}
+void HttpHome::check_pass()
+{
+    server_->resource["^/check_pass$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+        json res;
+        try
+        {
+            auto data = json::parse(request->content);
+            auto pass = data["pass"].get<string>();
+            if(db_->get_pass() == pass) 
+            {
+                res["ret"] = 0;
+            }
+            else 
+            {
+                throw invalid_argument("invalid pass");
+            }
+        }
+        catch (const exception &e)
+        {
+            res["ret"] = -1;
+            res["msg"] = e.what();
+        }
+        res_json(response, res);
     };
 }

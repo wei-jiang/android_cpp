@@ -56,3 +56,5 @@ ssh -o ProxyCommand='nc -x 192.168.1.127:57100 %h %p' ny
 
 objdump -f  /data/cpp_libs/android_libs/arm64-v8a/sqlite/libsqlite3.a
 
+cordova plugin add cordova-zip-plugin
+cordova plugin rm com.jjdltc.cordova.plugin.zip

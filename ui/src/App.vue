@@ -56,6 +56,11 @@
         <i class="material-icons">wifi</i>
         {{$t('svr-addr')}}
       </div>
+      <div class="mb" @click="to_page('/home', $t('home-addr'), $event)">
+        <i class="material-icons">home</i>
+        {{$t('home-addr')}}
+        
+      </div>
     </footer>
   </div>
 </template>

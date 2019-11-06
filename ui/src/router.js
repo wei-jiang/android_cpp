@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Home from '@/views/Home.vue';
+import Store from '@/views/Store.vue';
 
 import All from '@/views/fs/All.vue';
 import Folder from '@/views/fs/Folder.vue';
@@ -26,8 +26,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Home,
+      name: 'store',
+      component: Store,
       children: [
         { path: '', name: 'all', component: All },
         { path: 'folder', name: 'folder', component: Folder },
@@ -88,6 +88,11 @@ export default new Router({
       path: '/help-en',
       name: 'help-en',
       component: () => import(/* webpackChunkName: "help-en" */ './views/Help_en.vue')
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component: () => import('./views/Home.vue')
     },
   ]
 });

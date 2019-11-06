@@ -10,6 +10,7 @@
     <footer>
       <div class="mb selected" @click="to_page('/', $t('browse-file'), $event)">{{$t('browse-file')}}</div>
       <div class="mb" @click="to_page('/upload', $t('upload-file'), $event)">{{$t('upload-file')}}</div>
+      <div class="mb" @click="to_page('/uphome', $t('upload-home'), $event)">{{$t('upload-home')}}</div>
     </footer>
     
   </div>

@@ -20,4 +20,7 @@ public:
 private:
     void static_dir();
     void handle_sql();
+    void handle_cors();
+    void check_pass();
+    void res_json(std::shared_ptr<HttpServer::Response> response, json& data);
 };

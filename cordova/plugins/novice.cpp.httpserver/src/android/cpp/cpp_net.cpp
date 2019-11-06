@@ -167,7 +167,8 @@ int FreeNet::start_http(int port, const string& path)
             LOGE( "cpu core=%u", std::thread::hardware_concurrency() );
             g_io_home = make_shared<boost::asio::io_context>();
             servers.push_back( make_shared<HttpHome>(port+1, path) );
-            for(int i = 0; i < std::thread::hardware_concurrency(); ++i)
+            int t_cnt = std::max( 2, (int)std::thread::hardware_concurrency() );
+            for(int i = 0; i < t_cnt; ++i)
             {
                 std::thread t( []{ g_io_home->run(); } );
                 t.detach();

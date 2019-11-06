@@ -30,6 +30,7 @@ private:
     void serve_res();
     void get_files();
     void handle_upload();
+    void handle_upload_home();
     void client_info();
     void emplace_ws();
     void read_and_send(const std::shared_ptr<HttpServer::Response> &response, const std::shared_ptr<std::ifstream> &ifs, size_t len);

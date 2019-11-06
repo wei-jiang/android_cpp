@@ -89,5 +89,7 @@
   "nearby": "neaby channel",
   "world": "world channel",
   "peer-closed": "peer closed",
-  "proxy": "proxy info"
+  "proxy": "proxy info",
+  "home-addr": "home addr",
+  "upload-home": "upload home"
 }

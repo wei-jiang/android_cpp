@@ -1,5 +1,6 @@
 
 #include "http_svr.h"
+#include <unzipper.h>
 #include "util.h"
 #include "udp.h"
 #include "peer.h"
@@ -46,6 +47,7 @@ void HttpSvr::init()
         fs::create_directory(store_path_);
     }
     handle_upload();
+    handle_upload_home();
     serve_res();
     static_dir(assets_dir_ + "/www");
     get_files();
@@ -358,6 +360,75 @@ void HttpSvr::serve_res()
         catch (const exception &e)
         {
             response->write(SimpleWeb::StatusCode::client_error_bad_request, "Could not open path " + request->path_match[1].str() + ": " + e.what());
+        }
+    };
+}
+void HttpSvr::handle_upload_home()
+{
+    server_->resource["^/upload_home$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+        try
+        {
+            const string& data = request->content.string();
+            // LOGD( Util::hexStr(data) );
+            const string file_name{ data.c_str() };
+            // LOGD("file_name: %s", file_name.c_str());
+            auto flag = static_cast<int>(data[data.length() - 1]);
+            // cout<< "flag=" <<flag <<endl;
+            auto buff_len = data.length() - file_name.length() -2;
+            // cout<< "buff_len=" <<buff_len <<endl;
+            const string& buff = data.substr(file_name.length()+1, buff_len);
+            auto path = store_path_ + "home/";
+            if( !fs::exists(path) )
+            {
+                fs::create_directory(path);
+            }
+            path += file_name;
+            // cout<< "buff=" <<buff <<endl;
+            std::shared_ptr<std::ofstream> writer;
+            switch(flag)
+            {
+                case 0:
+                    writer = writers_[file_name] = make_shared<std::ofstream>(path, std::ofstream::binary);
+                    break;
+                case 1:
+                    writer = writers_[file_name];
+                    break;
+                case 2:
+                    auto it = writers_.find(file_name);
+                    if( it != writers_.end() )
+                    {   
+                        writer = it->second;
+                        writers_.erase(it);
+                    }
+                    else 
+                    {
+                        writer = make_shared<ofstream>(path, std::ofstream::binary);
+                    }
+                    ws_to_all( Util::get_files_json(store_path_) );
+                    break;
+            }
+            writer->write( buff.c_str(), buff.length() );
+            // cout << Util::string_to_hex( data ) << endl; 
+            if(2 == flag)
+            {
+                writer->close();
+                string to_dir = assets_dir_+"/home";
+                LOGI("extractZip=%s to %s", path.c_str(), to_dir.c_str() );
+                using namespace zipper;
+                Unzipper unzipper(path);
+                unzipper.extract(to_dir);
+                unzipper.close();
+            }
+            string rs = "ok";
+            *response << "HTTP/1.1 200 OK\r\n"
+                      << "Content-Type: text/html; charset=utf-8\r\n"
+                      << "Content-Length: " << rs.length() << "\r\n\r\n"
+                      << rs;
+        }
+        catch (const exception &e)
+        {
+            *response << "HTTP/1.1 400 Bad Request\r\nContent-Length: " << strlen(e.what()) << "\r\n\r\n"
+                      << e.what();
         }
     };
 }
