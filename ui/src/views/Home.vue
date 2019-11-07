@@ -6,20 +6,9 @@
       </h3>
       <!-- can not use v-if, cause not be able to get element -->
       <canvas id="addr_qr"></canvas>
-      <p>
-        <ol>
-          <li>数据库RESTful接口
-            <pre>
-
-            </pre>
-          </li>
-          <li>WebSocket广播接口
-            <pre>
-
-            </pre>
-          </li>
-        </ol>      
-      </p>
+      <div class="api-panel">
+        <a :href="api_url" target="_blank">后台api接口说明</a>
+      </div>
 
     </div>
     <div v-show="!wifi_ip">
@@ -55,6 +44,9 @@ export default {
   computed: {
     address() {
       return `http://${this.wifi_ip}:${this.port}`;
+    },
+    api_url(){
+      return `http://${this.wifi_ip}:${this.port-1}/api.txt`;
     }
   },
   methods: {
@@ -87,9 +79,12 @@ canvas {
 
 p {
   margin: 0.7em 1.7em;
-  text-align: left;
+  
 }
-
+.api-panel{
+  margin: 1.1em 1em;
+  font-size: 1.3rem;
+}
 .home {
   display: flex;
   /* justify-content: space-between; */

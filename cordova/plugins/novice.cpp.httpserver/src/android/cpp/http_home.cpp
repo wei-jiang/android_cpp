@@ -106,6 +106,7 @@ void HttpHome::handle_sql()
             SimpleWeb::CaseInsensitiveMultimap header;
             header.emplace("Content-Type", "application/json;charset=utf-8");
             header.emplace("Connection", "keep-alive");
+            header.emplace("Access-Control-Allow-Origin", "*");
             // throw exception hurt performance, so try to not use: try...catch...throw
             auto data = json::parse(request->content);
             auto pass = data["pass"].get<string>();
@@ -137,6 +138,7 @@ void HttpHome::res_json(std::shared_ptr<HttpServer::Response> response, json &da
     SimpleWeb::CaseInsensitiveMultimap header;
     header.emplace("Content-Type", "application/json;charset=utf-8");
     header.emplace("Connection", "keep-alive");
+    header.emplace("Access-Control-Allow-Origin", "*");
     response->write(data.dump(), header);
 }
 void HttpHome::handle_cors()
@@ -150,7 +152,7 @@ void HttpHome::handle_cors()
             header.emplace("Access-Control-Allow-Origin", "*");
             header.emplace("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
             header.emplace("Access-Control-Max-Age", "1728000");
-            header.emplace("Access-Control-Allow-Headers", "authorization,content-type");
+            header.emplace("Access-Control-Allow-Headers", "Authorization, Origin, X-Requested-With, Content-Type, Accept");
 
             response->write(SimpleWeb::StatusCode::success_ok, "", header);
         }

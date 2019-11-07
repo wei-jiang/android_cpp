@@ -5,7 +5,13 @@
       <div class="cap">{{`${progress_cap(v)}(${v.progress})`}}</div>
     </div>
     <input type="file" multiple @change="processFile($event)">
-    <button class="upload_btn" @click.prevent="open_file()" v-if="up_count==0">{{$t('upload-file')}}</button>
+    <div v-if="up_count==0">
+      <button class="upload_btn" @click.prevent="open_file()">{{$t('upload-file')}}</button>
+      <div class="info-panel">
+        上传的文件保存在/sdcard/mystore目录下。在手机服务端可进行文件整理：移动、改名、删除等。
+      </div>
+    </div>
+    
   </div>
 </template>
 
@@ -151,5 +157,8 @@ input[type="file"] {
   width: 90%;
   margin: 0.9em auto;
   text-align: center;
+}
+.info-panel{
+  border: 2px inset darkgray;
 }
 </style>

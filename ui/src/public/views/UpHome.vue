@@ -5,7 +5,18 @@
       <div class="cap">{{`${progress_cap(uploading)}(${uploading.progress})`}}</div>
     </div>
     <input type="file" @change="processFile($event)">
-    <button class="upload_btn" @click.prevent="open_file()" v-if="!uploading">{{$t('upload-home')}}</button>
+    <div v-if="!uploading" class="input-panel">
+      <input type="password" v-model="pass" placeholder="数据库密码">
+      <button class="upload_btn" @click.prevent="check_and_upload()">{{$t('upload-home')}}</button>
+      <p>
+        请上传网站的zip压缩包（只支持zip格式），zip解压后应直接有index.html，及其它的网站相关资源文件。<br>
+        不要解压后里面还有个文件夹，然后那里面才是网站内容。
+      </p>
+      <a :href="api_url">后台接口说明</a>
+      <a :href="home_url">打开用户网站</a>
+      
+    </div>
+    
   </div>
 </template>
 
@@ -24,20 +35,39 @@ export default {
   },
   data() {
     return {
+      pass: '',
       uploading: null,
     };
   },
   computed: {
-    address() {
-      return ``;
+    home_url() {
+      return `http://${location.hostname}:${parseInt(location.port)+1}/`;
+    },
+    pass_url(){
+      return `http://${location.hostname}:${parseInt(location.port)+1}/check_pass`;
+    },
+    api_url(){
+      return `http://${location.hostname}:${parseInt(location.port)}/api.txt`;
     }
   },
   methods: {
+
     progress_cap(f){
       return `${_.truncate(f.name, {'length': 7})}${util.formatFileSize(f.size)}`
     },
-    open_file() {
-      $('input[type="file"]').click();
+    async check_and_upload() {
+      if(!this.pass) return util.show_alert_top_tm('请输入数据库访问密码')
+      try{
+        const res = await util.post_json(this.pass_url, {pass: this.pass});
+        if(res.ret == 0){
+          $('input[type="file"]').click();
+        } else {
+          util.show_error_top(`无效的密码: ${res.msg}`)
+        }
+        this.pass = ''
+      }catch(err){
+        util.show_error_top(`上传网站失败: ${err}`)
+      }   
     },
     upload_file(file) {
       let loaded = 0;
@@ -108,8 +138,15 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.up-home{
+  /* overflow: hidden; */
+}
 input[type="file"] {
   display: none;
+}
+input[type="password"] {
+  font-size: 1.4em;
+  width: 80%;
 }
 .progressbar {
   position: relative;
@@ -126,7 +163,7 @@ input[type="file"] {
   transform: translateX(-50%) translateY(-50%);
   background-color: initial;
   width: 100%;
-  color: rgb(107, 0, 128);
+  color: rgb(250, 163, 65);
   font-weight: bold;
 }
 .progressbar + .progressbar {
@@ -134,7 +171,7 @@ input[type="file"] {
 }
 .progressbar > div {
   text-align: center;
-  background-color: rgb(166, 255, 0);
+  background-color: rgb(87, 167, 156);
   height: 1.5em;
   line-height: 1.5em;
   border-radius: 0.7em;
@@ -142,12 +179,24 @@ input[type="file"] {
 .upload_btn {
   border-radius: 0.7em;
   display: block;
-  background-color: rgb(166, 218, 218);
+  background-color: rgb(135, 155, 155);
   color: rgb(71, 70, 70);
   font-weight: 900;
   font-size: 1.7rem;
   width: 90%;
   margin: 0.9em auto;
   text-align: center;
+}
+p{
+  margin: 1em 0.5em;
+  text-align: left;
+}
+a{
+  display: block;
+  margin: 1em;
+  font-size: 1.3em;
+}
+.input-panel{
+  margin: 0.5em;
 }
 </style>

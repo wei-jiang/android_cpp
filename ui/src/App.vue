@@ -249,7 +249,7 @@ export default {
 @import "./assets/common.css";
 :root {
   box-sizing: border-box;
-  font-size: calc(1vw + 0.9em);
+  font-size: calc(1vw + 0.8em);
 }
 @media (min-width: 35em) {
 }
