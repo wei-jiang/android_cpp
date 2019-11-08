@@ -17,7 +17,6 @@ public:
 private:
     void ep_for_cpp();
     void ep_for_tunnel();
-    void ep_for_broadcast();
     void return_json(std::shared_ptr<WsServer::Connection> cnn, pt::ptree&);
 
 };

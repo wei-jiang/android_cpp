@@ -1,5 +1,6 @@
 1. 数据库RESTful接口
-后台提供了sqlite数据库存取接口，可执行任何合法的sql语句，包括：建表、增、删、改 记录。提交每个sql语句需要验证密码，默认admin，
+后台提供了sqlite数据库存取接口，可执行任何合法的sql语句，包括：建表、增、删、改 记录。
+提交执行每个sql语句前需要验证密码，默认admin，
 这个密码存储在user表里，初次使用时，请先修改访问密码，以后用新密码读写数据库即可。
 例如用ajax post如下json数据：
 
@@ -9,10 +10,12 @@ URL： http://手机ip:端口（默认57001）/sql
   "pass": "admin",
   "sql": "update user set pass='my-password';"
 }
-返回格式： ret为0代表执行成功，-1代表失败，同时带回msg字段标示失败原因
+返回格式： ret为0代表执行成功，-1代表失败，同时带回msg字段标示失败原因, 
+如果sql为select语句，result表示返回的查询结果
 {
-  ret: 0
-  msg: "错误描述，失败时返回"
+  ret: 0,
+  msg: "错误描述，失败时返回",
+  result: [{"字段1":value1, "字段2":value2, ...}, ...]
 }
 
 提示：这个接口已开启了cors，可在任何站点的js中调用，不存在跨域问题。所以也可把手机当做数据库服务器使用。
@@ -20,11 +23,11 @@ URL： http://手机ip:端口（默认57001）/sql
 2. WebSocket广播接口
 同时提供一个websocket接口，可用来做内网实时在线游戏，
 比如给每个浏览器生成一个uuid存在localStorage里，每次广播时带上自己的id标识。玩家的数据可用上面的接口存数据库
-websocket地址为：ws://手机ip:端口（默认57000）/broadcast
-注意：数据库服务的默认端口是57001，ws的是57000，“个人网站”地址的端口总是在“服务地址”的端口号上+1，而服务地址是可修改的，下次启动时“个人网站”端口将随之更改。
+websocket地址为：ws://手机ip:端口（默认57001）/broadcast
+注意：“个人网站”地址的端口总是在“服务地址”的端口号上+1，而服务地址是可修改的，下次启动时“个人网站”端口将随之更改。
 
 // 在个人网站中建立websocket的示例代码：
-const url = `ws://${location.hostname}:${parseInt(location.port)-1}/broadcast`;
+const url = `ws://${location.host}/broadcast`;
 const ws = new WebSocket(url);
 ws.onmessage = (evt)=>{
   // 接收其它浏览器发送的广播数据

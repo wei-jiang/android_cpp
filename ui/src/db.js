@@ -16,7 +16,7 @@ function populate_default() {
     if (!db.svr.findOne({})) {
         db.svr.insert({
             http_port: 57000,
-            socks_port: 57100,
+            socks_port: 58000,
         });
     }
     if (!db.ss.findOne({})) {

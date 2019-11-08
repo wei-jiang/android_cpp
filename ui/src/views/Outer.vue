@@ -11,11 +11,13 @@
       <div @click="remove(s)"><i class="small material-icons">delete</i></div>
     </div>
     <button @click="add_server"><i class="material-icons">add</i>&nbsp;{{$t('add')}}</button>
-    <h3 @click.prevent="how_to = !how_to">{{$t('how-to-setup-ss')}}&#x2753;</h3>
-    <div v-show="how_to" @click.prevent="how_to = !how_to">
-      {{$t('how-to-setup-ss-content')}}
-      <a href="https://github.com/novice79/ss.git" target="_blank">https://github.com/novice79/ss.git</a>
-    </div>
+    <!-- <h3>{{$t('how-to-setup-ss')}}&#x2753;</h3> -->
+    <p>
+      <!-- {{$t('how-to-setup-ss-content')}} -->
+      如果没配外网服务器地址，会自动插入测试服地址，您可禁用或改为自己的地址。<br>
+      也可设置多台服务器，同时与各台服务器上的玩家进行交互。<br>
+      自行搭建服务器请参考： <a href="https://github.com/novice79/ss.git" target="_blank" class="green">这里</a>
+    </p>
   </div>
 </template>
 
@@ -39,7 +41,6 @@ export default {
   data() {
     return {
       sss: [],
-      how_to: false
     };
   },
   computed: {

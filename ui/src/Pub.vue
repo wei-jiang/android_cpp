@@ -8,9 +8,9 @@
       </keep-alive>
     </div>
     <footer>
-      <div class="mb selected" @click="to_page('/', $t('browse-file'), $event)">{{$t('browse-file')}}</div>
-      <div class="mb" @click="to_page('/upload', $t('upload-file'), $event)">{{$t('upload-file')}}</div>
-      <div class="mb" @click="to_page('/uphome', $t('upload-home'), $event)">{{$t('upload-home')}}</div>
+      <div class="all" @click="to_page('/', $t('browse-file'), $event)">{{$t('browse-file')}}</div>
+      <div class="upload" @click="to_page('/upload', $t('upload-file'), $event)">{{$t('upload-file')}}</div>
+      <div class="uphome" @click="to_page('/uphome', $t('upload-home'), $event)">{{$t('upload-home')}}</div>
     </footer>
     
   </div>
@@ -37,15 +37,22 @@ export default {
   destroyed() {
 
   },
+  watch: {
+    '$route': function(to, from) {
+      // console.log(`to.name=${to.name}`)
+      this.push_tab(to.name);
+    }
+  },
   mounted() {
     if(navigator.language !== 'zh-CN'){
       document.title = 'android resource server';
     }
+    // console.log(this.$route.name)
+    this.push_tab(this.$route.name);
   },
   data() {
     return {
       title: this.$t("file-mgr"),
-      sub: ''
     };
   },
   computed: {
@@ -54,6 +61,10 @@ export default {
     }
   },
   methods: {
+    push_tab(name){
+      $(`footer > div`).removeClass('selected')
+      $(`footer > .${name}`).addClass('selected')
+    },
     enter_full(){
       // if (screenfull.enabled && !screenfull.isFullscreen) {
       //   screenfull.request();
@@ -62,15 +73,10 @@ export default {
       //   console.log('not support fullscreen')
       // }     
     },
-    sub_title_chg(sub){
-      this.sub = sub;
-    },
+
     to_page(name, title, e) {
       this.title = title;
       this.$router.replace(name);
-      $(".mb").removeClass("selected");
-      $(e.target).addClass("selected");
-      this.sub = ''
     },
 
   }

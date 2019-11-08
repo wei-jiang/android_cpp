@@ -34,6 +34,7 @@ void HttpHome::init()
     handle_cors();
     static_dir();
     check_pass();
+    emplace_ws();
     server_->start();
 }
 
@@ -184,5 +185,34 @@ void HttpHome::check_pass()
             res["msg"] = e.what();
         }
         res_json(response, res);
+    };
+}
+void HttpHome::emplace_ws()
+{
+    auto &bc_ep = ws_server_.endpoint["^/broadcast/?$"];
+    bc_ep.on_open = [&](shared_ptr<WsServer::Connection> connection) {
+
+    };
+    bc_ep.on_close = [&](shared_ptr<WsServer::Connection> connection, int status, const string &reason) {
+
+    };
+    bc_ep.on_error = [&](shared_ptr<WsServer::Connection> connection, const boost::system::error_code &ec) {
+
+    };
+    bc_ep.on_message = [&](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
+        auto msg = in_message->string();
+        if(msg == "") return;
+        for (auto &a_connection : bc_ep.get_connections())
+        {
+            a_connection->send(msg); 
+        }                    
+    };
+    server_->on_upgrade = [this](unique_ptr<SimpleWeb::HTTP> &socket, shared_ptr<HttpServer::Request> request) {
+        auto connection = std::make_shared<WsServer::Connection>(std::move(socket));
+        connection->method = std::move(request->method);
+        connection->path = std::move(request->path);
+        connection->http_version = std::move(request->http_version);
+        connection->header = std::move(request->header);
+        ws_server_.upgrade(connection);
     };
 }

@@ -6,6 +6,7 @@ import WSS from "@/wss";
 import FTrans from "@/common/file_transfer";
 
 window.sss = {}
+// this is target socks5 provider peerid
 window.socks_pid = '';
 class Busi {
     constructor() {

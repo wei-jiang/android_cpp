@@ -12,7 +12,7 @@
         请上传网站的zip压缩包（只支持zip格式），zip解压后应直接有index.html，及其它的网站相关资源文件。<br>
         不要解压后里面还有个文件夹，然后那里面才是网站内容。
       </p>
-      <a :href="api_url">后台接口说明</a>
+      <a :href="api_url" target="_blank">后台接口说明</a>
       <a :href="home_url">打开用户网站</a>
       
     </div>
@@ -138,9 +138,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.up-home{
-  /* overflow: hidden; */
-}
+/* .up-home{
+  overflow: hidden;
+} */
 input[type="file"] {
   display: none;
 }

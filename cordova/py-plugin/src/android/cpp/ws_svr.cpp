@@ -38,7 +38,6 @@ void WsSvr::init()
     };
     ep_for_cpp();
     ep_for_tunnel();
-    ep_for_broadcast();
 }
 void WsSvr::to_all(const std::string &json)
 {
@@ -128,26 +127,3 @@ void WsSvr::ep_for_tunnel()
 //         }
 //     });
 // }
-void WsSvr::ep_for_broadcast()
-{
-    auto &bc_ep = ws_server_.endpoint["^/broadcast/?$"];
-    bc_ep.on_open = [&](shared_ptr<WsServer::Connection> connection) {
-
-    };
-
-    bc_ep.on_close = [&](shared_ptr<WsServer::Connection> connection, int status, const string &reason) {
-
-    };
-
-    bc_ep.on_error = [&](shared_ptr<WsServer::Connection> connection, const boost::system::error_code &ec) {
-
-    };
-    bc_ep.on_message = [&](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
-        auto msg = in_message->string();
-        if(msg == "") return;
-        for (auto &a_connection : bc_ep.get_connections())
-        {
-            a_connection->send(msg); 
-        }                    
-    };
-}

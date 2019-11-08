@@ -7,6 +7,7 @@ using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 
 class HttpHome: public Service
 {
+    WsServer ws_server_;
     std::shared_ptr<HttpServer> server_;
     std::shared_ptr<DB> db_;
     std::string assets_dir_, home_path_;
@@ -22,5 +23,6 @@ private:
     void handle_sql();
     void handle_cors();
     void check_pass();
+    void emplace_ws();
     void res_json(std::shared_ptr<HttpServer::Response> response, json& data);
 };
