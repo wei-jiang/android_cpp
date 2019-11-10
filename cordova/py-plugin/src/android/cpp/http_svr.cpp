@@ -66,7 +66,7 @@ void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadl
     // LOGI("thread[%s] in routine...", tid.c_str()); 
     // ws_svr_.to_all("cpp ws server alive");
     json noty_proxy_info;    
-    for( auto const& [k, v] : SocksClient::s_peer2cnn )
+    for( auto const& [k, v] : SocksCnn1::s_peer2cnn )
     {
         noty_proxy_info[k] = v.size();
         // for(auto const& [k, n] : v) 
@@ -77,7 +77,7 @@ void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadl
         //     }  
         // }
     }   
-    // for(auto const& [k, n] : RtcCnn::s_id2cnn) 
+    // for(auto const& [k, n] : SocksCnn0::s_id2cnn) 
     // {
     //     if(n)
     //     {
@@ -88,7 +88,7 @@ void HttpSvr::routine(const boost::system::error_code& /*e*/, boost::asio::deadl
     //         }          
     //     }  
     // }
-    noty_proxy_info["local_socks_cnn_count"] = RtcCnn::s_id2cnn.size();
+    noty_proxy_info["local_socks_cnn_count"] = SocksCnn0::s_id2cnn.size();
     noty_proxy_info["cmd"] = "noty_proxy_info";
     cpp2java_que.push(noty_proxy_info.dump());
     for(auto& n : for_del) {

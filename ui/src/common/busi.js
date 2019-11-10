@@ -8,6 +8,8 @@ import FTrans from "@/common/file_transfer";
 window.sss = {}
 // this is target socks5 provider peerid
 window.socks_pid = '';
+// this is target home peerid
+window.target_home_pid = '';
 class Busi {
     constructor() {
         _.bindAll(this, ['init', 'reg_evt', 'routine']);
@@ -17,6 +19,7 @@ class Busi {
         this.reg_evt();
         this.go_pub();
         this.routine();
+        this.home_tunnel_port = util.http_port() + 100;
         // if(navigator.mediaDevices && navigator.mediaDevices.getSupportedConstraints){
         //     console.log( `navigator.mediaDevices.getSupportedConstraints()=${JSON.stringify(navigator.mediaDevices.getSupportedConstraints())}` );
         // }      
@@ -69,6 +72,22 @@ class Busi {
         }
     }
     reg_evt() {
+        vm.$on("open_target_home", async (target_pid) => {
+            if(target_pid != target_home_pid){
+                if(target_home_pid){
+                    // disconnect local cnns
+                    const buf = util.get_close_cnns_home_buff(target_home_pid, 1)
+                    ws_tunnel.send(buf);
+                    // disconnect remote cnns
+                    peers.get(target_home_pid).send_cmd(CMD.disconnect_home_cnns);
+                }               
+                target_home_pid = target_pid;
+            }
+            const ip = await util.get_ip();
+            const url = `http://${ip || location.hostname}:${this.home_tunnel_port}/`;
+            // window.open(url)
+            vm.$router.replace(({ name: 'phome', params: { url} }))
+        });
         vm.$on("start_socks_server_succeed", data => {
             window.remote_proxy_port = parseInt(data.port)+100;
             console.log(`window.remote_proxy_port=${window.remote_proxy_port}`);
@@ -87,6 +106,14 @@ class Busi {
                 ws_tunnel.send(buf);
                 window.socks_pid = "";
                 vm.$emit('remote_proxy_changed', socks_pid);
+            }
+            buf[1] = 0;
+            ws_tunnel.send(buf);
+            // ////////////////////////
+            buf = util.get_close_cnns_home_buff(pid, 1);
+            if (pid == window.target_home_pid) {
+                ws_tunnel.send(buf);
+                window.target_home_pid = "";
             }
             buf[1] = 0;
             ws_tunnel.send(buf);

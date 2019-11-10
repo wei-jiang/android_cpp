@@ -19,6 +19,7 @@ import Nearby from '@/views/peer/Nearby.vue';
 import Sss from '@/views/peer/Sss.vue';
 import World from '@/views/peer/World.vue';
 import Socks from '@/views/peer/Socks.vue';
+import Phome from '@/views/peer/Home.vue';
 Vue.use(Router);
 
 export default new Router({
@@ -66,7 +67,8 @@ export default new Router({
         { path: 'nearby', name: 'nearby', component: Nearby },
         { path: 'sss', name: 'sss', component: Sss },
         { path: 'world', name: 'world', component: World },
-        { path: 'socks', name: 'socks', component: Socks },        
+        { path: 'socks', name: 'socks', component: Socks },      
+        { path: '/phome/:url', name: 'phome', component: Phome, props: true, },     
       ]
     },
     {

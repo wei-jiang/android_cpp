@@ -91,5 +91,6 @@
   "peer-closed": "peer closed",
   "proxy": "proxy info",
   "home-addr": "home addr",
-  "upload-home": "upload home"
+  "upload-home": "upload home",
+  "check-pass": "check pass"
 }

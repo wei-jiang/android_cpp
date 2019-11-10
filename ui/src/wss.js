@@ -280,6 +280,7 @@ class WSS extends PDealer {
       buf = Buffer.concat([buf, buff]);
       sp.send(buf);
     };
+    sp.echo = _.throttle(sp.send, 1000);
     sp.activity = new Date();
     peers.set(pid, sp);  //-----------------------------------
     vm.$emit('peer_changed', '');

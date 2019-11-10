@@ -24,6 +24,7 @@ window.CMD = {
     noty_avatar: 18,
     req_friend: 19,
     res_friend: 20,
+    disconnect_home_cnns: 21,
 };
 
 class PDealer {
@@ -52,10 +53,12 @@ class PDealer {
         this.dealers[CMD.noty_avatar] = this.noty_avatar.bind(this);
         this.dealers[CMD.req_friend] = this.req_friend.bind(this);
         this.dealers[CMD.res_friend] = this.res_friend.bind(this);
+        this.dealers[CMD.disconnect_home_cnns] = this.disconnect_home_cnns.bind(this);
     }
 
     handle_msg(sp, data) {
         // data in buffer type
+        sp.echo('');
         try {
             if (data.length < 2) return;
             const cmd = data.readUInt16BE(0);
@@ -151,6 +154,10 @@ class PDealer {
     }
     disconnect_proxy_cnns(sp, data) {
         const buf = util.get_close_cnns_buff(sp.pid, 0);
+        ws_tunnel.send(buf);
+    }
+    disconnect_home_cnns(sp, data) {
+        const buf = util.get_close_cnns_home_buff(sp.pid, 0);
         ws_tunnel.send(buf);
     }
     async req_proxy(sp, data) {

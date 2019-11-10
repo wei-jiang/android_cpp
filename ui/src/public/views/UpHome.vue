@@ -6,9 +6,9 @@
     </div>
     <input type="file" @change="processFile($event)">
     <div v-if="!uploading" class="input-panel">
-      <input type="password" v-model="pass" placeholder="数据库密码">
-      <button class="upload_btn" @click.prevent="check_and_upload()">{{$t('upload-home')}}</button>
-      <p>
+      <input v-if="!pass_valid" type="password" v-model="pass" placeholder="数据库密码" @keypress.13="check_and_upload()">
+      <button class="upload_btn" @click.prevent="check_and_upload()">{{pass_valid ? $t('upload-home') : $t('check-pass')}}</button>
+      <p v-if="pass_valid">
         请上传网站的zip压缩包（只支持zip格式），zip解压后应直接有index.html，及其它的网站相关资源文件。<br>
         不要解压后里面还有个文件夹，然后那里面才是网站内容。
       </p>
@@ -35,6 +35,8 @@ export default {
   },
   data() {
     return {
+      invalid_tm: null,
+      pass_valid: false,
       pass: '',
       uploading: null,
     };
@@ -55,19 +57,30 @@ export default {
     progress_cap(f){
       return `${_.truncate(f.name, {'length': 7})}${util.formatFileSize(f.size)}`
     },
-    async check_and_upload() {
+    async check_pass(){
       if(!this.pass) return util.show_alert_top_tm('请输入数据库访问密码')
-      try{
+      try{      
         const res = await util.post_json(this.pass_url, {pass: this.pass});
         if(res.ret == 0){
-          $('input[type="file"]').click();
+          this.pass_valid = true;
+          clearTimeout(this.invalid_tm);
+          this.invalid_tm = setTimeout(()=>{
+            this.pass_valid = false;
+          }, 120 * 1000)
         } else {
           util.show_error_top(`无效的密码: ${res.msg}`)
         }
         this.pass = ''
       }catch(err){
-        util.show_error_top(`上传网站失败: ${err}`)
-      }   
+        util.show_error_top(`验证密码失败: ${err}`)
+      }
+    },
+    check_and_upload() {
+      if(this.pass_valid){
+        $('input[type="file"]').click();
+      } else {
+        this.check_pass();
+      }         
     },
     upload_file(file) {
       let loaded = 0;
@@ -179,17 +192,17 @@ input[type="password"] {
 .upload_btn {
   border-radius: 0.7em;
   display: block;
-  background-color: rgb(135, 155, 155);
+  background-color: rgb(191, 221, 221);
   color: rgb(71, 70, 70);
   font-weight: 900;
   font-size: 1.7rem;
-  width: 90%;
+  width: 80%;
   margin: 0.9em auto;
   text-align: center;
 }
 p{
   margin: 1em 0.5em;
-  text-align: left;
+  /* text-align: left; */
 }
 a{
   display: block;

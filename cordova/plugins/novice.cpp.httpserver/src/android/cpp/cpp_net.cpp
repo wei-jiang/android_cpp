@@ -77,7 +77,7 @@ void FreeNet::start_socks(int port)
             {
                 g_socks_io = make_shared<boost::asio::io_context>();
                 servers.push_back( make_shared<Socks>(port) );
-                Tunnel::instance().start(port + 100);
+                Tunnel::instance().start_socks(port);
                 for(auto&& s: servers) LOGI("thread[%s] port=%d;type=%d", tid.c_str(), s->get_port(), s->get_type());
                 g_socks_port = port;
                 cpp2java_que.push(Util::to_json({
@@ -173,6 +173,7 @@ int FreeNet::start_http(int port, const string& path)
                 std::thread t( []{ g_io_home->run(); } );
                 t.detach();
             }
+            Tunnel::instance().start_home(port);
             g_io->run();          
         }
         catch(const std::exception& e)

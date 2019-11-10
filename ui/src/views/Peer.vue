@@ -81,7 +81,7 @@ export default {
 <style scoped>
 .main {
   width: 100%;
-  height: calc(100vh - 4.5rem);
+  height: calc(100vh - 4.0rem);
   overflow-y: auto;
 }
 

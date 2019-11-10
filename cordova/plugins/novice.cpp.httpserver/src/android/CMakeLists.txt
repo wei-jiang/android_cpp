@@ -63,6 +63,7 @@ set(SOURCE_FILES
     src/main/cpp/tunnel.cpp
     src/main/cpp/db.cpp
     src/main/cpp/http_home.cpp
+    src/main/cpp/home_cnn.cpp
 )
 
 # Include a location to the header files

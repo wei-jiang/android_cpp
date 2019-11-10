@@ -91,5 +91,6 @@
   "peer-closed": "对方已离线",
   "proxy": "代理信息",
   "home-addr": "个人网站",
-  "upload-home": "上传网站"
+  "upload-home": "上传网站",
+  "check-pass": "验证密码"
 }

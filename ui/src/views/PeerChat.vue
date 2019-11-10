@@ -106,6 +106,10 @@
               <div class="small material-icons">vpn_key</div>
               <div>请求代理</div>
             </div>
+            <div @click.stop="open_target_home()">
+              <div class="small material-icons">home</div>
+              <div>它的网站</div>
+            </div>
           </div>
         </div>
       </div>
@@ -211,6 +215,9 @@ export default {
     }
   },
   methods: {
+    open_target_home(){
+      vm.$emit(`open_target_home`, this.tp.id);
+    },
     request_proxy(){
       const sp = peers.get(this.tp.id);
       sp.send_cmd(CMD.req_proxy);

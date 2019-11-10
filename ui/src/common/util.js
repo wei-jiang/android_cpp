@@ -147,8 +147,14 @@ class Util extends Cordova {
         new Noty({ type: 'error', layout: 'top', text }).show();
     }
     get_close_cnns_buff(pid, dir){
+        return this.get_close_buff(CPP_CMD.CLOSE_PEER_CNNS);
+    }
+    get_close_cnns_home_buff(pid, dir){
+        return this.get_close_buff(CPP_CMD.CLOSE_PEER_CNNS_HOME);
+    }
+    get_close_buff(cmd, pid, dir){
         let buf = Buffer.alloc(38);
-        buf[0] = CPP_CMD.CLOSE_PEER_CNNS;
+        buf[0] = cmd;
         buf[1] = dir;
         buf.write(pid, 2, 32);
         return buf;

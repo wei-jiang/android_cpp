@@ -9,7 +9,12 @@ window.CPP_CMD = {
   WRITE_BUFFER : 1,
   CLI_WRITE_BUFFER : 2,
   CLOSE_CONNECTION : 3,
-  CLOSE_PEER_CNNS : 4
+  CLOSE_PEER_CNNS : 4,
+
+  NEW_CONNECTION_HOME : 5,
+  WRITE_BUFFER_HOME : 6,
+  CLOSE_CONNECTION_HOME : 7,
+  CLOSE_PEER_CNNS_HOME: 8
 };
 class WsTunnel {
   constructor() {
@@ -32,14 +37,17 @@ class WsTunnel {
     if(data[1] == 0){
       data.write(cli_id, 2, 32);
       // console.log( data.toString('hex') );
-      if(socks_pid){
-        const sp = peers.get(socks_pid)
+      const target_id = data[0] >= CPP_CMD.NEW_CONNECTION_HOME ? target_home_pid : socks_pid;
+      if(target_id){
+        const sp = peers.get(target_id)
         if(sp){
+          console.log(`sp.send_buff(CMD.tcp_tunnel, data);`)
           return sp.send_buff(CMD.tcp_tunnel, data);
         } 
       }
       data[1] = 1;
-      data[0] = CPP_CMD.CLOSE_CONNECTION;
+      data[0] = data[0] >= CPP_CMD.NEW_CONNECTION_HOME ? CPP_CMD.CLOSE_CONNECTION_HOME: CPP_CMD.CLOSE_CONNECTION;
+      console.log(`can not send to peer, close local connection`)
       this.ws.send(data);
     } else{
       const target_id = data.toString('binary', 2, 34);
@@ -48,7 +56,7 @@ class WsTunnel {
         sp.send_buff(CMD.tcp_tunnel, data);
       } else{
         data[1] = 0;
-        data[0] = CPP_CMD.CLOSE_CONNECTION;
+        data[0] = data[0] >= CPP_CMD.NEW_CONNECTION_HOME ? CPP_CMD.CLOSE_CONNECTION_HOME: CPP_CMD.CLOSE_CONNECTION;
         this.ws.send(data);
       }
     }

@@ -5,7 +5,7 @@
 例如用ajax post如下json数据：
 
 请求格式： pass为数据库访问密码，sql为sqlite支持的所有sql语句
-URL： http://手机ip:端口（默认57001）/sql
+URL： http://手机ip:端口（默认57001）/sql。如果在站点页面中访问，请用相对地址：/sql
 { 
   "pass": "admin",
   "sql": "update user set pass='my-password';"
@@ -18,7 +18,7 @@ URL： http://手机ip:端口（默认57001）/sql
   result: [{"字段1":value1, "字段2":value2, ...}, ...]
 }
 
-提示：这个接口已开启了cors，可在任何站点的js中调用，不存在跨域问题。所以也可把手机当做数据库服务器使用。
+提示：这个接口已开启了cors，可在其它站点的js中调用，不存在跨域问题。所以也可把手机当做数据库服务器使用。
 
 2. WebSocket广播接口
 同时提供一个websocket接口，可用来做内网实时在线游戏，
@@ -45,3 +45,7 @@ ws.onopen = ()=>{
   // 这个消息会广播至所有websocket客户端
   ws.send(msg);
 };
+
+【提示】：
+如果网站页面中RESTful和websocket的请求都用相对地址（/sql & ws://${location.host}/broadcast），
+那么这个网站可以被公网上的其它用户穿透访问，并能正常执行数据库请求和websocket广播。

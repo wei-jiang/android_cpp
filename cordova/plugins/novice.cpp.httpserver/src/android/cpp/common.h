@@ -156,11 +156,39 @@ public:
 private:
     std::chrono::steady_clock::time_point t_;
 };
+class CNNBase: public LYTimer
+{
+public:
+    virtual void remove_self(bool noty_flag = true) = 0;
+    virtual ~CNNBase(){}
+
+};
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 #include "server_ws.hpp"
 typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
+
+#define MEM_FN(x) boost::bind(&self_type::x, shared_from_this())
+#define MEM_FN1(x,y) boost::bind(&self_type::x, shared_from_this(),y)
+#define MEM_FN2(x,y,z) boost::bind(&self_type::x, shared_from_this(),y,z)
+enum {
+    NEW_CONNECTION,
+    WRITE_BUFFER,
+    CLI_WRITE_BUFFER,
+    CLOSE_CONNECTION,
+    CLOSE_PEER_CNNS,
+    
+    NEW_CONNECTION_HOME,
+    WRITE_BUFFER_HOME,
+    CLOSE_CONNECTION_HOME,
+    CLOSE_PEER_CNNS_HOME
+};
+
+enum
+{
+    max_length = 8 * 1024
+};
 
 extern TSQueue<std::string> cpp2java_que;
 extern std::shared_ptr<boost::asio::io_context> g_io, g_socks_io, g_io_home;
