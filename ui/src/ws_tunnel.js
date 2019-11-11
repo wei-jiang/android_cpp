@@ -41,7 +41,6 @@ class WsTunnel {
       if(target_id){
         const sp = peers.get(target_id)
         if(sp){
-          console.log(`sp.send_buff(CMD.tcp_tunnel, data);`)
           return sp.send_buff(CMD.tcp_tunnel, data);
         } 
       }

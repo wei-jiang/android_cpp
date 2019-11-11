@@ -34,6 +34,7 @@ void HttpHome::init()
     handle_cors();
     static_dir();
     check_pass();
+    login();
     emplace_ws();
     server_->start();
 }
@@ -110,10 +111,30 @@ void HttpHome::handle_sql()
             header.emplace("Access-Control-Allow-Origin", "*");
             // throw exception hurt performance, so try to not use: try...catch...throw
             auto data = json::parse(request->content);
-            auto pass = data["pass"].get<string>();
+            const auto pass = data["pass"].get<string>();
             auto sql = data["sql"].get<string>();           
-            // LOGI("handle_sql : pass=%s; sql=%s", pass.c_str(), sql.c_str());
-            if(db_->get_pass() == pass) 
+            // LOGI("handle_sql : pass=%s; sql=%s", pass.c_str(), sql.c_str());  
+            std::size_t pos = sql.find(";");
+            if(pos != string::npos)
+            {
+                sql = sql.substr(0, pos+1 );
+            }  
+            sql = std::regex_replace(sql, std::regex("\\s{2,}"), " ");
+            // for wrk test log a lot
+            // LOGI("handle_sql : pass=%s; sql=%s", pass.c_str(), sql.c_str());  	
+            const auto [pass0, pass1] = db_->get_pass();
+            // todo: substr first sql that before ;
+            if( boost::ifind_first(sql, "select ") && pass1 == pass)
+            {
+                pos = sql.find("from user");
+                if(pos != string::npos)
+                {
+                    throw invalid_argument("permission denied");
+                }  
+                response->write(db_->exec_sql(sql), header);
+            }
+            else
+            if(pass0 == pass) 
             {
                 response->write(db_->exec_sql(sql), header);
             }
@@ -121,7 +142,7 @@ void HttpHome::handle_sql()
             {
                 json res;
                 res["ret"] = -1;
-                res["msg"] = "invalid pass";
+                res["msg"] = "permission denied";
                 response->write(res.dump(), header);
             }
         }
@@ -162,6 +183,35 @@ void HttpHome::handle_cors()
         }
     };
 }
+void HttpHome::login()
+{
+    server_->resource["^/login$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+        json res;
+        try
+        {
+            auto data = json::parse(request->content);
+            auto usr = data["usr"].get<string>();
+            auto pass = data["pass"].get<string>();
+            const auto [usr0, pass0] = db_->get_acc();
+            if(usr == usr0 && pass == pass0) 
+            {
+                const auto [pass0, pass1] = db_->get_pass();
+                res["ret"] = 0;
+                res["admin"] = pass0;
+            }
+            else 
+            {
+                throw invalid_argument("invalid account");
+            }
+        }
+        catch (const exception &e)
+        {
+            res["ret"] = -1;
+            res["msg"] = e.what();
+        }
+        res_json(response, res);
+    };
+}
 void HttpHome::check_pass()
 {
     server_->resource["^/check_pass$"]["POST"] = [this](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
@@ -170,7 +220,8 @@ void HttpHome::check_pass()
         {
             auto data = json::parse(request->content);
             auto pass = data["pass"].get<string>();
-            if(db_->get_pass() == pass) 
+            const auto [pass0, pass1] = db_->get_pass();
+            if(pass0 == pass) 
             {
                 res["ret"] = 0;
             }

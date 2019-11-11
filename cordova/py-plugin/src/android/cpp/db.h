@@ -10,7 +10,8 @@ public:
     DB(std::string path);
     ~DB();
     std::string exec_sql(const std::string& sql);
-    std::string get_pass();
+    std::tuple<std::string, std::string> get_pass();
+    std::tuple<std::string, std::string> get_acc();
 private:
     void init();
     int usr_count();

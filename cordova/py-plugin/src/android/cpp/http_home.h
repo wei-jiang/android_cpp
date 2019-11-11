@@ -21,6 +21,7 @@ public:
 private:
     void static_dir();
     void handle_sql();
+    void login();
     void handle_cors();
     void check_pass();
     void emplace_ws();

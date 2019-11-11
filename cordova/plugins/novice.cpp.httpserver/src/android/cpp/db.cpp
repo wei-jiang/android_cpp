@@ -107,6 +107,9 @@ void DB::init()
     string sql = R"(
         create table if not exists user (
             _id integer primary key autoincrement not null,
+            admin text,
+            client text,
+            usr text,
             pass text
         );
     )";
@@ -116,24 +119,42 @@ void DB::init()
     if(count == 0)
     {
         sql = R"(
-            insert into user (pass) values ('admin');
+            insert into user (admin,client,usr,pass) values ('root','guest','mystore','letmein');
         )";
         exec_sql(sql);
         LOGD("begin insert default pass -----------------------------------");
     }
 }
-std::string DB::get_pass(){
+
+std::tuple<std::string, std::string> DB::get_pass(){
     string sql = R"(
-        select pass from user where _id=1;
+        select admin,client from user where _id=1;
     )";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, NULL);
     if (rc != SQLITE_OK) {
         LOGE("get pass failed? This will never happen");
-        return "";
+        return {"", ""};
     }
     sqlite3_step(stmt);
-    string pass = (char*)sqlite3_column_text(stmt, 0);
+    string pass0 = (char*)sqlite3_column_text(stmt, 0);
+    string pass1 = (char*)sqlite3_column_text(stmt, 1);
     sqlite3_finalize(stmt);
-    return pass;
+    return {pass0, pass1};
+}
+std::tuple<std::string, std::string> DB::get_acc(){
+    string sql = R"(
+        select usr,pass from user where _id=1;
+    )";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        LOGE("get acc failed? This will never happen");
+        return {"", ""};
+    }
+    sqlite3_step(stmt);
+    string usr = (char*)sqlite3_column_text(stmt, 0);
+    string pass = (char*)sqlite3_column_text(stmt, 1);
+    sqlite3_finalize(stmt);
+    return {usr, pass};
 }
